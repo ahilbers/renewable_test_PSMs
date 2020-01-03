@@ -14,3 +14,21 @@ run:
     bigM: 1e6  # Cannot be too high, or optimisation will not converge
     zero_threshold: 1e-10  # Round any value smaller than this to 0
     mode: plan  # Choices: plan, operate
+
+overrides:
+    LP:
+        model:
+            name: 6-region linear program model
+        techs:
+            baseload:
+                constraints:
+                    energy_cap_max: inf
+    MILP:
+        model:
+            name: 6-region mixed integer linear program model
+        techs:
+            baseload:
+                constraints:
+                    units_max: inf
+                    energy_cap_per_unit: 1
+                    energy_ramping: 1

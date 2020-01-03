@@ -8,7 +8,7 @@ locations:
     region1:
         coordinates: {lat: 3, lon: 2}
         techs:
-            baseload_continuous:
+            baseload:
             peaking:
 
 
@@ -26,7 +26,7 @@ locations:
     region3:
         coordinates: {lat: 2, lon: 0}
         techs:
-            baseload_continuous:
+            baseload:
             peaking:
 
     region4:
@@ -51,7 +51,7 @@ locations:
     region6:
         coordinates: {lat: 0, lon: 2}
         techs:
-            baseload_continuous:
+            baseload:
             peaking:
             wind:
                 constraints:

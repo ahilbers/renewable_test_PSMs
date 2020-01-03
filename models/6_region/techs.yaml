@@ -1,38 +1,15 @@
-##
-# TECHNOLOGY DEFINITIONS
-##
-
 techs:
-
-
 
 
 # Supply
 
-    baseload_continuous:
+    baseload:
         essentials:
             carrier_out: power
             name: baseload_continuous
             parent: supply
         constraints:
             lifetime: 1
-            energy_cap_max: inf    # for continuous
-        costs:
-            monetary:
-                energy_cap: 300    # GBP m per GW
-                om_con: 0.005    # GBP m per GWh
-                interest_rate: 0
-
-    baseload_discrete:
-        essentials:
-            carrier_out: power
-            name: baseload_discrete
-            parent: supply
-        constraints:
-            lifetime: 1
-            units_max: inf
-            energy_cap_per_unit: 1
-            energy_ramping: 1.0
         costs:
             monetary:
                 energy_cap: 300    # GBP m per GW
