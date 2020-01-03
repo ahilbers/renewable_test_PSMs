@@ -1,0 +1,87 @@
+##
+# LOCATIONS
+##
+
+locations:
+
+
+    region1:
+        coordinates: {lat: 3, lon: 2}
+        techs:
+            baseload_continuous:
+            peaking:
+
+
+    region2:
+        coordinates: {lat: 3, lon: 1}
+        techs:
+            wind:
+                constraints:
+                    resource: file=demand_wind.csv:wind_region2
+            demand_power:
+                constraints:
+                    resource: file=demand_wind.csv:demand_region2
+            unmet:
+
+    region3:
+        coordinates: {lat: 2, lon: 0}
+        techs:
+            baseload_continuous:
+            peaking:
+
+    region4:
+        coordinates: {lat: 1, lon: 0}
+        techs:
+            demand_power:
+                constraints:
+                    resource: file=demand_wind.csv:demand_region4
+            unmet:
+
+    region5:
+        coordinates: {lat: 0, lon: 1}
+        techs:
+            wind:
+                constraints:
+                    resource: file=demand_wind.csv:wind_region5
+            demand_power:
+                constraints:
+                    resource: file=demand_wind.csv:demand_region5
+            unmet:
+
+    region6:
+        coordinates: {lat: 0, lon: 2}
+        techs:
+            baseload_continuous:
+            peaking:
+            wind:
+                constraints:
+                    resource: file=demand_wind.csv:wind_region6
+
+
+
+##
+# TRANSMISSION CAPACITIES
+##
+
+links:
+    region1,region2:
+        techs:
+            transmission_other:
+    region2,region3:
+        techs:
+            transmission_other:
+    region3,region4:
+        techs:
+            transmission_other:
+    region4,region5:
+        techs:
+            transmission_other:
+    region5,region6:
+        techs:
+            transmission_other:
+    region6,region1:
+        techs:
+            transmission_other:
+    region1,region5:
+        techs:
+            transmission_region1to5:

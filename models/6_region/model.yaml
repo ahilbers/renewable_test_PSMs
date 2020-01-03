@@ -1,0 +1,16 @@
+import:
+    - 'techs.yaml' 
+    - 'locations.yaml'
+
+model:
+    name: 6-region model
+    calliope_version: 0.6.4
+    timeseries_data_path: ''
+
+run:
+    objective_options.cost_class:
+        monetary: 1
+    solver: gurobi
+    bigM: 1e6  # Cannot be too high, or optimisation will not converge
+    zero_threshold: 1e-10  # Round any value smaller than this to 0
+    mode: plan  # Choices: plan, operate

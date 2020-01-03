@@ -1,0 +1,14 @@
+locations:
+
+    region1:
+        coordinates: {lat: 0, lon: 0}
+        techs:
+            baseload:
+            peaking:
+            wind:
+                constraints:
+                    resource: file=demand_wind.csv:wind
+            demand_power:
+                constraints:
+                    resource: file=demand_wind.csv:demand
+            unmet:
