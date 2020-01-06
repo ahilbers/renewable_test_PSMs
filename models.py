@@ -26,7 +26,7 @@ class SixRegionModel(calliope.Model):
             'model_type must be either LP or MILP'
 
         self._base_dir = 'models/6_region'
-        self._num_timesteps = ts_data.shape[0]
+        self.num_timesteps = ts_data.shape[0]
         self.emission_levels = {'baseload': 200,
                                 'peaking': 400,
                                 'wind': 0,
@@ -44,12 +44,12 @@ class SixRegionModel(calliope.Model):
         os.remove(ts_data_init_path)
 
     def _create_init_time_series(self, ts_data, preserve_index=False):
-        """Create demand and wind time series data for Calliope model 
+        """Create demand and wind time series data for Calliope model
         initialisation.
 
         Parameters:
         -----------
-        ts_data (pandas DataFrame) : demand and wind time series data 
+        ts_data (pandas DataFrame) : demand and wind time series data
             to use in model
         preserve_index (bool) : if False, resets the time series index
             to a default starting at 1980-01-01 with hourly resolution. This
@@ -65,7 +65,7 @@ class SixRegionModel(calliope.Model):
         # Reset index if applicable
         if not preserve_index:
             ts_data.index = pd.date_range(start='1980-01-01',
-                                          periods=self._num_timesteps,
+                                          periods=self.num_timesteps,
                                           freq='h')
         else:
             print('WARNING: you have selected to maintain the original ' +
@@ -91,7 +91,7 @@ class SixRegionModel(calliope.Model):
             'Model outputs have not been calculated: call self.run() first.'
 
         outputs = pd.DataFrame(columns=['output'])    # Output DataFrame
-        corrfac = (8760/self._num_timesteps)    # For annualisation
+        corrfac = (8760/self.num_timesteps)    # For annualisation
 
         baseload_list, peaking_list, wind_list, unmet_list, demand_list = (
             [('baseload', i) for i in ['region1', 'region3', 'region6']],
