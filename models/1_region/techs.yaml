@@ -1,0 +1,72 @@
+techs:
+
+
+# Supply
+
+    baseload:
+        essentials:
+            carrier_out: power
+            name: baseload_continuous
+            parent: supply
+        constraints:
+            lifetime: 1
+        costs:
+            monetary:
+                energy_cap: 300    # GBP m per GW
+                om_con: 0.005    # GBP m per GWh
+                interest_rate: 0
+
+    peaking:
+        essentials:
+            carrier_out: power
+            name: peaking
+            parent: supply
+        constraints:
+            lifetime: 1
+            energy_cap_max: inf
+        costs:
+            monetary:
+                energy_cap: 100      # GBP m per GW
+                om_con: 0.035      # GBP m per GWh
+                interest_rate: 0
+
+    wind:
+        essentials:
+            carrier_out: power
+            name: wind
+            parent: supply
+        constraints:
+            lifetime: 1
+            energy_cap_max: inf
+            resource_unit: energy_per_area
+            resource_area_max: inf
+        costs:
+            monetary:
+                resource_area: 100    # GBP m per GW
+                om_con: 0    # GBP m per GWh
+                interest_rate: 0
+
+    unmet:
+        essentials:
+            carrier_out: power
+            name: unmet
+            parent: supply
+        constraints:
+            lifetime: 1
+            energy_cap_max: inf
+        costs:
+            monetary:
+                energy_cap: 0    # GBP m per GW
+                om_con: 6    # GBP m per GWh
+                interest_rate: 0
+
+
+
+
+# Demand
+    
+    demand_power:
+        essentials:
+            carrier: power
+            name: demand
+            parent: demand

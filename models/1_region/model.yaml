@@ -1,18 +1,34 @@
-import:  # Can be either relative or absolute path
-    - 'model_config/techs.yaml' 
-    - 'model_config/locations.yaml'
-    - 'scenarios.yaml'  # Scenario and override group definitions
+import:
+    - 'techs.yaml' 
+    - 'locations.yaml'
 
 model:
-    name: National-scale example model
+    name: 1-region model
     calliope_version: 0.6.4
-    timeseries_data_path: 'timeseries_data'
-    subset_time: ['2015-01-01', '2015-12-31']  # Subset of timesteps
+    timeseries_data_path: ''
 
 run:
-    objective_options.cost_class: {'monetary': 1}
+    objective_options.cost_class:
+        monetary: 1
     solver: gurobi
-    ensure_feasibility: true  # Switches on the "unmet demand" constraint
     bigM: 1e6  # Cannot be too high, or optimisation will not converge
     zero_threshold: 1e-10  # Round any value smaller than this to 0
     mode: plan  # Choices: plan, operate
+
+overrides:
+    LP:
+        model:
+            name: 1-region linear program model
+        techs:
+            baseload:
+                constraints:
+                    energy_cap_max: inf
+    MILP:
+        model:
+            name: 1-region mixed integer linear program model
+        techs:
+            baseload:
+                constraints:
+                    units_max: inf
+                    energy_cap_per_unit: 1
+                    energy_ramping: 1
