@@ -1,0 +1,11 @@
+,output
+cap_baseload_total,9.28905356886
+cap_peaking_total,37.0911805256
+cap_wind_total,39.4801091484
+gen_baseload_total,69962.53015220667
+gen_peaking_total,95699.96599597477
+gen_wind_total,160963.06383168173
+gen_unmet_total,17.88002010626382
+demand_total,326643.44
+cost_total,14250.436619318001
+emissions_total,52272492.42883124
