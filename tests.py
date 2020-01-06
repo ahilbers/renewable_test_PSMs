@@ -1,19 +1,10 @@
-import os
+"""Tests to check whether the models behave as required."""
+
+
 import numpy as np
 import pandas as pd
 import models
 import pdb
-
-
-def run_test():
-    """The development test function."""
-
-    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
-    ts_data.index = pd.to_datetime(ts_data.index)
-    model = models.SixRegionModel(model_type='LP',
-                                  ts_data=ts_data.loc['1980-01'])
-    model.run()
-    model.get_summary_outputs(save_csv=True)
 
 
 def test_output_consistency(model, summary_outputs):
@@ -32,12 +23,13 @@ def test_output_consistency(model, summary_outputs):
     costs.loc['baseload']                = [300., 0.005]
     costs.loc['peaking']                 = [100., 0.035]
     costs.loc['wind']                    = [100., 0.   ]
-    costs.loc['unmet']                   = [  0., 6.000]
+    costs.loc['unmet']                   = [  0., 6.   ]
     costs.loc['transmission_other']      = [100., 0.   ]
     costs.loc['transmission_region1to5'] = [150., 0.   ]
 
     cost_total_method1 = 0
 
+    # Test if generation technology installation costs are consistent
     for tech in ['baseload', 'peaking', 'wind', 'unmet']:
         for region in ['region{}'.format(i+1) for i in range(6)]:
             try:
@@ -57,6 +49,7 @@ def test_output_consistency(model, summary_outputs):
             except KeyError:
                 pass
 
+    # Test if transmission installation costs are consistent
     for tech in ['transmission_other', 'transmission_region1to5']:
         for regionA in ['region{}'.format(i+1) for i in range(6)]:
             for regionB in ['region{}'.format(i+1) for i in range(6)]:
@@ -81,6 +74,7 @@ def test_output_consistency(model, summary_outputs):
                 except KeyError:
                     pass
 
+    # Test if generation costs are consistent
     for tech in ['baseload', 'peaking', 'wind', 'unmet']:
         for region in ['region{}'.format(i+1) for i in range(6)]:
             try:
@@ -100,6 +94,7 @@ def test_output_consistency(model, summary_outputs):
             except KeyError:
                 pass
 
+    # Test if total costs are consistent
     cost_total_method2 = corrfac * float(res.cost.sum())
     if abs(cost_total_method1 - cost_total_method2) > 1:
         print('FAIL: total system costs do not match!\n'
@@ -107,6 +102,7 @@ def test_output_consistency(model, summary_outputs):
                   cost_total_method1, cost_total_method2))
         passing = False
 
+    # Test if supply matches demand
     generation_total = float(out.loc[['gen_baseload_total',
                                       'gen_peaking_total',
                                       'gen_wind_total',
@@ -125,13 +121,16 @@ def dev_test():
     """The development test function."""
 
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
+    ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
     ts_data.index = pd.to_datetime(ts_data.index)
-    model = models.SixRegionModel(model_type='LP',
-                                  ts_data=ts_data.loc['1980-01-01'])
+    ts_data.columns = ['demand', 'wind']
+    
+    model = models.OneRegionModel(model_type='LP',
+                                  ts_data=ts_data.loc['2017'])
     model.run()
-    summary_outputs = model.get_summary_outputs(at_regional_level=True)
-    passing = test_output_consistency(model, summary_outputs)
-    print(passing)
+    summary_outputs = model.get_summary_outputs()
+    print(summary_outputs)
+    summary_outputs.to_csv('benchmarks/1_region_LP.csv')
 
 
 
