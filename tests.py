@@ -8,56 +8,6 @@ import models
 import pdb
 
 
-def test_output_consistency(model_name, model_type):
-    """Check if model outputs are internally consistent.
-
-    Parameters:
-    -----------
-    model (calliope.Model) : instance of OneRegionModel or SixRegionModel
-    model_name (str) : '1_region' or '6_region'
-    summary_outputs (pandas DataFrame) : summary outputs, from
-        model.get_summary_outputs(...)
-
-    Returns:
-    --------
-    passing: True if test is passed, False otherwise
-    """
-
-    # Install costs, generation costs, and carbon emissions. These
-    # should match the information provided in the model.yaml and
-    # techs.yaml files in the model definition
-    costs = pd.DataFrame(columns=['install', 'generation'])
-    costs.loc['baseload']                = [300., 0.005]
-    costs.loc['peaking']                 = [100., 0.035]
-    costs.loc['wind']                    = [100., 0.   ]
-    costs.loc['unmet']                   = [  0., 6.   ]
-    costs.loc['transmission_other']      = [100., 0.   ]
-    costs.loc['transmission_region1to5'] = [150., 0.   ]
-
-    assert model_name in ['1_region', '6_region'], \
-        'Admissible model names: 1_region and 6_region'
-    assert model_type in ['LP', 'MILP'], \
-        'Admissible model types: LP and MILP'
-
-    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
-    ts_data.index = pd.to_datetime(ts_data.index)
-    ts_data = ts_data.loc['2017']
-
-    if model_name == '1_region':
-        passing = test_output_consistency_1_region(model,
-                                                   summary_outputs,
-                                                   costs)
-    if model_name == '6_region':
-        passing = test_output_consistency_6_region(model,
-                                                   summary_outputs,
-                                                   costs)
-
-    if passing:
-        print('PASS: model outputs are consistent.')
-
-    return passing
-
-
 def test_output_consistency_1_region(model, summary_outputs, costs):
     """Check if model outputs are internally consistent for 6 region model.
 
@@ -251,11 +201,12 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
     return passing
 
 
-def test_output_against_benchmark(model_name, model_type, summary_outputs):
-    """Test whether model outputs match benchmark values.
+def test_output_consistency(model, model_name, model_type, summary_outputs):
+    """Check if model outputs are internally consistent.
 
     Parameters:
     -----------
+    model (calliope.Model) : instance of OneRegionModel or SixRegionModel
     model_name (str) : '1_region' or '6_region'
     model_type (str) : 'LP' or 'MILP'
     summary_outputs (pandas DataFrame) : summary outputs, from
@@ -266,34 +217,60 @@ def test_output_against_benchmark(model_name, model_type, summary_outputs):
     passing: True if test is passed, False otherwise
     """
 
+    # Install costs, generation costs, and carbon emissions. These
+    # should match the information provided in the model.yaml and
+    # techs.yaml files in the model definition
+    costs = pd.DataFrame(columns=['install', 'generation'])
+    costs.loc['baseload']                = [300., 0.005]
+    costs.loc['peaking']                 = [100., 0.035]
+    costs.loc['wind']                    = [100., 0.   ]
+    costs.loc['unmet']                   = [  0., 6.   ]
+    costs.loc['transmission_other']      = [100., 0.   ]
+    costs.loc['transmission_region1to5'] = [150., 0.   ]
+
+    # Run the consistency tests
+    if model_name == '1_region':
+        passing = test_output_consistency_1_region(model,
+                                                   summary_outputs,
+                                                   costs)
+    if model_name == '6_region':
+        passing = test_output_consistency_6_region(model,
+                                                   summary_outputs,
+                                                   costs)
+
+    if passing:
+        print('PASS: model outputs are consistent.')
+
+    return passing
+
+
+def test_outputs_against_benchmark(model_name, model_type, summary_outputs):
+    """ Run the tests.
+
+    Parameters:
+    -----------
+    model_name (str) : '1_region' or '6_region'
+    model_type (str) : 'LP' or 'MILP'
+    summary_outputs (pandas DataFrame) : summary outputs, from
+        model.get_summary_outputs(...)
+    """    
+
     passing = True
 
-    assert model_name in ['1_region', '6_region'], \
-        'Admissible model names: 1_region and 6_region'
-    assert model_type in ['LP', 'MILP'], \
-        'Admissible model types: LP and MILP'
-
-    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
-    ts_data.index = pd.to_datetime(ts_data.index)
-    ts_data = ts_data.loc['2017']
-
+    # Load benchmarks
     benchmark_outputs = pd.read_csv(
         os.path.join('benchmarks',
                      '_'.join((model_name, model_type, '2017.csv'))),
         index_col=0
     )
 
-    if model_name == '1_region':
-        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
-        ts_data.columns = ['demand', 'wind']
-        model = models.OneRegionModel(model_type, ts_data)
-    elif model_name == '6_region':
-        model = models.SixRegionModel(model_type, ts_data)
-    model.run()
-    summary_outputs = model.get_summary_outputs()
-
     if float(abs(summary_outputs - benchmark_outputs).max()) > 1:
         print('FAIL: Model outputs do not match benchmark outputs!')
+        print('Model outputs:')
+        print(summary_outputs)
+        print('')
+        print('Benchmark outputs:')
+        print(benchmark_outputs)
         passing = False
 
     if passing:
@@ -316,16 +293,13 @@ def run_tests(model_name, model_type):
     assert model_type in ['LP', 'MILP'], \
         'Admissible model types: LP and MILP'
 
+    # Load time series data
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
-    ts_data = ts_data.loc['2017']
+    ts_data = ts_data.loc['2017']    # Should match benchmarks
 
-    benchmark_outputs = pd.read_csv(
-        os.path.join('benchmarks',
-                     '_'.join((model_name, model_type, '2017.csv'))),
-        index_col=0
-    )
-
+    # Run a simulation on which to run tests
+    print('TESTS: Running test simulation...')
     if model_name == '1_region':
         ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
         ts_data.columns = ['demand', 'wind']
@@ -334,16 +308,14 @@ def run_tests(model_name, model_type):
         model = models.SixRegionModel(model_type, ts_data)
     model.run()
     summary_outputs = model.get_summary_outputs()
+    print('TESTS: Done running test simulation \n')
 
-    if float(abs(summary_outputs - benchmark_outputs).max()) > 1:
-        print('FAIL: Model outputs do not match benchmark outputs!')
-        passing = False
-
-    if passing:
-        print('PASS: model outputs match benchmark outputs.')
-
-    return passing    
-
+    # Run the tests
+    print('TESTS: Starting tests\n'
+          '---------------------')
+    test_output_consistency(model, model_name, model_type, summary_outputs)
+    test_outputs_against_benchmark(model_name, model_type, summary_outputs)
+    
 
 if __name__ == '__main__':
     run_tests(model_name='1_region', model_type='LP')

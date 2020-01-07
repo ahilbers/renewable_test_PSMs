@@ -5,7 +5,6 @@ import os
 import numpy as np
 import pandas as pd
 import calliope
-import functions
 import tests
 
 
@@ -27,6 +26,135 @@ def calculate_carbon_emissions(emission_levels, generation_levels):
         emission_levels['unmet'] * generation_levels['unmet']
 
     return emissions_tot
+
+
+class OneRegionModel(calliope.Model):
+    """Instance of 1-region power system model."""
+
+    def __init__(self, model_type, ts_data, preserve_index=False):
+        """Create instance of 1-region model in Calliope.
+
+        Parameters:
+        -----------
+        model_type (str) : either 'LP' (linear program) or 'MILP' (mixed
+            integer linear program), depending on the baseload constraints.
+        ts_data (pandas DataFrame) : time series with demand and wind data
+        preserve_index (bool) : whether to use index from original time
+            series. If False, the index is reset to hours starting in 1980.
+            If True, the original time series index is used. This may lead
+            to problems with leap days.
+        """
+
+        assert model_type in ['LP', 'MILP'], \
+            'model_type must be either LP or MILP'
+
+        self._base_dir = 'models/1_region'
+        self.num_timesteps = ts_data.shape[0]
+
+        # Emission intensity, ton CO2 equivalent per GWh
+        self.emission_levels = {'baseload': 200,
+                                'peaking': 400,
+                                'wind': 0,
+                                'unmet': 0}
+
+        # Calliope requires a CSV file of time series data to be present
+        # at time of model initialisation. This code creates a CSV with the
+        # right format, initialises the model, then deletes the CSV
+        ts_data = self._create_init_time_series(ts_data, preserve_index)
+        ts_data_init_path = os.path.join(self._base_dir, 'demand_wind.csv')
+        ts_data.to_csv(ts_data_init_path)
+        super(OneRegionModel, self).__init__(os.path.join(self._base_dir,
+                                                          'model.yaml'),
+                                             scenario=model_type)
+        os.remove(ts_data_init_path)
+
+    def _create_init_time_series(self, ts_data, preserve_index=False):
+        """Create demand and wind time series data for Calliope model
+        initialisation.
+
+        Parameters:
+        -----------
+        ts_data (pandas DataFrame) : demand and wind time series data
+            to use in model
+        preserve_index (bool) : if False, resets the time series index
+            to a default starting at 1980-01-01 with hourly resolution. This
+            avoids problems with leap days.
+        """
+
+        # Test if correct columns are present
+        if set(ts_data.columns) != set(['demand', 'wind']):
+            raise AttributeError('Input time series: incorrect columns')
+
+        # Reset index if applicable
+        if not preserve_index:
+            ts_data.index = pd.date_range(start='1980-01-01',
+                                          periods=self.num_timesteps,
+                                          freq='h')
+        else:
+            print('WARNING: you have selected to maintain the original '
+                  'time series index. Be careful with leap days')
+
+        # Create CSV for model intialisation
+        ts_data.loc[:, 'demand'] = -ts_data.loc[:, 'demand']
+
+        return ts_data
+
+    def get_summary_outputs(self, save_csv=False):
+        """Create a pandas DataFrame of a subset of relevant model outputs
+
+        Parameters:
+        -----------
+        at_regional_level (bool) : if True, gives each model output at
+            regional level, otherwise the model totals
+        save_csv (bool) : whether to save summary outputs as CSV, as file
+            called 'outputs_summary.csv'
+        """
+
+        assert hasattr(self, 'results'), \
+            'Model outputs have not been calculated: call self.run() first.'
+
+        outputs = pd.DataFrame(columns=['output'])    # Output DataFrame
+        corrfac = (8760/self.num_timesteps)    # For annualisation
+
+        # Insert installed capacities
+        outputs.loc['cap_baseload_total'] = \
+            float(self.results.energy_cap.loc['region1::baseload'])
+        outputs.loc['cap_peaking_total'] = \
+            float(self.results.energy_cap.loc['region1::peaking'])
+        outputs.loc['cap_wind_total'] = \
+            float(self.results.resource_area.loc['region1::wind'])
+
+        # Insert generation levels
+        for tech in ['baseload', 'peaking', 'wind', 'unmet']:
+            outputs.loc['gen_' + tech + '_total'] = corrfac * float(
+                self.results.carrier_prod.loc[
+                    'region1::' + tech + '::power'].sum()
+            )
+
+        # Insert annualised demand levels
+        outputs.loc['demand_total'] = -corrfac * float(
+            self.results.carrier_con.loc[
+                'region1::demand_power::power'].sum()
+        )
+
+        # Insert annualised total system cost
+        outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
+
+        # Insert annualised carbon emissions
+        outputs.loc['emissions_total'] = calculate_carbon_emissions(
+            emission_levels=self.emission_levels,
+            generation_levels={
+                'baseload': outputs.loc['gen_baseload_total'],
+                'peaking': outputs.loc['gen_peaking_total'],
+                'wind': outputs.loc['gen_wind_total'],
+                'unmet': outputs.loc['gen_unmet_total']
+            }
+        )
+
+        if save_csv:
+            outputs.to_csv('outputs_summary.csv')
+
+        return outputs
 
 
 class SixRegionModel(calliope.Model):
@@ -206,11 +334,6 @@ class SixRegionModel(calliope.Model):
             }
         )
 
-        # Run tests to check whether outputs are consistent -- for debugging
-        if not tests.test_output_consistency(self, outputs):
-            print('WARNING: model outputs are not consistent.\n'
-                  'Check model configuration for possible bugs')
-
         if not at_regional_level:
             outputs = outputs.loc[[
                 'cap_baseload_total', 'cap_peaking_total', 'cap_wind_total',
@@ -221,139 +344,5 @@ class SixRegionModel(calliope.Model):
 
         if save_csv:
             outputs.to_csv('outputs_summary.csv')
-
-        return outputs
-
-
-class OneRegionModel(calliope.Model):
-    """Instance of 1-region power system model."""
-
-    def __init__(self, model_type, ts_data, preserve_index=False):
-        """Create instance of 1-region model in Calliope.
-
-        Parameters:
-        -----------
-        model_type (str) : either 'LP' (linear program) or 'MILP' (mixed
-            integer linear program), depending on the baseload constraints.
-        ts_data (pandas DataFrame) : time series with demand and wind data
-        preserve_index (bool) : whether to use index from original time
-            series. If False, the index is reset to hours starting in 1980.
-            If True, the original time series index is used. This may lead
-            to problems with leap days.
-        """
-
-        assert model_type in ['LP', 'MILP'], \
-            'model_type must be either LP or MILP'
-
-        self._base_dir = 'models/1_region'
-        self.num_timesteps = ts_data.shape[0]
-
-        # Emission intensity, ton CO2 equivalent per GWh
-        self.emission_levels = {'baseload': 200,
-                                'peaking': 400,
-                                'wind': 0,
-                                'unmet': 0}
-
-        # Calliope requires a CSV file of time series data to be present
-        # at time of model initialisation. This code creates a CSV with the
-        # right format, initialises the model, then deletes the CSV
-        ts_data = self._create_init_time_series(ts_data, preserve_index)
-        ts_data_init_path = os.path.join(self._base_dir, 'demand_wind.csv')
-        ts_data.to_csv(ts_data_init_path)
-        super(OneRegionModel, self).__init__(os.path.join(self._base_dir,
-                                                          'model.yaml'),
-                                             scenario=model_type)
-        os.remove(ts_data_init_path)
-
-    def _create_init_time_series(self, ts_data, preserve_index=False):
-        """Create demand and wind time series data for Calliope model
-        initialisation.
-
-        Parameters:
-        -----------
-        ts_data (pandas DataFrame) : demand and wind time series data
-            to use in model
-        preserve_index (bool) : if False, resets the time series index
-            to a default starting at 1980-01-01 with hourly resolution. This
-            avoids problems with leap days.
-        """
-
-        # Test if correct columns are present
-        if set(ts_data.columns) != set(['demand', 'wind']):
-            raise AttributeError('Input time series: incorrect columns')
-
-        # Reset index if applicable
-        if not preserve_index:
-            ts_data.index = pd.date_range(start='1980-01-01',
-                                          periods=self.num_timesteps,
-                                          freq='h')
-        else:
-            print('WARNING: you have selected to maintain the original '
-                  'time series index. Be careful with leap days')
-
-        # Create CSV for model intialisation
-        ts_data.loc[:, 'demand'] = -ts_data.loc[:, 'demand']
-
-        return ts_data
-
-    def get_summary_outputs(self, save_csv=False):
-        """Create a pandas DataFrame of a subset of relevant model outputs
-
-        Parameters:
-        -----------
-        at_regional_level (bool) : if True, gives each model output at
-            regional level, otherwise the model totals
-        save_csv (bool) : whether to save summary outputs as CSV, as file
-            called 'outputs_summary.csv'
-        """
-
-        assert hasattr(self, 'results'), \
-            'Model outputs have not been calculated: call self.run() first.'
-
-        outputs = pd.DataFrame(columns=['output'])    # Output DataFrame
-        corrfac = (8760/self.num_timesteps)    # For annualisation
-
-        # Insert installed capacities
-        outputs.loc['cap_baseload_total'] = \
-            float(self.results.energy_cap.loc['region1::baseload'])
-        outputs.loc['cap_peaking_total'] = \
-            float(self.results.energy_cap.loc['region1::peaking'])
-        outputs.loc['cap_wind_total'] = \
-            float(self.results.resource_area.loc['region1::wind'])
-
-        # Insert generation levels
-        for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-            outputs.loc['gen_' + tech + '_total'] = corrfac * float(
-                self.results.carrier_prod.loc[
-                    'region1::' + tech + '::power'].sum()
-        )
-
-        # Insert annualised demand levels
-        outputs.loc['demand_total'] = -corrfac * float(
-            self.results.carrier_con.loc[
-                'region1::demand_power::power'].sum()
-        )
-
-        # Insert annualised total system cost
-        outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
-
-        # Insert annualised carbon emissions
-        outputs.loc['emissions_total'] = calculate_carbon_emissions(
-            emission_levels=self.emission_levels,
-            generation_levels={
-                'baseload': outputs.loc['gen_baseload_total'],
-                'peaking': outputs.loc['gen_peaking_total'],
-                'wind': outputs.loc['gen_wind_total'],
-                'unmet': outputs.loc['gen_unmet_total']
-            }
-        )
-
-        # # Run tests to check whether outputs are consistent -- for debugging
-        # if not tests.test_output_consistency(self, outputs):
-        #     print('WARNING: model outputs are not consistent.\n'
-        #           'Check model configuration for possible bugs')
-
-        # if save_csv:
-        #     outputs.to_csv('outputs_summary.csv')
 
         return outputs
