@@ -267,72 +267,72 @@ class SixRegionModel(calliope.Model):
         outputs = pd.DataFrame(columns=['output'])    # Output DataFrame
         corrfac = (8760/self.num_timesteps)    # For annualisation
 
-        # These should match the model topology specified in locations.yaml
-        baseload_list, peaking_list, wind_list, unmet_list, demand_list = (
-            [('baseload', i) for i in ['region1', 'region3', 'region6']],
-            [('peaking', i) for i in ['region1', 'region3', 'region6']],
-            [('wind', i) for i in ['region2', 'region5', 'region6']],
-            [('unmet', i) for i in ['region2', 'region4', 'region5']],
-            [('demand', i) for i in ['region2', 'region4', 'region5']]
-        )
+        # Insert model outputs at regional level
+        for region in ['region{}'.format(i+1) for i in range(6)]:
 
-        transmission_region1to5_list, transmission_other_list, = (
-            [('transmission_region1to5', 'region1', 'region5')],
-            [('transmission_other', *i) for i in [('region1', 'region2'),
-                                                  ('region1', 'region6'),
-                                                  ('region2', 'region3'),
-                                                  ('region3', 'region4'),
-                                                  ('region4', 'region5'),
-                                                  ('region5', 'region6')]]
-        )
+            # Baseload and peaking capacity
+            for tech in ['baseload', 'peaking']:
+                try:
+                    outputs.loc['_'.join(('cap', tech, region))] = float(
+                        self.results.energy_cap.loc[region + '::' + tech]
+                    )
+                except KeyError:
+                    pass
 
-        # Insert baseload & peaking capacities
-        for tech, region in baseload_list + peaking_list:
-            outputs.loc['_'.join(('cap', tech, region))] = float(
-                self.results.energy_cap.loc['::'.join((region, tech))]
-            )
+            # Wind capacity
+            for tech in ['wind']:
+                try:
+                    outputs.loc['_'.join(('cap', tech, region))] = float(
+                        self.results.resource_area.loc[region + '::' + tech]
+                    )
+                except KeyError:
+                    pass
 
-        # Insert wind capacities
-        for tech, region in wind_list:
-            outputs.loc['_'.join(('cap', tech, region))] = float(
-                self.results.resource_area.loc['::'.join((region, tech))]
-            )
+            # Transmission capacity
+            for transmission_type in ['transmission_region1to5',
+                                      'transmission_other']:
+                for to in ['region{}'.format(i+1) for i in range(6)]:
+                    try:
+                        outputs.loc['cap_transmission_' + region + '_'+ to] = float(
+                            self.results.energy_cap.loc[
+                                region + '::' + transmission_type + ':' + to
+                            ]
+                        )
+                    except KeyError:
+                        pass
 
-        # Insert transmission capacities
-        for transmission_type, reg_a, reg_b in \
-            transmission_region1to5_list + transmission_other_list:
-            outputs.loc['_'.join(('cap', 'transmission', reg_a, reg_b))] = \
-                float(self.results.energy_cap.loc[
-                    ':'.join((reg_a + ':', transmission_type, reg_b))
-                ])
+            # Baseload, peaking, wind and unmet generation levels
+            for tech in ['baseload', 'peaking', 'wind', 'unmet']:
+                try:
+                    outputs.loc['gen_' + tech + '_' + region] = corrfac * float(
+                        self.results.carrier_prod.loc[
+                            region + '::' + tech + '::' + 'power'
+                        ].sum()
+                    )
+                except KeyError:
+                    pass
 
-        # Insert annualised generation and unmet demand levels
-        for tech, region in baseload_list+peaking_list+wind_list+unmet_list:
-            outputs.loc['_'.join(('gen', tech, region))] = corrfac * float(
-                self.results.carrier_prod.loc['::'.join((region,
-                                                         tech,
-                                                         'power'))].sum()
-            )
-
-        # Insert annualised demand levels
-        for tech, region in demand_list:
-            outputs.loc['_'.join(('demand', region))] = -corrfac * float(
-                self.results.carrier_con.loc['::'.join((region,
-                                                        'demand_power',
-                                                        'power'))].sum()
-            )
+            # Demand levels
+            try:
+                outputs.loc['demand_' + region] = -corrfac * float(
+                    self.results.carrier_con.loc[
+                        region+ '::demand_power::power'
+                    ].sum()
+                )
+            except KeyError:
+                pass
 
         # Insert total capacities
         for tech in ['baseload', 'peaking', 'wind', 'transmission']:
-            outputs.loc['_'.join(('cap', tech, 'total'))] = \
-                outputs.loc[outputs.index.str.contains(
-                    '_'.join(('cap', tech)))].sum()
+            outputs.loc['cap_' + tech + '_total'] = outputs.loc[
+                outputs.index.str.contains('cap_' + tech)
+            ].sum()
 
         # Insert total annualised generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-            outputs.loc['_'.join(('gen', tech, 'total'))] = \
-                outputs.loc[outputs.index.str.contains(
-                    '_'.join(('gen', tech)))].sum()
+            outputs.loc['gen_' + tech + '_total'] = outputs.loc[
+                outputs.index.str.contains('gen_' + tech)
+            ].sum()
 
         # Insert total annualised demand levels
         outputs.loc['demand_total'] = \

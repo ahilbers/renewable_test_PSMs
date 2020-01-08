@@ -18,6 +18,26 @@ COSTS.loc['transmission_other']      = [100., 0.   ]
 COSTS.loc['transmission_region1to5'] = [150., 0.   ]
 
 
+# Topology of 6 region model. These should match the information provided
+# in the locations.yaml files in the model definition
+BASELOAD_TOP, PEAKING_TOP, WIND_TOP, UNMET_TOP, DEMAND_TOP = (
+    [('baseload', i) for i in ['region1', 'region3', 'region6']],
+    [('peaking', i) for i in ['region1', 'region3', 'region6']],
+    [('wind', i) for i in ['region2', 'region5', 'region6']],
+    [('unmet', i) for i in ['region2', 'region4', 'region5']],
+    [('demand', i) for i in ['region2', 'region4', 'region5']]
+)
+TRANSMISSION_REGION1TO5_TOP, TRANSMISSION_OTHER_TOP = (
+    [('transmission_region1to5', 'region1', 'region5')],
+    [('transmission_other', *i) for i in [('region1', 'region2'),
+                                          ('region1', 'region6'),
+                                          ('region2', 'region3'),
+                                          ('region3', 'region4'),
+                                          ('region4', 'region5'),
+                                          ('region5', 'region6')]]
+)
+
+
 def test_output_consistency_1_region(model):
     """Check if model outputs are internally consistent for 6 region model.
 
@@ -39,42 +59,32 @@ def test_output_consistency_1_region(model):
     corrfac = 8760/model.num_timesteps    # For annualisation
 
     # Test if generation technology installation costs are consistent
-    for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-        try:
-            cost_method1 = float(
-                COSTS.loc[tech, 'install'] *
-                out.loc['_'.join(('cap', tech, 'total'))]
-            )
-            cost_method2 = corrfac * float(
-                res.cost_investment[0].loc['::'.join(('region1', tech))]
-            )
-            if abs(cost_method1 - cost_method2) > 1:
-                print('FAIL: {} install costs do not match!\n'
-                      '    manual: {}, model: {}'.format(
-                          tech, cost_method1, cost_method2))
-                passing = False
-            cost_total_method1 += cost_method1
-        except KeyError:
-            pass
+    for tech in ['baseload', 'peaking', 'wind']:
+        cost_method1 = float(COSTS.loc[tech, 'install']
+                             * out.loc['_'.join(('cap', tech, 'total'))])
+        cost_method2 = corrfac * float(
+            res.cost_investment[0].loc['::'.join(('region1', tech))]
+        )
+        if abs(cost_method1 - cost_method2) > 1:
+            print('FAIL: {} install costs do not match!\n'
+                  '    manual: {}, model: {}'.format(
+                      tech, cost_method1, cost_method2))
+            passing = False
+        cost_total_method1 += cost_method1
 
     # Test if generation costs are consistent
     for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-        try:
-            cost_method1 = float(
-                COSTS.loc[tech, 'generation'] *
-                out.loc['_'.join(('gen', tech, 'total'))]
-            )
-            cost_method2 = corrfac * float(res.cost_var[0].loc[
-                '::'.join(('region1', tech))
-            ].sum())
-            if abs(cost_method1 - cost_method2) > 1:
-                print('FAIL: {} generation costs do not match!\n'
-                      '    manual: {}, model: {}'.format(
-                          tech, cost_method1, cost_method2))
-                passing = False
-            cost_total_method1 += cost_method1
-        except KeyError:
-            pass
+        cost_method1 = float(COSTS.loc[tech, 'generation']
+                             * out.loc['_'.join(('gen', tech, 'total'))])
+        cost_method2 = corrfac * float(res.cost_var[0].loc[
+            '::'.join(('region1', tech))
+        ].sum())
+        if abs(cost_method1 - cost_method2) > 1:
+            print('FAIL: {} generation costs do not match!\n'
+                  '    manual: {}, model: {}'.format(
+                      tech, cost_method1, cost_method2))
+            passing = False
+        cost_total_method1 += cost_method1
 
     # Test if total costs are consistent
     cost_total_method2 = corrfac * float(res.cost.sum())
@@ -119,71 +129,58 @@ def test_output_consistency_6_region(model):
     corrfac = 8760/model.num_timesteps    # For annualisation
 
     # Test if generation technology installation costs are consistent
-    for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-        for region in ['region{}'.format(i+1) for i in range(6)]:
-            try:
-                cost_method1 = float(
-                    COSTS.loc[tech, 'install'] *
-                    out.loc['_'.join(('cap', tech, region))]
-                )
-                print(cost_method1)
-                cost_method2 = corrfac * float(
-                    res.cost_investment[0].loc['::'.join((region, tech))]
-                )
-                print(cost_method2)
-                if abs(cost_method1 - cost_method2) > 1:
-                    print('FAIL: {} install costs in {} do not match!\n'
-                          '    manual: {}, model: {}'.format(
-                              tech, region, cost_method1, cost_method2))
-                    passing = False
-                cost_total_method1 += cost_method1
-            except KeyError:
-                pass
+    for tech, region in BASELOAD_TOP + PEAKING_TOP + WIND_TOP:
+        cost_method1 = float(
+            COSTS.loc[tech, 'install'] *
+            out.loc['_'.join(('cap', tech, region))]
+        )
+        cost_method2 = corrfac * float(
+            res.cost_investment[0].loc['::'.join((region, tech))]
+        )
+        if abs(cost_method1 - cost_method2) > 1:
+            print('FAIL: {} install costs in {} do not match!\n'
+                  '    manual: {}, model: {}'.format(
+                      tech, region, cost_method1, cost_method2))
+            passing = False
+        cost_total_method1 += cost_method1
 
     # Test if transmission installation costs are consistent
-    for tech in ['transmission_other', 'transmission_region1to5']:
-        for reg_a in ['region{}'.format(i+1) for i in range(6)]:
-            for reg_b in ['region{}'.format(i+1) for i in range(6)]:
-                try:
-                    cost_method1 = float(
-                        COSTS.loc[tech, 'install'] * out.loc[
-                            '_'.join(('cap_transmission', reg_a, reg_b))
-                        ]
-                    )
-                    cost_method2 = 2 * corrfac * \
-                        float(res.cost_investment[0].loc[
-                            ':'.join((reg_a + ':', tech, reg_b))
-                        ])
-                    if abs(cost_method1 - cost_method2) > 1:
-                        print('FAIL: {} install costs from {} to {} do '
-                              'not match!\n'
-                              '    manual: {}, model: {}'.format(
-                                  tech, reg_a, reg_b,
-                                  cost_method1, cost_method2))
-                        passing = False
-                    cost_total_method1 += cost_method1
-                except KeyError:
-                    pass
+    for tech, region_a, region_b in \
+        TRANSMISSION_REGION1TO5_TOP + TRANSMISSION_OTHER_TOP:
+        cost_method1 = float(
+            COSTS.loc[tech, 'install'] * out.loc[
+                '_'.join(('cap_transmission', region_a, region_b))
+            ]
+        )
+        cost_method2 = 2 * corrfac * \
+            float(res.cost_investment[0].loc[
+                ':'.join((region_a + ':', tech, region_b))
+            ])
+        if abs(cost_method1 - cost_method2) > 1:
+            print('FAIL: {} install costs from {} to {} do not match!\n'
+                  '    manual: {}, model: {}'.format(tech,
+                                                     region_a,
+                                                     region_b,
+                                                     cost_method1,
+                                                     cost_method2))
+            passing = False
+        cost_total_method1 += cost_method1
 
     # Test if generation costs are consistent
-    for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-        for region in ['region{}'.format(i+1) for i in range(6)]:
-            try:
-                cost_method1 = float(
-                    COSTS.loc[tech, 'generation'] *
-                    out.loc['_'.join(('gen', tech, region))]
-                )
-                cost_method2 = corrfac * float(res.cost_var[0].loc[
-                    '::'.join((region, tech))
-                ].sum())
-                if abs(cost_method1 - cost_method2) > 1:
-                    print('FAIL: {} generation costs in {} do not match!\n'
-                          '    manual: {}, model: {}'.format(
-                              tech, region, cost_method1, cost_method2))
-                    passing = False
-                cost_total_method1 += cost_method1
-            except KeyError:
-                pass
+    for tech, region in BASELOAD_TOP + PEAKING_TOP + WIND_TOP + UNMET_TOP:
+        cost_method1 = float(
+            COSTS.loc[tech, 'generation']
+            * out.loc['_'.join(('gen', tech, region))]
+        )
+        cost_method2 = corrfac * float(
+            res.cost_var[0].loc[region + '::' + tech].sum()
+        )
+        if abs(cost_method1 - cost_method2) > 1:
+            print('FAIL: {} generation costs in {} do not match!\n'
+                  '    manual: {}, model: {}'.format(
+                      tech, region, cost_method1, cost_method2))
+            passing = False
+        cost_total_method1 += cost_method1
 
     # Test if total costs are consistent
     cost_total_method2 = corrfac * float(res.cost.sum())
