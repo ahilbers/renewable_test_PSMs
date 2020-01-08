@@ -2,28 +2,59 @@
 
 
 import os
-import numpy as np
 import pandas as pd
 import calliope
-import tests
 
 
-def calculate_carbon_emissions(emission_levels, generation_levels):
+# Emission intensities of technologies, in ton CO2 equivalent per GWh
+EMISSION_INTENSITIES = {'baseload': 200,
+                        'peaking': 400,
+                        'wind': 0,
+                        'unmet': 0}
+
+
+def load_time_series_data(model_name, demand_region=None, wind_region=None):
+    """Load demand and wind time series data for model.
+
+    Parameters:
+    -----------
+    model_name (str) : '1_region' or '6_region'
+    demand_region (str) : region in data/demand_wind.csv from which
+        to take demand data. Use only if model_name='1_region'
+    wind_region (str) : region in data/demand_wind.csv from which to
+        take wind data. Use only if model_name='1_region'
+
+    Returns:
+    --------
+    ts_data (pandas DataFrame) : time series data for use in model
+    """
+
+    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
+    ts_data.index = pd.to_datetime(ts_data.index)
+
+    # If 1_region model, select regions from which to take demand, wind data
+    if model_name == '1_region':
+        ts_data = ts_data.loc[:, ['_'.join(('demand', demand_region)),
+                                  '_'.join(('wind', wind_region))]]
+        ts_data.columns = ['demand', 'wind']
+
+    return ts_data
+
+
+def calculate_carbon_emissions(generation_levels):
     """Calculate total carbon emissions.
 
     Parameters:
     -----------
-    generation_levels (pandas DataFrame or dict) : emission levels
-        for the 4 technologies (baseload, peaking, wind and unmet)
     generation_levels (pandas DataFrame or dict) : generation levels
         for the 4 technologies (baseload, peaking, wind and unmet)
     """
 
     emissions_tot = \
-        emission_levels['baseload'] * generation_levels['baseload'] + \
-        emission_levels['peaking'] * generation_levels['peaking'] + \
-        emission_levels['wind'] * generation_levels['wind'] + \
-        emission_levels['unmet'] * generation_levels['unmet']
+        EMISSION_INTENSITIES['baseload'] * generation_levels['baseload'] + \
+        EMISSION_INTENSITIES['peaking'] * generation_levels['peaking'] + \
+        EMISSION_INTENSITIES['wind'] * generation_levels['wind'] + \
+        EMISSION_INTENSITIES['unmet'] * generation_levels['unmet']
 
     return emissions_tot
 
@@ -50,12 +81,6 @@ class OneRegionModel(calliope.Model):
 
         self._base_dir = 'models/1_region'
         self.num_timesteps = ts_data.shape[0]
-
-        # Emission intensity, ton CO2 equivalent per GWh
-        self.emission_levels = {'baseload': 200,
-                                'peaking': 400,
-                                'wind': 0,
-                                'unmet': 0}
 
         # Calliope requires a CSV file of time series data to be present
         # at time of model initialisation. This code creates a CSV with the
@@ -142,7 +167,6 @@ class OneRegionModel(calliope.Model):
 
         # Insert annualised carbon emissions
         outputs.loc['emissions_total'] = calculate_carbon_emissions(
-            emission_levels=self.emission_levels,
             generation_levels={
                 'baseload': outputs.loc['gen_baseload_total'],
                 'peaking': outputs.loc['gen_peaking_total'],
@@ -179,12 +203,6 @@ class SixRegionModel(calliope.Model):
 
         self._base_dir = 'models/6_region'
         self.num_timesteps = ts_data.shape[0]
-
-        # Emission intensity, ton CO2 equivalent per GWh
-        self.emission_levels = {'baseload': 200,
-                                'peaking': 400,
-                                'wind': 0,
-                                'unmet': 0}
 
         # Calliope requires a CSV file of time series data to be present
         # at time of model initialisation. This code creates a CSV with the
@@ -281,11 +299,11 @@ class SixRegionModel(calliope.Model):
             )
 
         # Insert transmission capacities
-        for transmission_type, regionA, regionB in \
+        for transmission_type, reg_a, reg_b in \
             transmission_region1to5_list + transmission_other_list:
-            outputs.loc['_'.join(('cap', 'transmission', regionA, regionB))] = \
+            outputs.loc['_'.join(('cap', 'transmission', reg_a, reg_b))] = \
                 float(self.results.energy_cap.loc[
-                    ':'.join((regionA + ':', transmission_type, regionB))
+                    ':'.join((reg_a + ':', transmission_type, reg_b))
                 ])
 
         # Insert annualised generation and unmet demand levels
@@ -325,7 +343,6 @@ class SixRegionModel(calliope.Model):
 
         # Insert annualised carbon emissions
         outputs.loc['emissions_total'] = calculate_carbon_emissions(
-            emission_levels=self.emission_levels,
             generation_levels={
                 'baseload': outputs.loc['gen_baseload_total'],
                 'peaking': outputs.loc['gen_peaking_total'],

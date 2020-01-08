@@ -2,20 +2,28 @@
 
 
 import os
-import numpy as np
 import pandas as pd
 import models
 import pdb
 
 
-def test_output_consistency_1_region(model, summary_outputs, costs):
+# Install costs and generation costs. These should match the information
+# provided in the model.yaml and techs.yaml files in the model definition
+COSTS = pd.DataFrame(columns=['install', 'generation'])
+COSTS.loc['baseload']                = [300., 0.005]
+COSTS.loc['peaking']                 = [100., 0.035]
+COSTS.loc['wind']                    = [100., 0.   ]
+COSTS.loc['unmet']                   = [  0., 6.   ]
+COSTS.loc['transmission_other']      = [100., 0.   ]
+COSTS.loc['transmission_region1to5'] = [150., 0.   ]
+
+
+def test_output_consistency_1_region(model):
     """Check if model outputs are internally consistent for 6 region model.
 
     Parameters:
     -----------
     model (calliope.Model) : instance of OneRegionModel or SixRegionModel
-    summary_outputs (pandas DataFrame) : summary outputs, from
-        model.get_summary_outputs(...)
     costs (pandas DataFrame) : costs of model technologies
 
     Returns:
@@ -26,7 +34,7 @@ def test_output_consistency_1_region(model, summary_outputs, costs):
     passing = True
     cost_total_method1 = 0
 
-    out = summary_outputs
+    out = model.get_summary_outputs()
     res = model.results
     corrfac = 8760/model.num_timesteps    # For annualisation
 
@@ -34,7 +42,7 @@ def test_output_consistency_1_region(model, summary_outputs, costs):
     for tech in ['baseload', 'peaking', 'wind', 'unmet']:
         try:
             cost_method1 = float(
-                costs.loc[tech, 'install'] *
+                COSTS.loc[tech, 'install'] *
                 out.loc['_'.join(('cap', tech, 'total'))]
             )
             cost_method2 = corrfac * float(
@@ -53,7 +61,7 @@ def test_output_consistency_1_region(model, summary_outputs, costs):
     for tech in ['baseload', 'peaking', 'wind', 'unmet']:
         try:
             cost_method1 = float(
-                costs.loc[tech, 'generation'] *
+                COSTS.loc[tech, 'generation'] *
                 out.loc['_'.join(('gen', tech, 'total'))]
             )
             cost_method2 = corrfac * float(res.cost_var[0].loc[
@@ -91,15 +99,12 @@ def test_output_consistency_1_region(model, summary_outputs, costs):
     return passing
 
 
-def test_output_consistency_6_region(model, summary_outputs, costs):
+def test_output_consistency_6_region(model):
     """Check if model outputs are internally consistent for 6 region model.
 
     Parameters:
     -----------
     model (calliope.Model) : instance of OneRegionModel or SixRegionModel
-    summary_outputs (pandas DataFrame) : summary outputs, from
-        model.get_summary_outputs(...)
-    costs (pandas DataFrame) : costs of model technologies
 
     Returns:
     --------
@@ -109,7 +114,7 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
     passing = True
     cost_total_method1 = 0
 
-    out = summary_outputs
+    out = model.get_summary_outputs(at_regional_level=True)
     res = model.results
     corrfac = 8760/model.num_timesteps    # For annualisation
 
@@ -118,12 +123,14 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
         for region in ['region{}'.format(i+1) for i in range(6)]:
             try:
                 cost_method1 = float(
-                    costs.loc[tech, 'install'] *
+                    COSTS.loc[tech, 'install'] *
                     out.loc['_'.join(('cap', tech, region))]
                 )
+                print(cost_method1)
                 cost_method2 = corrfac * float(
                     res.cost_investment[0].loc['::'.join((region, tech))]
                 )
+                print(cost_method2)
                 if abs(cost_method1 - cost_method2) > 1:
                     print('FAIL: {} install costs in {} do not match!\n'
                           '    manual: {}, model: {}'.format(
@@ -135,23 +142,23 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
 
     # Test if transmission installation costs are consistent
     for tech in ['transmission_other', 'transmission_region1to5']:
-        for regionA in ['region{}'.format(i+1) for i in range(6)]:
-            for regionB in ['region{}'.format(i+1) for i in range(6)]:
+        for reg_a in ['region{}'.format(i+1) for i in range(6)]:
+            for reg_b in ['region{}'.format(i+1) for i in range(6)]:
                 try:
                     cost_method1 = float(
-                        costs.loc[tech, 'install'] * out.loc[
-                            '_'.join(('cap_transmission', regionA, regionB))
+                        COSTS.loc[tech, 'install'] * out.loc[
+                            '_'.join(('cap_transmission', reg_a, reg_b))
                         ]
                     )
                     cost_method2 = 2 * corrfac * \
                         float(res.cost_investment[0].loc[
-                            ':'.join((regionA + ':', tech, regionB))
+                            ':'.join((reg_a + ':', tech, reg_b))
                         ])
                     if abs(cost_method1 - cost_method2) > 1:
                         print('FAIL: {} install costs from {} to {} do '
                               'not match!\n'
                               '    manual: {}, model: {}'.format(
-                                  tech, regionA, regionB,
+                                  tech, reg_a, reg_b,
                                   cost_method1, cost_method2))
                         passing = False
                     cost_total_method1 += cost_method1
@@ -163,7 +170,7 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
         for region in ['region{}'.format(i+1) for i in range(6)]:
             try:
                 cost_method1 = float(
-                    costs.loc[tech, 'generation'] *
+                    COSTS.loc[tech, 'generation'] *
                     out.loc['_'.join(('gen', tech, region))]
                 )
                 cost_method2 = corrfac * float(res.cost_var[0].loc[
@@ -201,14 +208,13 @@ def test_output_consistency_6_region(model, summary_outputs, costs):
     return passing
 
 
-def test_output_consistency(model, model_name, model_type, summary_outputs):
+def test_output_consistency(model, model_name):
     """Check if model outputs are internally consistent.
 
     Parameters:
     -----------
     model (calliope.Model) : instance of OneRegionModel or SixRegionModel
     model_name (str) : '1_region' or '6_region'
-    model_type (str) : 'LP' or 'MILP'
     summary_outputs (pandas DataFrame) : summary outputs, from
         model.get_summary_outputs(...)
 
@@ -217,26 +223,11 @@ def test_output_consistency(model, model_name, model_type, summary_outputs):
     passing: True if test is passed, False otherwise
     """
 
-    # Install costs, generation costs, and carbon emissions. These
-    # should match the information provided in the model.yaml and
-    # techs.yaml files in the model definition
-    costs = pd.DataFrame(columns=['install', 'generation'])
-    costs.loc['baseload']                = [300., 0.005]
-    costs.loc['peaking']                 = [100., 0.035]
-    costs.loc['wind']                    = [100., 0.   ]
-    costs.loc['unmet']                   = [  0., 6.   ]
-    costs.loc['transmission_other']      = [100., 0.   ]
-    costs.loc['transmission_region1to5'] = [150., 0.   ]
-
     # Run the consistency tests
     if model_name == '1_region':
-        passing = test_output_consistency_1_region(model,
-                                                   summary_outputs,
-                                                   costs)
+        passing = test_output_consistency_1_region(model)
     if model_name == '6_region':
-        passing = test_output_consistency_6_region(model,
-                                                   summary_outputs,
-                                                   costs)
+        passing = test_output_consistency_6_region(model)
 
     if passing:
         print('PASS: model outputs are consistent.')
@@ -244,18 +235,18 @@ def test_output_consistency(model, model_name, model_type, summary_outputs):
     return passing
 
 
-def test_outputs_against_benchmark(model_name, model_type, summary_outputs):
+def test_outputs_against_benchmark(model, model_name, model_type):
     """ Run the tests.
 
     Parameters:
     -----------
+    model (calliope.Model) : instance of OneRegionModel or SixRegionModel
     model_name (str) : '1_region' or '6_region'
     model_type (str) : 'LP' or 'MILP'
-    summary_outputs (pandas DataFrame) : summary outputs, from
-        model.get_summary_outputs(...)
-    """    
+    """
 
     passing = True
+    summary_outputs = model.get_summary_outputs()
 
     # Load benchmarks
     benchmark_outputs = pd.read_csv(
@@ -293,29 +284,25 @@ def run_tests(model_name, model_type):
     assert model_type in ['LP', 'MILP'], \
         'Admissible model types: LP and MILP'
 
-    # Load time series data
-    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
-    ts_data.index = pd.to_datetime(ts_data.index)
+    ts_data = models.load_time_series_data(model_name=model_name,
+                                           demand_region='region5',
+                                           wind_region='region5')
     ts_data = ts_data.loc['2017']    # Should match benchmarks
 
     # Run a simulation on which to run tests
     print('TESTS: Running test simulation...')
     if model_name == '1_region':
-        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
-        ts_data.columns = ['demand', 'wind']
         model = models.OneRegionModel(model_type, ts_data)
     elif model_name == '6_region':
         model = models.SixRegionModel(model_type, ts_data)
     model.run()
-    summary_outputs = model.get_summary_outputs()
     print('TESTS: Done running test simulation \n')
 
     # Run the tests
-    print('TESTS: Starting tests\n'
-          '---------------------')
-    test_output_consistency(model, model_name, model_type, summary_outputs)
-    test_outputs_against_benchmark(model_name, model_type, summary_outputs)
-    
+    print('TESTS: Starting tests\n---------------------')
+    test_output_consistency(model, model_name)
+    test_outputs_against_benchmark(model, model_name, model_type)
+
 
 if __name__ == '__main__':
-    run_tests(model_name='1_region', model_type='LP')
+    run_tests(model_name='6_region', model_type='LP')
