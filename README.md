@@ -1,4 +1,2 @@
-# renewable_test_PSMs
-This repository will contain three open-source power system models for conducting renewable energy analysis. It is still under construction and should be available soon.
-
-
+# Renewable test power system models
+This repository contains open-source test power system models for renewable energy and time series analysis.
