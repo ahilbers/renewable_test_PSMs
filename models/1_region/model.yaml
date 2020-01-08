@@ -11,24 +11,51 @@ run:
     objective_options.cost_class:
         monetary: 1
     solver: gurobi
-    bigM: 1e6  # Cannot be too high, or optimisation will not converge
-    zero_threshold: 1e-10  # Round any value smaller than this to 0
-    mode: plan  # Choices: plan, operate
+    bigM: 1e6    # Not too high, or optimisation will not converge
+    zero_threshold: 1e-10    # Round any value smaller to 0
 
 overrides:
     LP:
+        run:
+            mode: plan
         model:
-            name: 1-region linear program model
+            name: 1-region linear program planning model
         techs:
             baseload:
                 constraints:
                     energy_cap_max: inf
     MILP:
+        run:
+            mode: plan
         model:
-            name: 1-region mixed integer linear program model
+            name: 1-region mixed integer linear program planning model
         techs:
             baseload:
                 constraints:
                     units_max: inf
                     energy_cap_per_unit: 1
                     energy_ramping: 1
+    operate:
+        model:
+            name: 1-region operation model
+        run:
+            mode: operate
+            cyclic_storage: False
+            operation:
+                horizon: 48  # hours
+                window: 24  # hours
+        locations:
+            region1:
+                techs:
+                    baseload:
+                        constraints:
+                            energy_cap_equals: 10  # GW
+                    peaking:
+                        constraints:
+                            energy_cap_equals: 10  # GW
+                    wind:
+                        constraints:
+                            resource_area_equals: 50  # GW
+                    unmet:
+                        constraints:
+                            energy_cap_equals: 1e10  # GW

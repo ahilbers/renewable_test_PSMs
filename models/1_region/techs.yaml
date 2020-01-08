@@ -6,7 +6,7 @@ techs:
     baseload:
         essentials:
             carrier_out: power
-            name: baseload_continuous
+            name: baseload
             parent: supply
         constraints:
             lifetime: 1
@@ -23,7 +23,6 @@ techs:
             parent: supply
         constraints:
             lifetime: 1
-            energy_cap_max: inf
         costs:
             monetary:
                 energy_cap: 100      # GBP m per GW
@@ -37,9 +36,7 @@ techs:
             parent: supply
         constraints:
             lifetime: 1
-            energy_cap_max: inf
             resource_unit: energy_per_area
-            resource_area_max: inf
         costs:
             monetary:
                 resource_area: 100    # GBP m per GW
@@ -53,7 +50,6 @@ techs:
             parent: supply
         constraints:
             lifetime: 1
-            energy_cap_max: inf
         costs:
             monetary:
                 energy_cap: 0    # GBP m per GW

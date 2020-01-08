@@ -9,6 +9,6 @@ locations:
                 constraints:
                     resource: file=demand_wind.csv:wind
             demand_power:
-                constraints:
+               constraints:
                     resource: file=demand_wind.csv:demand
             unmet:
