@@ -301,5 +301,18 @@ def run_tests(model_name, model_type):
     test_outputs_against_benchmark(model, model_name, model_type)
 
 
+def dev_test():
+    ts_data = models.load_time_series_data(model_name='1_region',
+                                           demand_region='region5',
+                                           wind_region='region5')
+    ts_data = ts_data.loc['2017-01']
+    model = models.OneRegionModel(model_type='operate',
+                                  ts_data=ts_data)
+    model.run()
+    summary_outputs = model.get_summary_outputs()
+    print(summary_outputs)
+
+
 if __name__ == '__main__':
-    run_tests(model_name='6_region', model_type='LP')
+    # run_tests(model_name='6_region', model_type='LP')
+    dev_test()

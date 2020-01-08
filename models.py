@@ -68,7 +68,7 @@ class OneRegionModel(calliope.Model):
         Parameters:
         -----------
         model_type (str) : either 'LP' (linear program) or 'MILP' (mixed
-            integer linear program), depending on the baseload constraints.
+            integer linear program), or 'operate'
         ts_data (pandas DataFrame) : time series with demand and wind data
         preserve_index (bool) : whether to use index from original time
             series. If False, the index is reset to hours starting in 1980.
@@ -76,8 +76,7 @@ class OneRegionModel(calliope.Model):
             to problems with leap days.
         """
 
-        assert model_type in ['LP', 'MILP'], \
-            'model_type must be either LP or MILP'
+        assert model_type in ['LP', 'MILP', 'operate']
 
         self._base_dir = 'models/1_region'
         self.num_timesteps = ts_data.shape[0]
