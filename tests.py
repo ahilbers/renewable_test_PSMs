@@ -3,6 +3,7 @@
 
 import os
 import pandas as pd
+import time
 import models
 import pdb
 
@@ -232,14 +233,18 @@ def test_output_consistency(model, model_name):
     return passing
 
 
-def test_outputs_against_benchmark(model, model_name, model_type):
-    """ Run the tests.
+def test_outputs_against_benchmark(model,
+                                   model_name,
+                                   run_mode,
+                                   baseload_type):
+    """Test model outputs against benchmark.
 
     Parameters:
     -----------
     model (calliope.Model) : instance of OneRegionModel or SixRegionModel
     model_name (str) : '1_region' or '6_region'
-    model_type (str) : 'LP' or 'MILP'
+    model_type (str) : 'plan' or 'operate'
+    baseload_type (str) : 'continuous' or 'integer_ramp'
     """
 
     passing = True
@@ -248,7 +253,7 @@ def test_outputs_against_benchmark(model, model_name, model_type):
     # Load benchmarks
     benchmark_outputs = pd.read_csv(
         os.path.join('benchmarks',
-                     '_'.join((model_name, model_type, '2017.csv'))),
+                     '_'.join((model_name, run_mode, baseload_type, '2017.csv'))),
         index_col=0
     )
 
@@ -267,19 +272,19 @@ def test_outputs_against_benchmark(model, model_name, model_type):
     return passing
 
 
-def run_tests(model_name, model_type):
+def run_tests(model_name, run_mode, baseload_type):
     """ Run the tests.
 
     Parameters:
     -----------
     model_name (str) : '1_region' or '6_region'
-    model_type (str) : 'LP' or 'MILP'
+    model_type (str) : 'plan' or 'operate'
+    baseload_type (str) : 'continuous' or 'integer_ramp'
     """
 
-    assert model_name in ['1_region', '6_region'], \
-        'Admissible model names: 1_region and 6_region'
-    assert model_type in ['LP', 'MILP'], \
-        'Admissible model types: LP and MILP'
+    assert model_name in ['1_region', '6_region']
+    assert run_mode in ['plan', 'operate']
+    assert baseload_type in ['continuous', 'integer_ramp']
 
     ts_data = models.load_time_series_data(model_name=model_name,
                                            demand_region='region5',
@@ -289,30 +294,112 @@ def run_tests(model_name, model_type):
     # Run a simulation on which to run tests
     print('TESTS: Running test simulation...')
     if model_name == '1_region':
-        model = models.OneRegionModel(model_type, ts_data)
-    elif model_name == '6_region':
-        model = models.SixRegionModel(model_type, ts_data)
+        model = models.OneRegionModel(run_mode, baseload_type, ts_data)
+    # elif model_name == '6_region':
+    #     model = models.SixRegionModel(model_type, ts_data)
     model.run()
     print('TESTS: Done running test simulation \n')
 
     # Run the tests
     print('TESTS: Starting tests\n---------------------')
     test_output_consistency(model, model_name)
-    test_outputs_against_benchmark(model, model_name, model_type)
+    test_outputs_against_benchmark(model,
+                                   model_name,
+                                   run_mode,
+                                   baseload_type)
+
+
+def get_summary_outputs(model_name, run_mode, baseload_type, time_subset,
+                        save_csv=False):
+
+    # Load time series data
+    ts_data = models.load_time_series_data(model_name=model_name,
+                                           demand_region='region5',
+                                           wind_region='region5')
+    ts_data = ts_data.loc[time_subset]
+
+    # Set up and run model
+    start = time.time()
+    if model_name == '1_region':
+        model = models.OneRegionModel(run_mode, baseload_type, ts_data)
+    if model_name == '6_region':
+        model = models.SixRegionModel(run_mode, baseload_type, ts_data)
+    model.run()
+    summary_outputs = model.get_summary_outputs()
+    end = time.time()
+    summary_outputs.loc['time'] = end - start
+
+    if save_csv:
+        summary_outputs.to_csv(
+            '_'.join((model_name, run_mode, baseload_type, time_subset + '.csv'))
+        )
+
+    return summary_outputs
+
+
+def compare_continuous_with_integer_ramping():
+    summary_outputs_cont = get_summary_outputs(model_name='1_region',
+                                               run_mode='operate',
+                                               baseload_type='continuous',
+                                               time_subset='2017')
+    summary_outputs_disc = get_summary_outputs(model_name='1_region',
+                                               run_mode='operate',
+                                               baseload_type='integer_ramp',
+                                               time_subset='2017')
+
+    summary_outputs = pd.merge(summary_outputs_cont, summary_outputs_disc,
+                               left_index=True, right_index=True)
+    summary_outputs.columns = ['cont', 'disc']
+    summary_outputs['diff'] = summary_outputs['cont'] - summary_outputs['disc']
+    print(summary_outputs)
+
+    # expected_cost = 0.005 * summary_outputs.loc['gen_baseload_total', 'output'] \
+    #                 + 0.035 * summary_outputs.loc['gen_peaking_total', 'output'] \
+    #                 + 6.0 * summary_outputs.loc['gen_unmet_total', 'output']
+
+    # print(summary_outputs)
+    # print('')
+    # print(float(summary_outputs.loc['cost_total']), expected_cost)
+    # print('')
+    # print(float(summary_outputs.loc['cost_total']) /  expected_cost)
 
 
 def dev_test():
+    # Load time series data
     ts_data = models.load_time_series_data(model_name='1_region',
                                            demand_region='region5',
                                            wind_region='region5')
-    ts_data = ts_data.loc['2017-01']
-    model = models.OneRegionModel(model_type='operate',
+    ts_data = ts_data.loc['2017-01-01']
+
+        # locations:
+        #     region1:
+        #         techs:
+        #             baseload:
+        #                 constraints:
+        #                     energy_cap_equals: 9  # GW
+        #                     # units_equals: 3
+        #                     # energy_cap_per_unit: 3
+        #             peaking:
+        #                 constraints:
+        #                     energy_cap_equals: 0  # GW
+        #             wind:
+        #                 constraints:
+        #                     resource_area_equals: 30  # GW
+        #             unmet:
+        #                 constraints:
+        #                     energy_cap_equals: 1e10  # GW
+
+
+    model = models.OneRegionModel(run_mode='operate',
+                                  baseload_type='continuous',
                                   ts_data=ts_data)
     model.run()
-    summary_outputs = model.get_summary_outputs()
-    print(summary_outputs)
+    model.plot.timeseries(array='results')
 
-
+    
 if __name__ == '__main__':
-    # run_tests(model_name='6_region', model_type='LP')
-    dev_test()
+    summary_outputs = get_summary_outputs(model_name='1_region',
+                                          run_mode='operate',
+                                          baseload_type='continuous',
+                                          time_subset='2017-01-01')
+    print(summary_outputs)

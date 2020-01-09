@@ -1,5 +1,4 @@
 locations:
-
     region1:
         coordinates: {lat: 0, lon: 0}
         techs:

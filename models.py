@@ -59,16 +59,29 @@ def calculate_carbon_emissions(generation_levels):
     return emissions_tot
 
 
+def create_cap_override_dict(model_name, capacities):
+    pass
+    # d = {}
+    # if model_name == '1_region':
+    #     d['locations.region1.techs.baseload.constraints.energy_cap_equals'] = \
+    #         capacities['cap_baseload_total'],
+    #         'locations.region1.techs.peaking.constraints.energy_cap_equals': \
+    #             capacities['cap_peaking_total'],
+    #         'locations.region1.techs.wind.constraints.resource_area_equals': \
+    #             capacities['cap_wind_total'],
+    #         'locations.region1.techs.unmet.constraints.energy_cap_equals': 1e10
+    #     }
+
+
 class OneRegionModel(calliope.Model):
     """Instance of 1-region power system model."""
 
-    def __init__(self, model_type, ts_data, preserve_index=False):
+    def __init__(self, run_mode, baseload_type, ts_data, preserve_index=False):
         """Create instance of 1-region model in Calliope.
 
         Parameters:
         -----------
-        model_type (str) : either 'LP' (linear program) or 'MILP' (mixed
-            integer linear program), or 'operate'
+        XXXX XXXX XXXX XXXX
         ts_data (pandas DataFrame) : time series with demand and wind data
         preserve_index (bool) : whether to use index from original time
             series. If False, the index is reset to hours starting in 1980.
@@ -76,10 +89,9 @@ class OneRegionModel(calliope.Model):
             to problems with leap days.
         """
 
-        assert model_type in ['LP', 'MILP', 'operate']
-
         self._base_dir = 'models/1_region'
         self.num_timesteps = ts_data.shape[0]
+        self.scenario = run_mode + ',' + baseload_type
 
         # Calliope requires a CSV file of time series data to be present
         # at time of model initialisation. This code creates a CSV with the
@@ -87,9 +99,11 @@ class OneRegionModel(calliope.Model):
         ts_data = self._create_init_time_series(ts_data, preserve_index)
         ts_data_init_path = os.path.join(self._base_dir, 'demand_wind.csv')
         ts_data.to_csv(ts_data_init_path)
+        
         super(OneRegionModel, self).__init__(os.path.join(self._base_dir,
                                                           'model.yaml'),
-                                             scenario=model_type)
+                                             scenario=self.scenario,
+                                             override_dict=override_dict)
         os.remove(ts_data_init_path)
 
     def _create_init_time_series(self, ts_data, preserve_index=False):
@@ -188,8 +202,8 @@ class SixRegionModel(calliope.Model):
 
         Parameters:
         -----------
-        model_type (str) : either 'LP' (linear program) or 'MILP' (mixed
-            integer linear program), depending on the baseload constraints.
+        model_type (str) : either 'plan_LP', 'plan_MILP', 'operate_basic'
+            or 'operate_ramping'
         ts_data (pandas DataFrame) : time series with demand and wind data
         preserve_index (bool) : whether to use index from original time
             series. If False, the index is reset to hours starting in 1980.
@@ -197,8 +211,8 @@ class SixRegionModel(calliope.Model):
             to problems with leap days.
         """
 
-        assert model_type in ['LP', 'MILP'], \
-            'model_type must be either LP or MILP'
+        assert model_type in ['plan_LP', 'plan_MILP',
+                              'operate_basic', 'operate_ramping']
 
         self._base_dir = 'models/6_region'
         self.num_timesteps = ts_data.shape[0]

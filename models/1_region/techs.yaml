@@ -1,8 +1,9 @@
+# lifetime: plant lifetime, in years (used only in calculating cost -- plants
+#     actually close after lifetime has ended
+# energy_cap: install cost, in GBP m per GW
+# om_con: generation cost, in GBP m per GWh
+
 techs:
-
-
-# Supply
-
     baseload:
         essentials:
             carrier_out: power
@@ -12,10 +13,9 @@ techs:
             lifetime: 1
         costs:
             monetary:
-                energy_cap: 300    # GBP m per GW
-                om_con: 0.005    # GBP m per GWh
-                interest_rate: 0
-
+                energy_cap: 300
+                om_con: 0.005
+                interest_rate: 0               
     peaking:
         essentials:
             carrier_out: power
@@ -28,7 +28,6 @@ techs:
                 energy_cap: 100      # GBP m per GW
                 om_con: 0.035      # GBP m per GWh
                 interest_rate: 0
-
     wind:
         essentials:
             carrier_out: power
@@ -42,7 +41,6 @@ techs:
                 resource_area: 100    # GBP m per GW
                 om_con: 0    # GBP m per GWh
                 interest_rate: 0
-
     unmet:
         essentials:
             carrier_out: power
@@ -55,12 +53,6 @@ techs:
                 energy_cap: 0    # GBP m per GW
                 om_con: 6    # GBP m per GWh
                 interest_rate: 0
-
-
-
-
-# Demand
-    
     demand_power:
         essentials:
             carrier: power
