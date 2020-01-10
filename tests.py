@@ -309,97 +309,121 @@ def run_tests(model_name, run_mode, baseload_type):
                                    baseload_type)
 
 
-def get_summary_outputs(model_name, run_mode, baseload_type, time_subset,
-                        save_csv=False):
+def get_summary_outputs(model_name, run_mode, baseload_integer,
+                        baseload_ramping, fixed_capacities,
+                        time_start, time_end,
+                        at_regional_level=False, save_csv=False):
 
     # Load time series data
     ts_data = models.load_time_series_data(model_name=model_name,
                                            demand_region='region5',
                                            wind_region='region5')
-    ts_data = ts_data.loc[time_subset]
+    ts_data = ts_data.loc[time_start:time_end]
 
-    # Set up and run model
     start = time.time()
     if model_name == '1_region':
-        model = models.OneRegionModel(run_mode, baseload_type, ts_data)
-    if model_name == '6_region':
-        model = models.SixRegionModel(run_mode, baseload_type, ts_data)
+        model = models.OneRegionModel(ts_data, run_mode,
+                                      baseload_integer, baseload_ramping,
+                                      fixed_capacities,
+                                      preserve_index=False)
+    else:
+        model = models.SixRegionModel(ts_data, run_mode,
+                                      baseload_integer, baseload_ramping,
+                                      fixed_capacities,
+                                      preserve_index=False)
     model.run()
-    summary_outputs = model.get_summary_outputs()
     end = time.time()
+    summary_outputs = model.get_summary_outputs()
     summary_outputs.loc['time'] = end - start
 
     if save_csv:
-        summary_outputs.to_csv(
-            '_'.join((model_name, run_mode, baseload_type, time_subset + '.csv'))
-        )
+        raise NotImplementedError()
 
     return summary_outputs
 
 
-def compare_continuous_with_integer_ramping():
-    summary_outputs_cont = get_summary_outputs(model_name='1_region',
-                                               run_mode='operate',
-                                               baseload_type='continuous',
-                                               time_subset='2017')
-    summary_outputs_disc = get_summary_outputs(model_name='1_region',
-                                               run_mode='operate',
-                                               baseload_type='integer_ramp',
-                                               time_subset='2017')
+def compare_summary_outputs():
 
-    summary_outputs = pd.merge(summary_outputs_cont, summary_outputs_disc,
+    fixed_capacities = {}
+    fixed_capacities['cap_baseload_total'] = 23.2123
+    fixed_capacities['cap_peaking_total'] = 26.5267
+    fixed_capacities['cap_wind_total'] = 23.2782
+
+    start = '2015'
+    end = '2017'
+
+    run_dict_1 = {
+        'model_name': '1_region',
+        'run_mode': 'plan',
+        'baseload_integer': True,
+        'baseload_ramping': True,
+        'fixed_capacities': None,
+        'time_start': start,
+        'time_end': end
+    }
+
+    run_dict_2 = {
+        'model_name': '1_region',
+        'run_mode': 'operate',
+        'baseload_integer': True,
+        'baseload_ramping': True,
+        'fixed_capacities': fixed_capacities,
+        'time_start': start,
+        'time_end': end
+    }
+
+    summary_outputs_1 = get_summary_outputs(**run_dict_1)
+    summary_outputs_2 = get_summary_outputs(**run_dict_2)
+    summary_outputs = pd.merge(summary_outputs_1, summary_outputs_2,
                                left_index=True, right_index=True)
-    summary_outputs.columns = ['cont', 'disc']
-    summary_outputs['diff'] = summary_outputs['cont'] - summary_outputs['disc']
+    summary_outputs.columns = ['run_1', 'run_2']
+    summary_outputs['diff'] = summary_outputs['run_1'] \
+                              - summary_outputs['run_2']
     print(summary_outputs)
-
-    # expected_cost = 0.005 * summary_outputs.loc['gen_baseload_total', 'output'] \
-    #                 + 0.035 * summary_outputs.loc['gen_peaking_total', 'output'] \
-    #                 + 6.0 * summary_outputs.loc['gen_unmet_total', 'output']
-
-    # print(summary_outputs)
-    # print('')
-    # print(float(summary_outputs.loc['cost_total']), expected_cost)
-    # print('')
-    # print(float(summary_outputs.loc['cost_total']) /  expected_cost)
 
 
 def dev_test():
-    # Load time series data
-    ts_data = models.load_time_series_data(model_name='1_region',
-                                           demand_region='region5',
-                                           wind_region='region5')
-    ts_data = ts_data.loc['2017-01-01']
 
-        # locations:
-        #     region1:
-        #         techs:
-        #             baseload:
-        #                 constraints:
-        #                     energy_cap_equals: 9  # GW
-        #                     # units_equals: 3
-        #                     # energy_cap_per_unit: 3
-        #             peaking:
-        #                 constraints:
-        #                     energy_cap_equals: 0  # GW
-        #             wind:
-        #                 constraints:
-        #                     resource_area_equals: 30  # GW
-        #             unmet:
-        #                 constraints:
-        #                     energy_cap_equals: 1e10  # GW
+    # fixed_capacities = {}
+    # fixed_capacities['cap_baseload_total'] = 23.2123
+    # fixed_capacities['cap_peaking_total'] = 26.5267
+    # fixed_capacities['cap_wind_total'] = 23.2782
 
+    fixed_capacities = {}
+    fixed_capacities['cap_baseload_region1']             = 3.112262e+01
+    fixed_capacities['cap_peaking_region1']              = 1.581766e+01
+    fixed_capacities['cap_transmission_region1_region5'] = 5.534785e+00
+    fixed_capacities['cap_transmission_region1_region2'] = 4.199222e+01
+    fixed_capacities['cap_transmission_region1_region6'] = 0.000000e+00
+    fixed_capacities['cap_wind_region2']                 = 2.241848e+00
+    fixed_capacities['cap_transmission_region2_region3'] = 3.048031e+01
+    fixed_capacities['cap_baseload_region3']             = 9.071644e+01
+    fixed_capacities['cap_peaking_region3']              = 2.742114e+01
+    fixed_capacities['cap_transmission_region3_region4'] = 8.815252e+01
+    fixed_capacities['cap_transmission_region4_region5'] = 2.028268e+00
+    fixed_capacities['cap_wind_region5']                 = 6.233972e+01
+    fixed_capacities['cap_transmission_region5_region6'] = 4.129871e+01
+    fixed_capacities['cap_baseload_region6']             = 0.000000e+00
+    fixed_capacities['cap_peaking_region6']              = 4.129871e+01
+    fixed_capacities['cap_wind_region6']                 = 0.000000e+00
+    fixed_capacities['cap_baseload_total']               = 1.218391e+02
+    fixed_capacities['cap_peaking_total']                = 8.453750e+01
+    fixed_capacities['cap_wind_total']                   = 6.458156e+01
+    fixed_capacities['cap_transmission_total']           = 4.189736e+02
 
-    model = models.OneRegionModel(run_mode='operate',
-                                  baseload_type='continuous',
-                                  ts_data=ts_data)
-    model.run()
-    model.plot.timeseries(array='results')
+    run_dict = {
+        'model_name': '6_region',
+        'run_mode': 'operate',
+        'baseload_integer': False,
+        'baseload_ramping': False,
+        'fixed_capacities': fixed_capacities,
+        'time_start': '2017-01',
+        'time_end': '2017-01'
+    }
 
-    
-if __name__ == '__main__':
-    summary_outputs = get_summary_outputs(model_name='1_region',
-                                          run_mode='operate',
-                                          baseload_type='continuous',
-                                          time_subset='2017-01-01')
+    summary_outputs = get_summary_outputs(**run_dict)
     print(summary_outputs)
+
+
+if __name__ == '__main__':
+    dev_test()
