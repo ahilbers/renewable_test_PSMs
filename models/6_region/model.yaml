@@ -8,9 +8,7 @@ model:
     timeseries_data_path: ''
 
 run:
-    objective_options:
-        cost_class:
-            monetary: 1
+    objective_options.cost_class.monetary: 1
     solver: gurobi
     zero_threshold: 1e-10  # Round any value smaller to 0
 
@@ -20,19 +18,14 @@ overrides:
             mode: plan
     continuous:
     # continuous baseload capacity
-        techs:
-            baseload:
-                constraints:
-                    energy_cap_max: inf
+        techs.baseload.constraints.energy_cap_max: inf
     integer:
     # baseload capacity in units of 3GW
-        techs:
-            baseload:
-                constraints:
-                    units_max: inf
-                    energy_cap_per_unit: 3
+        techs.baseload.constraints.units_max: inf
+        techs.baseload.constraints.energy_cap_per_unit: 3
     operate:
-    # fixed capacities should be entered in override_dict
+    # fixed capacities can be entered here or via on override_dict in
+    # python, in which case the values here are overridden
         run:
             mode: operate
             cyclic_storage: False
@@ -40,41 +33,39 @@ overrides:
                 # maximise scheduling horizon
                 horizon: 332880  # hours
                 window: 332880  # hours
+        locations:
+            region1:
+                techs.baseload.constraints.energy_cap_equals: 0
+                techs.peaking.constraints.energy_cap_equals: 0
+            region2:
+                techs.wind.constraints.resource_area_equals: 0
+                techs.unmet.constraints.energy_cap_equals: 1e10
+            region3:
+                techs.baseload.constraints.energy_cap_equals: 0
+                techs.peaking.constraints.energy_cap_equals: 0
+            region4:
+                techs.unmet.constraints.energy_cap_equals: 1e10
+            region5:
+                techs.wind.constraints.resource_area_equals: 0
+                techs.unmet.constraints.energy_cap_equals: 1e10
+            region6:
+                techs.baseload.constraints.energy_cap_equals: 0
+                techs.peaking.constraints.energy_cap_equals: 0
+                techs.wind.constraints.resource_area_equals: 0
+        links:
+            region1,region2:
+                techs.transmission_other.constraints.energy_cap_equals: 0
+            region1,region5:
+                techs.transmission_region1to5.constraints.energy_cap_equals: 0
+            region1,region6:
+                techs.transmission_other.constraints.energy_cap_equals: 0
+            region2,region3:
+                techs.transmission_other.constraints.energy_cap_equals: 0
+            region3,region4:
+                techs.transmission_other.constraints.energy_cap_equals: 0
+            region4,region5:
+                techs.transmission_other.constraints.energy_cap_equals: 0
+            region5,region6:
+                techs.transmission_other.constraints.energy_cap_equals: 0
     ramping:
-        techs:
-            baseload:
-                constraints:
-                    energy_ramping: 0.2  # %/hr
-
-# model:
-#     name: 6-region model
-#     calliope_version: 0.6.4
-#     timeseries_data_path: ''
-
-# run:
-#     objective_options.cost_class:
-#         monetary: 1
-#     solver: gurobi
-#     bigM: 1e6  # Cannot be too high, or optimisation will not converge
-#     zero_threshold: 1e-10  # Round any value smaller than this to 0
-#     mode: plan  # Choices: plan, operate
-
-# overrides:
-#     LP:
-#         model:
-#             name: 6-region linear program model
-#         techs:
-#             baseload:
-#                 constraints:
-#                     energy_cap_max: inf
-#     MILP:
-#         model:
-#             name: 6-region mixed integer linear program model
-#         techs:
-#             baseload:
-#                 constraints:
-#                     units_max: inf
-#                     energy_cap_per_unit: 1
-#                     energy_ramping: 1
-
-
+        techs.baseload.constraints.energy_ramping: 0.2  # frac/hr

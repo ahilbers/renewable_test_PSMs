@@ -1,8 +1,5 @@
 techs:
-
-
-# Supply
-
+# plant lifetimes used only calculating cost - plants do not close after 1 yr
     baseload:
         essentials:
             carrier_out: power
@@ -12,8 +9,8 @@ techs:
             lifetime: 1
         costs:
             monetary:
-                energy_cap: 300    # GBP m per GW
-                om_con: 0.005    # GBP m per GWh
+                energy_cap: 300  # GBP m per GW
+                om_con: 0.005  # GBP m per GWh
                 interest_rate: 0
 
     peaking:
@@ -26,8 +23,8 @@ techs:
             energy_cap_max: inf
         costs:
             monetary:
-                energy_cap: 100      # GBP m per GW
-                om_con: 0.035      # GBP m per GWh
+                energy_cap: 100  # GBP m per GW
+                om_con: 0.035  # GBP m per GWh
                 interest_rate: 0
 
     wind:
@@ -42,8 +39,8 @@ techs:
             resource_area_max: inf
         costs:
             monetary:
-                resource_area: 100    # GBP m per GW
-                om_con: 0    # GBP m per GWh
+                resource_area: 100  # GBP m per GW
+                om_con: 0  # GBP m per GWh
                 interest_rate: 0
 
     unmet:
@@ -56,26 +53,16 @@ techs:
             energy_cap_max: inf
         costs:
             monetary:
-                energy_cap: 0    # GBP m per GW
-                om_con: 6    # GBP m per GWh
+                energy_cap: 0  # GBP m per GW
+                om_con: 6  # GBP m per GWh
                 interest_rate: 0
-
-
-
-
-# Demand
-    
+                
     demand_power:
         essentials:
             carrier: power
             name: demand
             parent: demand
-
-
-
-
-# Transmission
-
+            
     transmission_region1to5:
         essentials:
             carrier: power
@@ -86,7 +73,7 @@ techs:
             energy_eff: 1.0
         costs:
             monetary:
-                energy_cap: 150    # GBP m per GW
+                energy_cap: 150  # GBP m per GW
                 interest_rate: 0
 
     transmission_other:
@@ -99,5 +86,5 @@ techs:
             energy_eff: 1.0
         costs:
             monetary:
-                energy_cap: 100    # GBP m per GW
+                energy_cap: 100  # GBP m per GW
                 interest_rate: 0
