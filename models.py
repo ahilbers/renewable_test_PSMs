@@ -42,6 +42,21 @@ def load_time_series_data(model_name, demand_region=None, wind_region=None):
 
 
 def get_scenario(run_mode, baseload_integer, baseload_ramping):
+    """Get the scenario name for different run settings.
+
+    Parameters:
+    -----------
+    run_mode (str) : 'plan' or 'operate': whether to let the model
+        determine the optimal capacities or work with prescribed ones
+    baseload_integer (bool) : activate baseload integer capacity
+        constraint (built in units of 3GW)
+    baseload_ramping (bool) : enforce baseload ramping constraint
+
+    Returns:
+    --------
+    scenario (str) : name of scenario to pass in Calliope model
+    """
+
     scenario = run_mode
     if run_mode == 'plan' and not baseload_integer:
         scenario = scenario + ',' + 'continuous'
@@ -50,121 +65,67 @@ def get_scenario(run_mode, baseload_integer, baseload_ramping):
     if baseload_ramping:
         scenario = scenario + ',' + 'ramping'
 
-    print(scenario)
-        
     return scenario
 
 
 def get_cap_override_dict(model_name, fixed_capacities):
-    od = {}
-    if model_name == '1_region':
-        od['locations.region1.techs.baseload.constraints.energy_cap_equals'] = \
-            fixed_capacities['cap_baseload_total']
-        od['locations.region1.techs.peaking.constraints.energy_cap_equals'] = \
-            fixed_capacities['cap_peaking_total']
-        od['locations.region1.techs.wind.constraints.resource_area_equals'] = \
-            fixed_capacities['cap_wind_total']
-        od['locations.region1.techs.unmet.constraints.energy_cap_equals'] = 1e10
+    """Create an override dictionary that can be used to set fixed
+    fixed capacities in a Calliope model run.
 
+    Parameters:
+    -----------
+    model_name (str) : '1_region' or '6_region'
+    fixed_capacities (pandas DataFrame or dict) : the fixed capacities.
+        A DataFrame created via model.get_summary_outputs (at
+        regional level) will work.
+
+    Returns:
+    --------
+    o_dict (dict) : A dict that can be fed as override_dict into Calliope
+        model in operate mode
+    """
+
+    o_dict = {}
+
+    # Add baseload, peaking and wind capacities
+    if model_name == '1_region':
+        o_dict['locations.region1.techs.baseload.constraints'
+               '.energy_cap_equals'] = fixed_capacities['cap_baseload_total']
+        o_dict['locations.region1.techs.peaking.constraints'
+               '.energy_cap_equals'] = fixed_capacities['cap_peaking_total']
+        o_dict['locations.region1.techs.wind.constraints'
+               '.resource_area_equals'] = fixed_capacities['cap_wind_total']
+
+    # Add baseload, peaking, wind and transmission capacities
     if model_name == '6_region':
         for region in ['region{}'.format(i+1) for i in range(6)]:
-
             for tech in ['baseload', 'peaking']:
-                index = '.'.join(('locations', region, 'techs', tech,
-                                  'constraints.energy_cap_equals'))
                 try:
-                    od[index] = fixed_capacities['cap_' + tech + '_' + region]
+                    o_dict['locations.{}.techs.{}.constraints.'
+                           'energy_cap_equals'.format(region, tech)] = \
+                        fixed_capacities['cap_{}_{}'.format(tech, region)]
                 except KeyError:
                     pass
-            for tech in ['wind']:
-                index = '.'.join(('locations', region, 'techs', tech,
-                                  'constraints.resource_area_equals'))
+            try:
+                o_dict['locations.{}.techs.wind.constraints.'
+                       'resource_area_equals'.format(region)] = \
+                    fixed_capacities['cap_wind_{}'.format(region)]
+            except KeyError:
+                pass
+            for region_to in ['region{}'.format(i+1) for i in range(6)]:
+                if (region, region_to) == ('region1', 'region5'):
+                    tech = 'transmission_region1to5'
+                else:
+                    tech = 'transmission_other'
                 try:
-                    od[index] = fixed_capacities['cap_' + tech + '_' + region]
+                    o_dict['links.{},{}.techs.{}.constraints.'
+                           'energy_cap_equals'] = \
+                        fixed_capacities['cap_transmission_{}_{}'.
+                                         format(region, region_to)]
                 except KeyError:
                     pass
-            for tech in ['unmet']:
-                index = '.'.join(('locations', region, 'techs', tech,
-                                  'constraints.energy_cap_equals'))
-                try:
-                    od[index] = 1e10
-                except KeyError:
-                    pass
 
-        # suffix = 'constraintss.energy_cap_equals'        
-        # od['links.region1,region2.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region1_region2']
-        # od['links.region1,region5.techs.transmission_region1to5.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region1_region5']
-        # od['links.region1,region6.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region1_region6']
-        # od['links.region2,region3.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region2_region3']
-        # od['links.region3,region4.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region3_region4']
-        # od['links.region4,region5.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region4_region5']
-        # od['links.region5,region6.techs.transmission_other.' + suffix] = \
-        #     fixed_capacities['cap_transmission_region5_region6']
-            # for to in ['region{}'.format(i+1) for i in range(6)]:
-            #     if (region, to) == ('region1', 'region5'):
-            #         tech = 'transmission_region1to5'
-            #     else:
-            #         tech = 'transmission_other'
-            #     index = '.'.join(('links', region + ',' + to, 'techs', tech,
-            #                       'constraints.energy_cap_equals'))
-            #     try:
-            #         od[index] = fixed_capacities[
-            #             'cap_transmission_' + region + '_' + to
-            #             ]
-            #     except KeyError:
-            #         pass
-
-    for key in fixed_capacities:
-        print(key, fixed_capacities[key])
-    print('')
-    for key in od:
-        print(key, od[key])
-    print('')
-
-        # od['locations.region1.techs.baseload.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_baseload_region1']
-        # od['locations.region1.techs.peaking.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_peaking_region1']
-        # od['locations.region3.techs.baseload.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_baseload_region3']
-        # od['locations.region3.techs.peaking.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_peaking_region3']
-        # od['locations.region6.techs.baseload.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_baseload_region6']
-        # od['locations.region6.techs.peaking.constraints.energy_cap_equals'] = \
-        #     fixed_capacities['cap_peaking_region6']
-        # od['locations.region2.techs.wind.constraints.resource_area_equals'] = \
-        #     fixed_capacities['cap_wind_region2']
-
-    # fixed_capacities['cap_transmission_region1_region5'] = 5.534785e+00
-    # fixed_capacities['cap_transmission_region1_region2'] = 4.199222e+01
-    # fixed_capacities['cap_transmission_region1_region6'] = 0.000000e+00
-    # fixed_capacities['cap_wind_region2']                 = 2.241848e+00
-    # fixed_capacities['cap_transmission_region2_region1'] = 4.199222e+01
-    # fixed_capacities['cap_transmission_region2_region3'] = 3.048031e+01
-    # fixed_capacities['cap_transmission_region3_region2'] = 3.048031e+01
-    # fixed_capacities['cap_transmission_region3_region4'] = 8.815252e+01
-    # fixed_capacities['cap_transmission_region4_region3'] = 8.815252e+01
-    # fixed_capacities['cap_transmission_region4_region5'] = 2.028268e+00
-    # fixed_capacities['cap_wind_region5']                 = 6.233972e+01
-    # fixed_capacities['cap_transmission_region5_region1'] = 5.534785e+00
-    # fixed_capacities['cap_transmission_region5_region4'] = 2.028268e+00
-    # fixed_capacities['cap_transmission_region5_region6'] = 4.129871e+01
-    # fixed_capacities['cap_baseload_region6']             = 0.000000e+00
-    # fixed_capacities['cap_peaking_region6']              = 4.129871e+01
-    # fixed_capacities['cap_wind_region6']                 = 0.000000e+00
-    # fixed_capacities['cap_transmission_region6_region1'] = 0.000000e+00
-    # fixed_capacities['cap_transmission_region6_region5'] = 4.129871e+01
-    # fixed_capacities['cap_wind_total']                   = 6.458156e+01
-    # fixed_capacities['cap_transmission_total']           = 4.189736e+02
-
-    return od
+    return o_dict
 
 
 def calculate_carbon_emissions(generation_levels):
@@ -202,7 +163,7 @@ class OneRegionModel(calliope.Model):
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
         fixed_capacities (dict or pandas DataFrame) : fixed
-            capacities for generation technologies
+            capacities for generation technologies, as an override.
         preserve_index (bool) : use index from original time series.  This
             may lead to problems with leap days since these are removed
             from data/demand_wind.csv. If False, use hourly index starting
@@ -212,9 +173,6 @@ class OneRegionModel(calliope.Model):
         self._base_dir = 'models/1_region'
         self.num_timesteps = ts_data.shape[0]
 
-        if run_mode == 'operate':
-            assert fixed_capacities is not None, \
-                'Fixed capacities must be provided in operate mode.'
         if run_mode == 'plan':
             assert fixed_capacities is None, \
                 'Fixed capacities should not be provided in planning mode.'
@@ -285,9 +243,9 @@ class OneRegionModel(calliope.Model):
 
         # Insert generation levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-            outputs.loc['gen_' + tech + '_total'] = \
+            outputs.loc['gen_{}_total'.format(tech)] = \
                 corrfac * float(self.results.carrier_prod.loc[
-                    'region1::' + tech + '::power'].sum())
+                    'region1::{}::power'.format(tech)].sum())
 
         # Insert annualised demand levels
         outputs.loc['demand_total'] = \
@@ -295,8 +253,7 @@ class OneRegionModel(calliope.Model):
                 'region1::demand_power::power'].sum())
 
         # Insert annualised total system cost
-        outputs.loc['cost_total'] = \
-            corrfac * float(self.results.cost.sum())
+        outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
 
         # Insert annualised carbon emissions
         outputs.loc['emissions_total'] = calculate_carbon_emissions(
@@ -313,7 +270,7 @@ class OneRegionModel(calliope.Model):
 
 class SixRegionModel(calliope.Model):
     """Instance of 6-region power system model."""
-    
+
     def __init__(self, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
                  fixed_capacities=None, preserve_index=False):
@@ -328,7 +285,7 @@ class SixRegionModel(calliope.Model):
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
         fixed_capacities (dict or pandas DataFrame) : fixed
-            capacities for generation technologies
+            capacities for generation technologies, as an override.
         preserve_index (bool) : use index from original time series.  This
             may lead to problems with leap days since these are removed
             from data/demand_wind.csv. If False, use hourly index starting
@@ -338,12 +295,12 @@ class SixRegionModel(calliope.Model):
         self._base_dir = 'models/6_region'
         self.num_timesteps = ts_data.shape[0]
 
-        if run_mode == 'operate':
-            assert fixed_capacities is not None, \
-                'Fixed capacities must be provided in operate mode.'
-        if run_mode == 'plan':
-            assert fixed_capacities is None, \
-                'Fixed capacities should not be provided in planning mode.'
+        # if run_mode == 'operate':
+        #     assert fixed_capacities is not None, \
+        #         'Fixed capacities must be provided in operate mode.'
+        # if run_mode == 'plan':
+        #     assert fixed_capacities is None, \
+        #         'Fixed capacities should not be provided in planning mode.'
 
         scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
         if fixed_capacities is not None:
@@ -411,55 +368,63 @@ class SixRegionModel(calliope.Model):
             # Baseload and peaking capacity
             for tech in ['baseload', 'peaking']:
                 try:
-                    outputs.loc['_'.join(('cap', tech, region))] = \
-                        float(self.results.energy_cap.loc[region + '::' + tech])
+                    outputs.loc['cap_{}_{}'.format(tech, region)] = \
+                        float(self.results.energy_cap.loc[
+                            '{}::{}'.format(region, tech)])
                 except KeyError:
                     pass
 
             # Wind capacity
             for tech in ['wind']:
                 try:
-                    outputs.loc['_'.join(('cap', tech, region))] = \
-                        float(self.results.resource_area.loc[region + '::' + tech])
+                    outputs.loc['cap_{}_{}'.format(tech, region)] = \
+                        float(self.results.resource_area.loc[
+                            '{}::{}'.format(region, tech)])
                 except KeyError:
                     pass
 
             # Transmission capacity
             for transmission_type in ['transmission_region1to5',
                                       'transmission_other']:
-                for to in ['region{}'.format(i+1) for i in range(6)]:
-                    try:
-                        outputs.loc['cap_transmission_' + region + '_'+ to] = \
-                        float(self.results.energy_cap.loc[region + '::' + transmission_type + ':' + to])
-                    except KeyError:
-                        pass
+                for region_to in ['region{}'.format(i+1) for i in range(6)]:
+                    # No double counting of links -- one way only
+                    if int(region[-1]) < int(region_to[-1]):
+                        try:
+                            outputs.loc['cap_transmission_{}_{}'.format(
+                                region, region_to)] = \
+                            float(self.results.energy_cap.loc[
+                                '{}::{}:{}'.format(region,
+                                                   transmission_type,
+                                                   region_to)])
+                        except KeyError:
+                            pass
 
             # Baseload, peaking, wind and unmet generation levels
             for tech in ['baseload', 'peaking', 'wind', 'unmet']:
                 try:
-                    outputs.loc['gen_' + tech + '_' + region] = \
+                    outputs.loc['gen_{}_{}'.format(tech, region)] = \
                         corrfac * float(self.results.carrier_prod.loc[
-                            region + '::' + tech + '::' + 'power'].sum())
+                            '{}::{}::power'.format(region, tech)].sum())
                 except KeyError:
                     pass
 
             # Demand levels
             try:
-                outputs.loc['demand_' + region] = \
+                outputs.loc['demand_{}'.format(region)] = \
                     -corrfac * float(self.results.carrier_con.loc[
-                        region+ '::demand_power::power'].sum())
+                        '{}::demand_power::power'.format(region)].sum())
             except KeyError:
                 pass
 
         # Insert total capacities
         for tech in ['baseload', 'peaking', 'wind', 'transmission']:
-            outputs.loc['cap_' + tech + '_total'] = outputs.loc[
-                outputs.index.str.contains('cap_' + tech)].sum()
+            outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
+                outputs.index.str.contains('cap_{}'.format(tech))].sum()
 
         # Insert total annualised generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-            outputs.loc['gen_' + tech + '_total'] = outputs.loc[
-                outputs.index.str.contains('gen_' + tech)].sum()
+            outputs.loc['gen_{}_total'.format(tech)] = outputs.loc[
+                outputs.index.str.contains('gen_{}'.format(tech))].sum()
 
         # Insert total annualised demand levels
         outputs.loc['demand_total'] = \
