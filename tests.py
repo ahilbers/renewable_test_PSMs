@@ -11,7 +11,7 @@ import pdb
 # Install costs and generation costs. These should match the information
 # provided in the model.yaml and techs.yaml files in the model definition
 COSTS = pd.DataFrame(columns=['install', 'generation'])
-COSTS.loc['baseload']                = [300., 0.006]
+COSTS.loc['baseload']                = [300., 0.005]
 COSTS.loc['peaking']                 = [100., 0.035]
 COSTS.loc['wind']                    = [100., 0.   ]
 COSTS.loc['unmet']                   = [  0., 6.   ]
@@ -67,7 +67,7 @@ def test_output_consistency_1_region(model, run_mode):
             cost_method2 = corrfac * float(
                 res.cost_investment[0].loc['region1::{}'.format(tech)]
             )
-            if abs(cost_method1 - cost_method2) > 1:
+            if abs(cost_method1 - cost_method2) > 0.1:
                 print('FAIL: {} install costs do not match!\n'
                       '    manual: {}, model: {}'.format(
                           tech, cost_method1, cost_method2))
@@ -81,7 +81,7 @@ def test_output_consistency_1_region(model, run_mode):
         cost_method2 = corrfac * float(res.cost_var[0].loc[
             'region1::{}'.format(tech)
         ].sum())
-        if abs(cost_method1 - cost_method2) > 1:
+        if abs(cost_method1 - cost_method2) > 0.1:
             print('FAIL: {} generation costs do not match!\n'
                   '    manual: {}, model: {}'.format(
                       tech, cost_method1, cost_method2))
@@ -91,7 +91,7 @@ def test_output_consistency_1_region(model, run_mode):
     # Test if total costs are consistent
     if run_mode == 'plan':
         cost_total_method2 = corrfac * float(res.cost.sum())
-        if abs(cost_total_method1 - cost_total_method2) > 1:
+        if abs(cost_total_method1 - cost_total_method2) > 0.1:
             print('FAIL: total system costs do not match!\n'
                   '    manual: {}, model: {}'.format(cost_total_method1,
                                                      cost_total_method2))
@@ -103,7 +103,7 @@ def test_output_consistency_1_region(model, run_mode):
                                       'gen_wind_total',
                                       'gen_unmet_total']].sum())
     demand_total = float(out.loc['demand_total'])
-    if abs(generation_total - demand_total) > 1:
+    if abs(generation_total - demand_total) > 0.1:
         print('FAIL: generation does not match demand!\n'
               '    generation: {}, demand: {}'.format(generation_total,
                                                       demand_total))
@@ -142,7 +142,7 @@ def test_output_consistency_6_region(model, run_mode):
             cost_method2 = corrfac * float(
                 res.cost_investment[0].loc['{}::{}'.format(region, tech)]
             )
-            if abs(cost_method1 - cost_method2) > 1:
+            if abs(cost_method1 - cost_method2) > 0.1:
                 print('FAIL: {} install costs in {} do not match!\n'
                       '    manual: {}, model: {}'.format(tech,
                                                          region,
@@ -164,7 +164,7 @@ def test_output_consistency_6_region(model, run_mode):
                 float(res.cost_investment[0].loc[
                     '{}::{}:{}'.format(region_a, tech, region_b)
                 ])
-            if abs(cost_method1 - cost_method2) > 1:
+            if abs(cost_method1 - cost_method2) > 0.1:
                 print('FAIL: {} install costs from {} to {} do not match!\n'
                       '    manual: {}, model: {}'.format(tech,
                                                          region_a,
@@ -183,7 +183,7 @@ def test_output_consistency_6_region(model, run_mode):
         cost_method2 = corrfac * float(
             res.cost_var[0].loc[region + '::' + tech].sum()
         )
-        if abs(cost_method1 - cost_method2) > 1:
+        if abs(cost_method1 - cost_method2) > 0.1:
             print('FAIL: {} generation costs in {} do not match!\n'
                   '    manual: {}, model: {}'.format(
                       tech, region, cost_method1, cost_method2))
@@ -193,7 +193,7 @@ def test_output_consistency_6_region(model, run_mode):
     # Test if total costs are consistent
     if run_mode == 'plan':
         cost_total_method2 = corrfac * float(res.cost.sum())
-        if abs(cost_total_method1 - cost_total_method2) > 1:
+        if abs(cost_total_method1 - cost_total_method2) > 0.1:
             print('FAIL: total system costs do not match!\n'
                   '    manual: {}, model: {}'.format(cost_total_method1,
                                                      cost_total_method2))
@@ -205,7 +205,7 @@ def test_output_consistency_6_region(model, run_mode):
                                       'gen_wind_total',
                                       'gen_unmet_total']].sum())
     demand_total = float(out.loc['demand_total'])
-    if abs(generation_total - demand_total) > 1:
+    if abs(generation_total - demand_total) > 0.1:
         print('FAIL: generation does not match demand!\n'
               '    generation: {}, demand: {}'.format(generation_total,
                                                       demand_total))
@@ -275,9 +275,69 @@ def test_outputs_against_benchmark(model, model_name, run_mode,
     return passing
 
 
-def run_tests(model_name, run_mode, baseload_integer, baseload_ramping,
-              fixed_capacities):
-    """ Run the tests."""
+def get_test_fixed_caps_override_dict(model_name):
+    """Create test fixed capacities and override dict."""
+
+    attributes = {'baseload': 'energy_cap_equals',
+                  'peaking': 'energy_cap_equals',
+                  'wind': 'resource_area_equals'}
+
+    # Create test versions of an override_dict and fixed capacities
+    fixed_caps = {}
+    o_dict = {}
+    i = 1
+    if model_name == '1_region':
+        for tech in ['baseload', 'peaking', 'wind']:
+            attribute = attributes[tech]
+            o_dict['locations.region1.techs.{}.constraints.{}'.
+                   format(tech, attribute)] = 10*i
+            fixed_caps['cap_{}_total'.format(tech)] = 10*i
+            i += 1
+    if model_name == '6_region':
+        for tech, region in BASELOAD_TOP + PEAKING_TOP + WIND_TOP:
+            attribute = attributes[tech]
+            o_dict['locations.{}.techs.{}.constraints.{}'.
+                   format(region, tech, attribute)] = 10*i
+            fixed_caps['cap_{}_{}'.format(tech, region)] = 10*i
+            i += 1
+        for transmission_type, region_a, region_b in \
+            TRANSMISSION_REGION1TO5_TOP + TRANSMISSION_OTHER_TOP:
+            i = int(region_a[-1] + region_b[-1])
+            o_dict['links.{},{}.techs.{}.constraints.energy_cap_equals'.
+                   format(region_a, region_b, transmission_type)] = i
+            fixed_caps['cap_transmission_{}_{}'.
+                       format(region_a, region_b)] = i
+
+    return fixed_caps, o_dict
+
+
+def test_override_dict(model_name):
+    """Test if the override dictionary is working properly"""
+
+    passing = True
+    fixed_caps, o_dict_1 = get_test_fixed_caps_override_dict(model_name)
+
+    # Test if override dictionary created by function is correct
+    o_dict_2 = models.get_cap_override_dict(model_name, fixed_caps)
+    if o_dict_1 != o_dict_2:
+        print('FAIL: Override dictionary does not match!\n'
+              '    Problem keys:')
+        for key in o_dict_1:
+            try:
+                if o_dict_1[key] != o_dict_2[key]:
+                    print(key)
+            except KeyError:
+                print(key)
+        passing = False
+
+    if passing:
+        print('PASS: override_dictionary is created properly.')
+
+    return passing
+
+
+def run_model_tests(model_name, run_mode, baseload_integer, baseload_ramping):
+    """ Run tests to see if models give the expected outputs."""
 
     # Load time series data
     ts_data = models.load_time_series_data(model_name=model_name,
@@ -293,20 +353,26 @@ def run_tests(model_name, run_mode, baseload_integer, baseload_ramping,
         model = models.SixRegionModel
     else:
         raise ValueError('Valid model names: 1_region, 6_region')
+
+    if run_mode == 'operate':
+        fixed_caps, _ = get_test_fixed_caps_override_dict(model_name)
+    else:
+        fixed_caps = None
+
     model = model(ts_data, run_mode, baseload_integer, baseload_ramping,
-                  fixed_capacities)
+                  fixed_caps)
     model.run()
     print('TESTS: Done running test simulation \n')
 
     # Run the tests
     print('TESTS: Starting tests\n---------------------')
     test_output_consistency(model, model_name, run_mode)
-    # test_outputs_against_benchmark(model, model_name, run_mode,
-    #                                baseload_integer, baseload_ramping)
+    test_outputs_against_benchmark(model, model_name, run_mode,
+                                   baseload_integer, baseload_ramping)
 
 
 def get_summary_outputs(model_name, run_mode, baseload_integer,
-                        baseload_ramping, fixed_capacities,
+                        baseload_ramping, fixed_caps,
                         time_start, time_end,
                         at_regional_level=False, save_csv=False):
 
@@ -320,15 +386,13 @@ def get_summary_outputs(model_name, run_mode, baseload_integer,
     if model_name == '1_region':
         model = models.OneRegionModel(ts_data, run_mode,
                                       baseload_integer, baseload_ramping,
-                                      fixed_capacities,
-                                      preserve_index=False)
+                                      fixed_caps, preserve_index=False)
         model.run()
         summary_outputs = model.get_summary_outputs()
     else:
         model = models.SixRegionModel(ts_data, run_mode,
                                       baseload_integer, baseload_ramping,
-                                      fixed_capacities,
-                                      preserve_index=False)
+                                      fixed_caps, preserve_index=False)
         model.run()
         summary_outputs = model.get_summary_outputs(at_regional_level)
     end = time.time()
@@ -380,54 +444,39 @@ def compare_summary_outputs():
     print(summary_outputs)
 
 
+def get_quick_outputs():
+
+    run_dict = {'model_name': '6_region',
+                'run_mode': 'operate',
+                'baseload_integer': False,
+                'baseload_ramping': False,
+                'fixed_caps': None,
+                'time_start': '2017-01',
+                'time_end': '2017-01'}
+
+    if run_dict['run_mode'] == 'operate':
+        fixed_caps, _ = get_test_fixed_caps_override_dict(
+            model_name=run_dict['model_name'])
+        run_dict['fixed_caps'] = fixed_caps
+
+    summary_outputs = get_summary_outputs(**run_dict)
+    print(summary_outputs)
+
+
 def dev_test():
+    ts_data = models.load_time_series_data(model_name='6_region',
+                                           demand_region='region5',
+                                           wind_region='region5')
+    ts_data = ts_data.loc['2017-01']    # Should match benchmarks
 
-    fixed_capacities = {}
+    model = models.SixRegionModel(ts_data,
+                                  run_mode='operate',
+                                  baseload_integer=False,
+                                  baseload_ramping=False,
+                                  fixed_capacities=None)
 
-    # fixed_capacities['cap_baseload_total'] = 23.2124
-    # fixed_capacities['cap_peaking_total'] = 26.5268
-    # fixed_capacities['cap_wind_total'] = 23.2783
-
-    fixed_capacities['cap_baseload_region1']             = 3.112262e+01
-    fixed_capacities['cap_peaking_region1']              = 1.581766e+01
-    fixed_capacities['cap_transmission_region1_region5'] = 5.534785e+00
-    fixed_capacities['cap_transmission_region1_region2'] = 4.199222e+01
-    fixed_capacities['cap_transmission_region1_region6'] = 0.000000e+00
-    fixed_capacities['cap_wind_region2']                 = 2.241848e+00
-    fixed_capacities['cap_transmission_region2_region3'] = 3.048031e+01
-    fixed_capacities['cap_baseload_region3']             = 9.071644e+01
-    fixed_capacities['cap_peaking_region3']              = 2.742114e+01
-    fixed_capacities['cap_transmission_region3_region4'] = 8.815252e+01
-    fixed_capacities['cap_transmission_region4_region5'] = 2.028268e+00
-    fixed_capacities['cap_wind_region5']                 = 6.233972e+01
-    fixed_capacities['cap_transmission_region5_region6'] = 4.129871e+01
-    fixed_capacities['cap_baseload_region6']             = 0.000000e+00
-    fixed_capacities['cap_peaking_region6']              = 4.129871e+01
-    fixed_capacities['cap_wind_region6']                 = 0.000000e+00
-    fixed_capacities['cap_baseload_total']               = 1.218391e+02
-    fixed_capacities['cap_peaking_total']                = 8.453750e+01
-    fixed_capacities['cap_wind_total']                   = 6.458156e+01
-    fixed_capacities['cap_transmission_total']           = 4.189736e+02
-
-
-
-    run_dict = {
-        'model_name': '6_region',
-        'run_mode': 'operate',
-        'baseload_integer': False,
-        'baseload_ramping': False,
-        'fixed_capacities': fixed_capacities,
-    }
-
-    time_start, time_end = '2017-01', '2017-01'
-
-    # summary_outputs = get_summary_outputs(**run_dict,
-    #                                       time_start=time_start,
-    #                                       time_end=time_end)
-    # print(summary_outputs)
-
-    run_tests(**run_dict)
-
+    model.run()
+    pdb.set_trace()
 
 if __name__ == '__main__':
     dev_test()
