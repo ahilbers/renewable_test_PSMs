@@ -15,9 +15,10 @@ In renewable energy policy and planning, open-source models and data typically r
 
 #### Models
 
+<img align="right" src="documentation/6_region_diagram.jpg" alt="drawing" width="540" height="450">
+
 The models are designed to be simple "toy" examples (and hence run fast in most settings), but have all the features of "real" power system models. There are two base models:
 - The `1 region` model has only one region in which supply and demand must be met.
-<img align="right" src="documentation/6_region_diagram.jpg" alt="drawing" width="540" height="450">
 - The `6 region` model has six regions with a transmission topology, and supply and demand must be matched across the model but transmitted between the regions. It is based on a renewable version of the *IEEE 6-bus test system*.
 Both of the models can be run in both planning mode, where the optimal system design (generation and transmssion capacities) are determined by minimising system cost, or in operational mode, where the system design is user-defined and the model finds the optimal generation and distribution to balance the grid.
 
