@@ -21,7 +21,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
   - `True`: baseload generation can only ramp up or down at 20% of its installed capacity per hour
 
 
-## Generation & technologies
+## Generation & transmission technologies
 
 ### Generation technologies
 
@@ -55,4 +55,15 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 <img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="540" height="450">
 
 
+
+
+## Additional information
+
+Additional information, such as the precise mathematical optimisation problem solved for each model setting, are available in the following paper:
+
+| Model in paper | Model in this repository |
+| -- | -- |
+| *1-region LP*   | `1 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region LP*   | `6 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region MILP*   | `6 region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
 
