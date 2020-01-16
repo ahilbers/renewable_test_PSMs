@@ -30,6 +30,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 
 
 | Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
+| Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
 | -- | -- | -- | -- |
 | Baseload     | 300 | 0.005 | 200 |
 | Peaking      | 100 | 0.035 | 400 |
