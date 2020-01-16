@@ -30,6 +30,11 @@ Inline-style:
 
 <img src="model_diagram.pdf" alt="drawing" width="50" height="50">
 
+![test image size](model_diagram.pdf){:class="img-responsive"}
+![test image size](model_diagram.pdf){:height="50%" width="50%"}
+![test image size](model_diagram.pdf){:height="700px" width="400px"}
+
+
 
 
 
