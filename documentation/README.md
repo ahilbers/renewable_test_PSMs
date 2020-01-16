@@ -29,16 +29,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 <img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="54" height="45">
 
 
-| Bus | Demand / candidate generation |
-| ---:| ----------------------------- | 
-| 1   | baseload, peaking             |
-| 2   | demand (DE), wind (DE)        |
-| 3   | baseload, peaking             |
-| 4   | demand (FR)                   |
-| 5   | demand (UK), wind (UK)        |
-| 6   | baseload, peaking, wind (ES)  |
-
-| Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh)
+| Technology | Installation cost \n(£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh)
 | -- | -- | -- | -- |
 | Baseload     | 300 | 0.005 | 200 |
 | Peaking      | 100 | 0.035 | 400 |
