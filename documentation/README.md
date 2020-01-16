@@ -28,11 +28,9 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 Inline-style: 
 ![](model_diagram.pdf)
 
-<img src="model_drawing.pdf" alt="drawing" width="200"/>
+<img src="model_diagram.pdf" alt="drawing" width="200"/>
 
 ![EuroSAT overview image](https://github.com/ahilbers/renewable_test_PSMs/blob/master/documentation/model_diagram.pdf?raw=true)
-
-phelber/EuroSAT/blob/master/eurosat_overview_small.jpg?raw=true)
 
 
 
