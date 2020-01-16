@@ -5,14 +5,13 @@
 
 ## Overview
 
+<img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="540" height="450">
+
 This repository contains model files, time series data and example code for a class of simple renewable test case power system models. They serve as "toy" models on which to test conduct renewable energy analysis.
 
-In renewable energy policy and planning, open-source models and data typically represent a real system and may be highly computationally expensive to run. In more pure power system research, the standard test case benchmark models (e.g. the various IEEE X-bus test case systems) are usually not designed for renewable analysis and/or require time series data that is not publicly available. This repository is released to serve as simple "toy" test-case power system models on which to test methodologies, particularly those related to time series and renewable energy analysis. The repository is fully self-contained; all the files required to create the models, 38 years of time series data, and sample code is provided.
+In renewable energy policy and planning, open-source models and data typically represent a real system and may be highly computationally expensive to run. In more pure power system research, the standard test case benchmark models (e.g. the various IEEE X-bus test case systems) are usually not designed for renewable analysis and/or require time series data that is not publicly available. This repository provides some simple "toy" test-case power system models on which to test methodologies, particularly those related to time series and renewable energy analysis. The repository is fully self-contained; all the files required to create the models, 38 years of time series data, and sample code is provided.
 
 The models are designed to be simple "toy" examples (and hence run fast in most settings), but have all the features of "real" power system models. There are two base models. The `1 region` model has only one region in which supply and demand must be met. The `6 region` model has six regions with a transmission topology, and supply and demand must be matched across the model but transmitted between the regions. It is based on a renewable version of the *IEEE 6-bus test system*. See `documentation` for full details on the models.
-
-- Time series
-- Possible generation technologies: baseload, peaking, wind. 
 
 
 
