@@ -23,7 +23,7 @@ The models are designed to be simple "toy" examples (and hence run fast in most 
 
 If you use this repository in your own research, please cite the following paper:
 
-AP Hilbers, DJ Brayshaw, A Gandy (2019). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
+AP Hilbers, DJ Brayshaw, A Gandy (2020). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
 
 
 

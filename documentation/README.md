@@ -16,22 +16,19 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 
 
 
+| Bus | Demand / candidate generation |
+| ---:| ----------------------------- | 
+| 1   | baseload, peaking             |
+| 2   | demand (DE), wind (DE)        |
+| 3   | baseload, peaking             |
+| 4   | demand (FR)                   |
+| 5   | demand (UK), wind (UK)        |
+| 6   | baseload, peaking, wind (ES)  |
 
 
 
-In this section the BUQ algorithm is applied to three test PSMs. Time series inputs are hourly demand levels and wind capacity factors in European countries over the 38-year period from 1980 to 2017. Model outputs consist of the minimum ``build-from-scratch'' power system cost as well as the associated carbon emissions, generation capacities and generation levels. The goal is to estimate each output's standard deviation using the BUQ algorithm introduced in Section \ref{sec:methodology}. The models are not intended to be realistic representation of existing power systems but serve as test cases containing many features of real power grids.
-
-The remainder of this section is structured as follows. Section \ref{sec:results:overview} introduces the three test-case PSMs. Section \ref{sec:results:subsampling} discusses the subsampling scheme used to make bootstrap samples in step 1 of the BUQ algorithm (Section \ref{sec:methodology:overview}). Section \ref{sec:results:verification} provides evidence for the methodology's accuracy. Section \ref{sec:results:estimating_standard deviation} provides a case study of application of the BUQ algorithm in four settings.
 
 
-\subsubsection{Model 1: 1-region LP}
-\label{sec:results:model_1}
-
-The \textit{1-region LP} model is a simple linear programming (LP)-based generation expansion planning (GEP) model with a choice of three possible generation technologies: \textit{baseload}, \textit{peaking} and \textit{wind}. Unmet demand (or, equivalently, load shedding) is allowed at high cost. The model takes two input time series: hourly demand levels and wind capacity factors for the United Kingdom. Section \ref{sec:appendix:optimisation:model_1} describes the precise mathematical optimisation problem.
-
-
-\subsubsection{Model 2: 6-region LP}
-\label{sec:results:model_2}
 
 \begin{figure}
   \begin{tabular}{c}
@@ -49,33 +46,6 @@ The \textit{1-region LP} model is a simple linear programming (LP)-based generat
   \caption{6-bus model configuration. Demand must be met at buses 2, 5 and 6. Conventional generation (baseload or peaking) may be installed at buses 1, 3 and 6. Wind generation may be installed at buses 2, 5 and 6. Buses 2, 4, 5 and 6 use (demand or wind) time series data from Germany (DE), France (FR), the United Kingdom (UK) and Spain (ES) respectively.}
   \label{fig:model_2:model_diagram}
 \end{figure}
-
-The \textit{6-region LP} is a more complicated multi-region generation \& transmission expansion planning (GEP/TEP) problem. The same technologies (baseload, peaking and wind) as in the \textit{1-region LP} are permitted, and unmet demand/load shedding is allowed at high cost. The system's 6-region topology is based on the \textit{IEEE 6-bus system}, see e.g.\ \citep{rau_1994, roh_2009, zhi_chen_2015, baharvandi_2018}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by \citet{kamalinia_2010} and \citet{kamalinia_2011}. Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration. Full mathematical details of the model are provided in Section \ref{sec:appendix:optimisation:model_2}.
-
-The \textit{6-region LP} model returns a larger number of outputs than the \textit{1-region LP} since each output is at regional level (e.g. baseload in regions 1, 3 and 6) and transmission expansion is also considered. This induces nonuniqueness in the solution; for example, in the case of residual demand in region 2, the optimal solution has no preference in meeting this from extra generation and transmission from region 1 versus 3. This property can be removed by considering distinct technologies at each region. However, in the interest of simplicity, this investigation concentrates on model-wide outputs (e.g. total baseload capacity), which are unique given identical input data.
-
-
-\subsubsection{Model 3: 6-region MILP}
-\label{sec:results:model_3}
-
-The \textit{6-region MILP} model is identical to the \textit{6-region LP} model with added integer and ramping constraints. Baseload generation capacity may be installed in blocks of 3GW (roughly a large nuclear plant) and is subject to a ramp rate of 20\%/hr. The optimisation problem is hence a mixed integer linear program (MILP) with ramping constraints. Mathematica deatils are provided in Section \ref{sec:appendix:optimisation:model_3}. 
-
-
-\subsubsection{Computational cost and time series length}
-\label{sec:results:computational_cost}
-
-\begin{figure}
-  \hspace*{3.5em} (a) 1-region LP \hspace*{4.5em} (b) 6-region LP \hspace*{4.3em} (c) 6-region MILP \\
-  \includegraphics[scale=0.7, trim=10 10 0 0, clip]{cc_scaling/1region_cont.pdf}
-  \includegraphics[scale=0.7, trim=20 10 0 0, clip]{cc_scaling/6regions_cont.pdf}
-  \includegraphics[scale=0.7, trim=20 10 10 0, clip]{cc_scaling/6regions_disc.pdf}
-  \center{\includegraphics[scale=0.7, trim=0 0 0 0, clip]{cc_scaling/legend.pdf}}
-  \caption{Distribution (across 80 runs) of computational cost required to solve each of the 3 test PSMs as a function of sample size. The black line shows the median and the grey region indicates a 95\% symmetric prediction interval.}
-  \label{fig:model_1:cc_scaling}
-\end{figure}
-
-Figure \ref{fig:model_1:cc_scaling} shows the distribution of the computing time to solve each model's optimisation problem as a function of the input demand \& weather time series length. For the \textit{1-region LP} model, solution times scale roughly linearly and 1-year simulations take 20-40 seconds. For the \textit{6-region LP} model, solution times are longer and scale up linearly at first but then accelerate in computational cost; a 5-year simulation (not shown) takes 1 hour, much longer than 5 times the 3-minute median for 1-year simulations. Furthermore, the range in solution times across runs using the same time series lengths is large. For the \textit{6-region MILP} model, the integer constraints cause an exponential scaling of solution times, which roughly double for every 72-day increase in sample length. Each of the above results are based on optimisation problems created in the open-source energy modeling framework \texttt{Calliope} \citep{pfenninger_2018} and solved using the \texttt{gurobi} solver on a 2.7GHz Intel Core i5-5257U processor with 8GB of RAM.
-
 
 
 
@@ -180,6 +150,66 @@ by optimising over decision variables
 \text{cap}_{i,r}^\text{gen}, \text{cap}_{r,r'}^\text{tr}, \text{gen}_{i,r,t} \ge 0 \quad & \forall \: i, r, t. \label{eq:model_3:ge_0}
 \end{align}
 \noindent \eqref{eq:model_3:gen_topology}-\eqref{eq:model_3:tr_topology} stipulate the locations of generation technologies and the model's transmission topology. \eqref{eq:model_3:demand_met} and \eqref{eq:model_3:tr_balance} are the demand and power flow balance requirements. \eqref{eq:model_3:gen_le_cap_b}-\eqref{eq:model_3:gen_le_cap_w} ensure generation does not exceed installed capacity (for conventional technologies) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_3:ramping} is the baseload ramping constraint. \eqref{eq:model_3:integer} enforces that baseload is built in 3GW units. \eqref{eq:model_3:tr_le_cap_tr} caps transmitted power at installed transmission capacity.
+
+
+
+
+
+
+
+
+
+
+
+
+In this section the BUQ algorithm is applied to three test PSMs. Time series inputs are hourly demand levels and wind capacity factors in European countries over the 38-year period from 1980 to 2017. Model outputs consist of the minimum ``build-from-scratch'' power system cost as well as the associated carbon emissions, generation capacities and generation levels. The goal is to estimate each output's standard deviation using the BUQ algorithm introduced in Section \ref{sec:methodology}. The models are not intended to be realistic representation of existing power systems but serve as test cases containing many features of real power grids.
+
+The remainder of this section is structured as follows. Section \ref{sec:results:overview} introduces the three test-case PSMs. Section \ref{sec:results:subsampling} discusses the subsampling scheme used to make bootstrap samples in step 1 of the BUQ algorithm (Section \ref{sec:methodology:overview}). Section \ref{sec:results:verification} provides evidence for the methodology's accuracy. Section \ref{sec:results:estimating_standard deviation} provides a case study of application of the BUQ algorithm in four settings.
+
+
+\subsubsection{Model 1: 1-region LP}
+\label{sec:results:model_1}
+
+The \textit{1-region LP} model is a simple linear programming (LP)-based generation expansion planning (GEP) model with a choice of three possible generation technologies: \textit{baseload}, \textit{peaking} and \textit{wind}. Unmet demand (or, equivalently, load shedding) is allowed at high cost. The model takes two input time series: hourly demand levels and wind capacity factors for the United Kingdom. Section \ref{sec:appendix:optimisation:model_1} describes the precise mathematical optimisation problem.
+
+
+\subsubsection{Model 2: 6-region LP}
+\label{sec:results:model_2}
+
+
+
+The \textit{6-region LP} is a more complicated multi-region generation \& transmission expansion planning (GEP/TEP) problem. The same technologies (baseload, peaking and wind) as in the \textit{1-region LP} are permitted, and unmet demand/load shedding is allowed at high cost. The system's 6-region topology is based on the \textit{IEEE 6-bus system}, see e.g.\ \citep{rau_1994, roh_2009, zhi_chen_2015, baharvandi_2018}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by \citet{kamalinia_2010} and \citet{kamalinia_2011}. Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration. Full mathematical details of the model are provided in Section \ref{sec:appendix:optimisation:model_2}.
+
+The \textit{6-region LP} model returns a larger number of outputs than the \textit{1-region LP} since each output is at regional level (e.g. baseload in regions 1, 3 and 6) and transmission expansion is also considered. This induces nonuniqueness in the solution; for example, in the case of residual demand in region 2, the optimal solution has no preference in meeting this from extra generation and transmission from region 1 versus 3. This property can be removed by considering distinct technologies at each region. However, in the interest of simplicity, this investigation concentrates on model-wide outputs (e.g. total baseload capacity), which are unique given identical input data.
+
+
+\subsubsection{Model 3: 6-region MILP}
+\label{sec:results:model_3}
+
+The \textit{6-region MILP} model is identical to the \textit{6-region LP} model with added integer and ramping constraints. Baseload generation capacity may be installed in blocks of 3GW (roughly a large nuclear plant) and is subject to a ramp rate of 20\%/hr. The optimisation problem is hence a mixed integer linear program (MILP) with ramping constraints. Mathematica deatils are provided in Section \ref{sec:appendix:optimisation:model_3}. 
+
+
+\subsubsection{Computational cost and time series length}
+\label{sec:results:computational_cost}
+
+\begin{figure}
+  \hspace*{3.5em} (a) 1-region LP \hspace*{4.5em} (b) 6-region LP \hspace*{4.3em} (c) 6-region MILP \\
+  \includegraphics[scale=0.7, trim=10 10 0 0, clip]{cc_scaling/1region_cont.pdf}
+  \includegraphics[scale=0.7, trim=20 10 0 0, clip]{cc_scaling/6regions_cont.pdf}
+  \includegraphics[scale=0.7, trim=20 10 10 0, clip]{cc_scaling/6regions_disc.pdf}
+  \center{\includegraphics[scale=0.7, trim=0 0 0 0, clip]{cc_scaling/legend.pdf}}
+  \caption{Distribution (across 80 runs) of computational cost required to solve each of the 3 test PSMs as a function of sample size. The black line shows the median and the grey region indicates a 95\% symmetric prediction interval.}
+  \label{fig:model_1:cc_scaling}
+\end{figure}
+
+Figure \ref{fig:model_1:cc_scaling} shows the distribution of the computing time to solve each model's optimisation problem as a function of the input demand \& weather time series length. For the \textit{1-region LP} model, solution times scale roughly linearly and 1-year simulations take 20-40 seconds. For the \textit{6-region LP} model, solution times are longer and scale up linearly at first but then accelerate in computational cost; a 5-year simulation (not shown) takes 1 hour, much longer than 5 times the 3-minute median for 1-year simulations. Furthermore, the range in solution times across runs using the same time series lengths is large. For the \textit{6-region MILP} model, the integer constraints cause an exponential scaling of solution times, which roughly double for every 72-day increase in sample length. Each of the above results are based on optimisation problems created in the open-source energy modeling framework \texttt{Calliope} \citep{pfenninger_2018} and solved using the \texttt{gurobi} solver on a 2.7GHz Intel Core i5-5257U processor with 8GB of RAM.
+
+
+
+
+
+
+
 
 
 
