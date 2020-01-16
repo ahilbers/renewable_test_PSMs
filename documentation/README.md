@@ -25,6 +25,9 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 | 5   | demand (UK), wind (UK)        |
 | 6   | baseload, peaking, wind (ES)  |
 
+Inline-style: 
+![alt text](model_diagram.pdf) "Logo Title Text 1")
+
 
 
 
