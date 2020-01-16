@@ -5,7 +5,7 @@
 
 ## Overview
 
-<img style="float: right;" src="documentation/6_region_diagram.jpg" alt="drawing" width="540" height="450">
+<img align="right;" src="documentation/6_region_diagram.jpg" alt="drawing" width="540" height="450">
 
 This repository contains model files, time series data and example code for a class of simple renewable test case power system models. They serve as "toy" models on which to test conduct renewable energy analysis.
 
