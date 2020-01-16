@@ -28,6 +28,8 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 Inline-style: 
 ![](model_diagram.pdf)
 
+<img src="model_drawing.pdf" alt="drawing" width="200"/>
+
 
 
 
