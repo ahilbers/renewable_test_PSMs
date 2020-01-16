@@ -28,10 +28,10 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 Inline-style: 
 ![](6_region_diagram.jpg)
 
-<img src="6_region_diagram.jpg" alt="drawing" width="50" height="50">
+<img src="6_region_diagram.jpg" alt="drawing" width="100" height="100">
 
 ![test image size](6_region_diagram.jpb){:class="img-responsive"}
-![test image size](6_region_diagram.jpg){:height="50%" width="50%"}
+![test image size](6_region_diagram.jpg){:height="25%" width="25%"}
 ![test image size](6_region_diagram.jpg){:height="700px" width="400px"}
 
 
