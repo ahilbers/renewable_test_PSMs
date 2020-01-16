@@ -29,15 +29,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 <img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="54" height="45">
 
 
-| Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
-| Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
-| -- | -- | -- | -- |
-| Baseload     | 300 | 0.005 | 200 |
-| Peaking      | 100 | 0.035 | 400 |
-| Wind         | 100 |     0 |   0 |
-| Unmet demand |   0 |     6 |   0 |
-
-| Technology | Installation cost (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
+| Technology | Installation cost <br> (£m/GWyr) | Generation cost (£m/GWh) | Carbon Emissions (t CO2/GWh) |
 | -- | -- | -- | -- |
 | Baseload     | 300 | 0.005 | 200 |
 | Peaking      | 100 | 0.035 | 400 |
