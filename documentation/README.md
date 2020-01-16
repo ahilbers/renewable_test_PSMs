@@ -21,6 +21,25 @@ For each of the two base models, there are 4 customisable inputs/settings that c
   - `True`: baseload generation can only ramp up or down at 20% of its installed capacity per hour
 
 
+## Generation & technologies
+
+### Generation technologies
+
+| Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
+| -- | -- | -- | -- |
+| Baseload     | 300 | 0.005 | 200 |
+| Peaking      | 100 | 0.035 | 400 |
+| Wind         | 100 |     0 |   0 |
+| Unmet demand |   0 |     6 |   0 |
+
+### Transmission technologies (in `6 region` model)
+
+| Regions | Installation cost <br> (£m/GWyr) |
+| -- | -- |
+| Region 1 to 5 | 150 |
+| Other         | 100 |
+
+
 
 
 | Bus | Demand / candidate generation |
@@ -36,9 +55,4 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 <img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="540" height="450">
 
 
-| Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
-| -- | -- | -- | -- |
-| Baseload     | 300 | 0.005 | 200 |
-| Peaking      | 100 | 0.035 | 400 |
-| Wind         | 100 |     0 |   0 |
-| Unmet demand |   0 |     6 |   0 |
+
