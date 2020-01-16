@@ -12,6 +12,8 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 - `run_mode`: The models may be run in two modes:
   - `plan`: generation and transmission capacities are determined by minimising system (sum of installation and generation) costs.
   - `operate`: generation and transmission capacities are fixed and the system is operated to match supply and demand at minimum cost.
+- `baseload_integer`: if `False`, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If `True`, baseload may be built only in blocks of 3GW, which makes a model in `plan` mode a mixed-integer linear program and slower to solve. This switch matters only in `plan` mode, since in `operate` mode the capacities are user-defined.
+- `baseload_ramping`: if `False` baseload generation can change at any rate. If `True`, baseload generation can only ramp up or down at 20% of its installed capacity per hour.
 
 
 
