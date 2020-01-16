@@ -26,7 +26,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 | 6   | baseload, peaking, wind (ES)  |
 
 Inline-style: 
-![](6_region_diagram.jpg =100x100)
+![](6_region_diagram.jpg)
 
 <img src="6_region_diagram.jpg" alt="drawing" width="50" height="50">
 
