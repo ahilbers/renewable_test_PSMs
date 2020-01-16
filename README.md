@@ -37,10 +37,10 @@ The easiest way to start using these models is by modifying the example script p
 Each of these examples can be run from a unix command line via
 
 ```
-python3 main.py --run_name $RUN_NAME
+python3 main.py --run_name {RUN_NAME}
 ```
 
-where `$RUN_NAME` is either `1_region_plan_LP`, `6_region_plan_MILP` or `6_region_operate`.
+where `{RUN_NAME}` is either `1_region_plan_LP`, `6_region_plan_MILP` or `6_region_operate`.
 
 A run may be customised by creating a custom `run_dict` and `ts_data` in `main.py`. Runs may give various warnings from the `Calliope` backend. 
 
@@ -103,8 +103,3 @@ The demand and wind dataset is based on work by Hannah Bloomfield et al. Details
 The `6 region` model topology is based on the IEEE 6-bus test system, used in many previous studies. The renewable-ready topology, including the links and locations of demand & supply technologies, is based on a renewable 6-bus model, introduced in the following paper:
 
 - S Kamalinia, M Shahidehpour (2010). Generation expansion planning in wind-thermal power systems. IET Generation, Transmission & Distribution, 4(8), 940-951. doi:[10.1049/iet-gtd.2009.0695](https://doi.org/10.1049/iet-gtd.2009.0695)
-
-
-- Data does not have leap days
-- Code written for easy development of models -- use tests to check model behaves as desired.
-- Warnings of type `monetary` interest rate of zero for technology XXXX, setting depreciation rate as 1/lifetime. can be ignored.
