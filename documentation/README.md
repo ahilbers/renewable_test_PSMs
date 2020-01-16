@@ -28,7 +28,7 @@ For each of the two base models, there are 4 customisable inputs/settings that c
 | 6   | baseload, peaking, wind (ES)  |
 
 
-<img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="54" height="45">
+<img style="float: right;" src="6_region_diagram.jpg" alt="drawing" width="540" height="450">
 
 
 | Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
