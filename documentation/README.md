@@ -30,6 +30,10 @@ Inline-style:
 
 <img src="model_drawing.pdf" alt="drawing" width="200"/>
 
+![EuroSAT overview image](https://github.com/ahilbers/renewable_test_PSMs/blob/master/documentation/model_diagram.pdf?raw=true)
+
+phelber/EuroSAT/blob/master/eurosat_overview_small.jpg?raw=true)
+
 
 
 
