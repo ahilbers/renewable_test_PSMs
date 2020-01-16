@@ -84,7 +84,7 @@ Since `main.py` is a short file with only a few functions, it's probably easier 
 
 Running `main.py` requires:
 - Python modules:
-  - `Calliope 0.6.4`:  see [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation.
+  - `Calliope 0.6.4`:  see [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation
   - `numpy 1.62.2`
   - `pandas 0.24.2`
 - Other:
