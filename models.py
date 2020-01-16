@@ -95,63 +95,6 @@ def get_scenario(run_mode, baseload_integer, baseload_ramping):
     return scenario
 
 
-def get_cap_override_dict(model_name, fixed_caps):
-    """Create an override dictionary that can be used to set fixed
-    fixed capacities in a Calliope model run.
-
-    Parameters:
-    -----------
-    model_name (str) : '1_region' or '6_region'
-    fixed_caps (pandas DataFrame or dict) : the fixed capacities.
-        A DataFrame created via model.get_summary_outputs (at
-        regional level) will work.
-
-    Returns:
-    --------
-    o_dict (dict) : A dict that can be fed as override_dict into Calliope
-        model in operate mode
-    """
-
-    o_dict = {}
-
-    # Add baseload, peaking and wind capacities
-    if model_name == '1_region':
-        for tech, attribute in [('baseload', 'energy_cap_equals'),
-                                ('peaking', 'energy_cap_equals'),
-                                ('wind', 'resource_area_equals')]:
-            idx = ('locations.region1.techs.{}.constraints.{}'.
-                   format(tech, attribute))
-            o_dict[idx] = fixed_caps['cap_{}_total'.format(tech)]
-
-    # Add baseload, peaking, wind and transmission capacities
-    if model_name == '6_region':
-        for region in ['region{}'.format(i+1) for i in range(6)]:
-            for tech, attribute in [('baseload', 'energy_cap_equals'),
-                                    ('peaking', 'energy_cap_equals'),
-                                    ('wind', 'resource_area_equals')]:
-                try:
-                    idx = ('locations.{}.techs.{}.constraints.{}'.
-                           format(region, tech, attribute))
-                    o_dict[idx] = \
-                        fixed_caps['cap_{}_{}'.format(tech, region)]
-                except KeyError:
-                    pass
-            for region_to in ['region{}'.format(i+1) for i in range(6)]:
-                if (region, region_to) == ('region1', 'region5'):
-                    tech = 'transmission_region1to5'
-                else:
-                    tech = 'transmission_other'
-                idx = ('links.{},{}.techs.{}.constraints.energy_cap_equals'.
-                       format(region, region_to, tech))
-                try:
-                    o_dict[idx] = fixed_caps['cap_transmission_{}_{}'.
-                                             format(region, region_to)]
-                except KeyError:
-                    pass
-
-    return o_dict
-
-
 def calculate_carbon_emissions(generation_levels):
     """Calculate total carbon emissions.
 
@@ -174,8 +117,7 @@ class OneRegionModel(calliope.Model):
     """Instance of 1-region power system model."""
 
     def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False,
-                 fixed_caps=None):
+                 baseload_integer=False, baseload_ramping=False):
         """Create instance of 1-region model in Calliope.
 
         Parameters:
@@ -186,22 +128,12 @@ class OneRegionModel(calliope.Model):
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
-        fixed_caps (dict or pandas DataFrame) : fixed capacities for
-            generation and tranmsission technologies, as an override
         """
 
         self._base_dir = 'models/1_region'
         self.num_timesteps = ts_data.shape[0]
 
-        if run_mode == 'plan':
-            assert fixed_caps is None, \
-                'Fixed capacities should not be provided in planning mode.'
-
         scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
-        if fixed_caps is not None:
-            override_dict = get_cap_override_dict('1_region', fixed_caps)
-        else:
-            override_dict = None
 
         # Calliope requires a CSV file of time series data to be present
         # at time of model initialisation. This code creates a CSV with the
@@ -211,8 +143,7 @@ class OneRegionModel(calliope.Model):
         ts_data.to_csv(ts_data_init_path)
         super(OneRegionModel, self).__init__(os.path.join(self._base_dir,
                                                           'model.yaml'),
-                                             scenario=scenario,
-                                             override_dict=override_dict)
+                                             scenario=scenario)
         os.remove(ts_data_init_path)
 
     def _create_init_time_series(self, ts_data):
@@ -290,8 +221,7 @@ class SixRegionModel(calliope.Model):
     """Instance of 6-region power system model."""
 
     def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False,
-                 fixed_caps=None):
+                 baseload_integer=False, baseload_ramping=False):
         """Create instance of 1-region model in Calliope.
 
         Parameters:
@@ -302,23 +232,12 @@ class SixRegionModel(calliope.Model):
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
-        fixed_caps (dict or pandas DataFrame) : fixed capacities for
-            generation and tranmsission technologies, as an override
         """
 
         self._base_dir = 'models/6_region'
         self.num_timesteps = ts_data.shape[0]
 
-        if run_mode == 'plan':
-            assert fixed_caps is None, \
-                'Fixed capacities should not be provided in planning mode.'
-
         scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
-        if fixed_caps is not None:
-            override_dict = get_cap_override_dict('6_region',
-                                                  fixed_caps)
-        else:
-            override_dict = None
 
         # Calliope requires a CSV file of time series data to be present
         # at time of model initialisation. This code creates a CSV with the
@@ -328,8 +247,7 @@ class SixRegionModel(calliope.Model):
         ts_data.to_csv(ts_data_init_path)
         super(SixRegionModel, self).__init__(os.path.join(self._base_dir,
                                                           'model.yaml'),
-                                             scenario=scenario,
-                                             override_dict=override_dict)
+                                             scenario=scenario)
         os.remove(ts_data_init_path)
 
     def _create_init_time_series(self, ts_data):
@@ -452,7 +370,7 @@ class SixRegionModel(calliope.Model):
                 'unmet': outputs.loc['gen_unmet_total']
             }
         )
-        
+
         # Aggregate outputs across regions if desired
         if not at_regional_level:
             outputs = outputs.loc[[

@@ -24,8 +24,6 @@ overrides:
         techs.baseload.constraints.units_max: inf
         techs.baseload.constraints.energy_cap_per_unit: 3
     operate:
-    # fixed capacities can be entered here or via on override_dict in
-    # python, in which case the values here are overridden
         run:
             mode: operate
             cyclic_storage: False
@@ -35,9 +33,9 @@ overrides:
                 window: 332880  # hours
         locations:
             region1:
-                techs.baseload.constraints.energy_cap_equals: 0
-                techs.peaking.constraints.energy_cap_equals: 0
-                techs.wind.constraints.resource_area_equals: 0
+                techs.baseload.constraints.energy_cap_equals: 10
+                techs.peaking.constraints.energy_cap_equals: 20
+                techs.wind.constraints.resource_area_equals: 30
                 techs.unmet.constraints.energy_cap_equals: 1e10
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr

@@ -24,8 +24,6 @@ overrides:
         techs.baseload.constraints.units_max: inf
         techs.baseload.constraints.energy_cap_per_unit: 3
     operate:
-    # fixed capacities can be entered here or via on override_dict in
-    # python, in which case the values here are overridden
         run:
             mode: operate
             cyclic_storage: False
@@ -35,37 +33,37 @@ overrides:
                 window: 332880  # hours
         locations:
             region1:
-                techs.baseload.constraints.energy_cap_equals: 0
-                techs.peaking.constraints.energy_cap_equals: 0
+                techs.baseload.constraints.energy_cap_equals: 10
+                techs.peaking.constraints.energy_cap_equals: 40
             region2:
-                techs.wind.constraints.resource_area_equals: 0
+                techs.wind.constraints.resource_area_equals: 70
                 techs.unmet.constraints.energy_cap_equals: 1e10
             region3:
-                techs.baseload.constraints.energy_cap_equals: 0
-                techs.peaking.constraints.energy_cap_equals: 0
+                techs.baseload.constraints.energy_cap_equals: 20
+                techs.peaking.constraints.energy_cap_equals: 50
             region4:
                 techs.unmet.constraints.energy_cap_equals: 1e10
             region5:
-                techs.wind.constraints.resource_area_equals: 0
+                techs.wind.constraints.resource_area_equals: 80
                 techs.unmet.constraints.energy_cap_equals: 1e10
             region6:
-                techs.baseload.constraints.energy_cap_equals: 0
-                techs.peaking.constraints.energy_cap_equals: 0
-                techs.wind.constraints.resource_area_equals: 0
+                techs.baseload.constraints.energy_cap_equals: 30
+                techs.peaking.constraints.energy_cap_equals: 60
+                techs.wind.constraints.resource_area_equals: 90
         links:
             region1,region2:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 12
             region1,region5:
-                techs.transmission_region1to5.constraints.energy_cap_equals: 0
+                techs.transmission_region1to5.constraints.energy_cap_equals: 15
             region1,region6:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 16
             region2,region3:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 23
             region3,region4:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 34
             region4,region5:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 45
             region5,region6:
-                techs.transmission_other.constraints.energy_cap_equals: 0
+                techs.transmission_other.constraints.energy_cap_equals: 56
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr
