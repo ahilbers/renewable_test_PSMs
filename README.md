@@ -22,7 +22,7 @@ The models are designed to be simple "toy" examples (and hence run fast in most 
 
 If you use this repository in your own research, please cite the following paper:
 
-AP Hilbers, DJ Brayshaw, A Gandy (2020). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
+AP Hilbers, DJ Brayshaw, A Gandy (2020, *in review*). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
 
 
 
@@ -98,7 +98,7 @@ Models are constructed in the modelling framework `Calliope`, created by Stefan 
 
 The demand and wind dataset is based on work by Hannah Bloomfield et al. Details can be found in the following paper:
 
-- HC Bloomfield, DJ Brayshaw, A Charlton-Perez (2020). Characterising the winter meteorological drivers of the European electricity system using Targeted Circulation Types. Meteorological Applications. ISSN 1469-8080 (in press). doi:[10.1002/met.1858](https://doi.org/10.1002/met.1858)
+- HC Bloomfield, DJ Brayshaw, A Charlton-Perez (2019). Characterising the winter meteorological drivers of the European electricity system using Targeted Circulation Types. Meteorological Applications. ISSN 1469-8080 (in press). doi:[10.1002/met.1858](https://doi.org/10.1002/met.1858)
 
 The `6 region` model topology is based on the IEEE 6-bus test system, used in many previous studies. The renewable-ready topology, including the links and locations of demand & supply technologies, is based on a renewable 6-bus model, introduced in the following paper:
 
