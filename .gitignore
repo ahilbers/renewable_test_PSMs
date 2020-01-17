@@ -1,2 +1,6 @@
 *.DS_Store
+*.aux
+*.log
+*.out
+*.spl
 __pycache__/*

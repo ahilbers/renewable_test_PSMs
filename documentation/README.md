@@ -66,4 +66,3 @@ Additional information, such as the precise mathematical optimisation problem so
 | *1-region LP*   | `1 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
 | *6-region LP*   | `6 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
 | *6-region MILP*   | `6 region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
-

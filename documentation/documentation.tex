@@ -1,0 +1,307 @@
+\documentclass[preprint]{elsarticle}
+
+% layout
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper,left=40mm, right=40mm, top=30mm}
+\bibliographystyle{model5-names}\biboptions{authoryear}
+\usepackage{multicol}
+\usepackage{url}
+
+% footer
+\makeatletter
+\def\ps@pprintTitle{%
+ \let\@oddhead\@empty
+ \let\@evenhead\@empty
+ \def\@oddfoot{\centerline{Preprint \textemdash \: \today}}%
+ \let\@evenfoot\@oddfoot}
+\makeatother
+
+% text & symbols
+\usepackage{csquotes} \usepackage{amsmath} \usepackage{amssymb}
+\usepackage[official]{eurosym} \usepackage{bm} \usepackage{bbm}
+\newcommand{\ah}[1]{{\bf[AH: }#1{\bf]}}
+\newcommand{\ag}[1]{{\bf[AG: }#1{\bf]}}
+
+% figures & references
+\usepackage{graphicx} \graphicspath{{../figs/}}
+
+
+
+
+\begin{document}
+
+
+
+
+
+
+
+\section{Overview}
+
+\begin{table}
+  \centering
+  \small
+\begin{tabular}{r p{5.3cm}}
+  Term & Description \\ \hline
+  \multicolumn{2}{l}{\textbf{Indices}} \\
+  $i$ & Generation technology \\
+  $r$ , $r'$ & Region \\
+  $t$ & Time step \\
+  \multicolumn{2}{l}{\textbf{Sets}} \\
+  $\mathcal{I}$ & Technologies: baseload ($b$), peaking ($p$), wind ($w$), unmet demand ($u$) \\
+  $\mathcal{D}$ & Decision variables \\
+  \multicolumn{2}{l}{\textbf{Parameters}} \\
+  $C_{i}^\text{gen}$ & Install cost, technology $i$ (\pounds m/GWyr)\\
+  $C_{r, r'}^\text{tr}$ & Install cost, transmission, region $r$ to $r'$ (\pounds m/GWyr) \\
+  $F_{i}^\text{gen}$ & Generation cost, technology $i$ (\pounds m/GWh) \\ \hline
+\end{tabular} \hspace{0.5em}
+\begin{tabular}{r p{3.7cm}}
+  Term & Description \\ \hline
+  \multicolumn{2}{l}{\textbf{Time series}} \\
+  $d_{r, t}$ & Demand, region $r$, time step $t$ (GWh) \\
+  $w_{r, t}$ & Wind capacity factor, region $r$, time $t$ ($\in$ [0, 1]) \\
+  \multicolumn{2}{l}{\textbf{Decision variables}} \\
+  $\text{cap}_{i, r}^\text{gen}$ & Generation capacity, technology $i$, region $r$ (GW) \\
+  $\text{cap}_{r, r'}^\text{tr}$ & Transmission capacity, region $r$ to $r'$ (GW) \\
+  $\text{gen}_{i, r, t}$ & Generation, technology $i$, region $r$, time $t$ (GWh) \\
+  $\text{tr}_{r, r', t}$ & Transmission, region $r$ to region $r'$, time $t$ (GWh) \\ \hline
+\end{tabular}
+\caption{Nomenclature.}
+\label{table:appendix:nomenclature}
+\end{table}
+
+\noindent There are two base models:
+\begin{itemize}
+\item The \texttt{1\_region} model has only one region, in which supply must match demand.
+\item The \texttt{6\_region} model has six regions. Supply must match demand across the mode, but electricity may be transmitted across the regions according to a transmission topology, taken from the \textit{IEEE 6-bus test system}.
+\end{itemize}
+For each of the two base models, there are a number of customisable inputs/settings that change the model's behaviour.
+\begin{itemize}
+\item The \texttt{run\_mode}. Each model can be run in either \texttt{plan} or \texttt{operate} mode. In \texttt{plan} mode, generation and transmission capacities are determined by minimising the sum of installation and generation costs. In \texttt{operate} mode, the installed capacities are user-defined, and a fixed model configuration is operated to determine the optimal generation and transmission levels.
+\item Each technology's install and generation cost. 
+\item The (demand and wind) time series inputs.
+\item The \texttt{baseload\_integer} constraint. If \texttt{False}, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If \texttt{True}, baseload may be built in blocks of 3GW. This constraint applies only in \texttt{plann} mode.
+\item The \texttt{baseload\_ramping} constraint. If \texttt{False}, baseload generation can change arbitrarily quickly between time steps. If \texttt{True}, baseload generation levels can ramp up or down at at most 20\% of its installed capacity.
+\item The installed capacities of generation and technology technologies. This applies only in \texttt{operate} mode.
+\end{itemize}
+The install and generation costs are specified in \texttt{models/\{MODEL\_NAME\}/techs.yaml}. The installed capacities are specified in \texttt{models/\{MODEL\_NAME\}/model.yaml}. All other settings \& inputs are specified when conducting model runs (see \texttt{main.py}).
+
+
+
+
+\newpage
+\section{Technologies}
+\begin{table}
+  \centering
+\begin{tabular}{ l  c  c  c}
+\small
+& Installation cost & Generation cost & Carbon emissions\\
+Technology &(\pounds m/GWyr) &(\pounds m/GWh) & (t CO$_2$/GWh) \\ \hline
+\multicolumn{4}{c}{\textbf{Generation technologies}} \\  
+Baseload & $C_b^\text{gen} = 300$ & $F_b^\text{gen} = 0.005$ & $e_b = 200$ \\
+Peaking & $C_p^\text{gen} = 100$ & $F_p^\text{gen} = 0.035$ & $e_m = 400$ \\
+Wind & $C_w^\text{gen} = 100$ & $F_w^\text{gen} = 0$ & $e_w = 0$ \\
+Unmet demand & $C_u^\text{gen} = 0$ & $F_u^\text{gen} = 6$ & $e_u = 0$ \\
+\multicolumn{4}{c}{\textbf{Transmission technologies}} \\  
+Regions 1 to 5 & $C_{1,5}^\text{tr} = 150$ & - & - \\
+Other links & $C_{r,r'}^\text{tr} = 100$ & - & - \\ \hline
+\end{tabular} \vspace{1em}
+\caption{Costs and carbon emissions of generation and transmission technologies. Transmission costs consist only of installation costs. Installation costs are annualised so as to reflect cost per year of plant lifetime.}
+\label{table:tech_characteristics}
+\end{table}
+
+\noindent In each model, three generation technologies are considered: baseload, peaking and wind. Baseload and peaking are conventional technologies that run on fuel and whose generation levels can be controlled. Wind has no generation cost but generation levels that are capped by the time-varying wind capacity factors. Unmet demand is considered, for modelling purposes, a fourth technology with no install but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
+
+
+
+
+
+
+
+
+\section{1-region model}
+
+\noindent The \texttt{1\_region model} considers a single node and a choice of the 3 generation technologies and unmet demand. It takes two input time series (hourly demand levels and wind capacity factors in the United Kingdom). In \texttt{plan} mode, the model leads to a generation expansion planning problem where the optimal generation capacities and hourly generation levels for each technology are determined. 
+
+
+
+
+\subsection{Planning mode}
+\label{sec:appendix:optimisation:model_1}
+\noindent \textit{Model inputs}:
+\begin{equation}
+  \{C_{i}^\text{gen}, \hspace{0.5em} F_{i}^\text{gen}, \hspace{0.5em} d_{1, t}, \hspace{0.5em} w_{1, t} \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_1:inputs}
+\end{equation}
+\textit{Model outputs:}
+\begin{equation}
+\{\text{cap}_{i,1}^\text{gen}, \hspace{0.5em} \text{gen}_{i,1,t}, \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_1:decision_variables}
+\end{equation}
+The model outputs are determined as the decision variables that solve the following optimisation problem:
+\begin{equation}
+\min \Bigg[ \frac{T}{8760} \Bigg( \underbrace{\sum_{i \in \mathcal{I}} C_i^\text{gen} \text{cap}_{i,1}^\text{gen}}_{\substack{\text{installation cost,} \\ \text{generation capacity}}} \Bigg) + \underbrace{ \sum_{i \in \mathcal{I}} \sum_{t=1}^{T} F_i^\text{gen} \text{gen}_{i,1,t}}_\text{generation cost} \Bigg]
+\label{eq:model_1:objective}
+\end{equation}
+\noindent subject to
+\begin{align}
+\sum_{i \in \mathcal{I}} \text{gen}_{i,1,t} = d_{1,t} \quad & \forall \: t \label{eq:model_1:demand_met} \\
+\text{gen}_{b,1,t} \le \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:gen_le_cap_b} \\
+\text{gen}_{p,1,t} \le \text{cap}_{p,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:gen_le_cap_p} \\
+\text{gen}_{w,1,t} \le \text{cap}_{w,1}^\text{gen} w_{1,t} \quad & \forall \: t \label{eq:model_1:gen_le_cap_w} \\
+\text{cap}_{b,1}^\text{gen} \in 3\mathbb{Z} \quad & \label{eq:model_1:integer} \\
+|\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:ramping} \\
+\text{cap}_{i,1}^\text{gen}, \text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_1:ge_0}
+\end{align}
+\noindent \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
+
+
+
+
+\subsection{Operation mode}
+\label{sec:appendix:optimisation:model_2}
+\noindent \textit{Model inputs}:
+\begin{equation}
+  \{C_{i}^\text{gen}, \hspace{0.5em} F_{i}^\text{gen}, \hspace{0.5em} d_{1, t}, \hspace{0.5em} w_{1, t}, \hspace{0.5em} \text{cap}_{i,1}^\text{gen}, \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_2:inputs}
+\end{equation}
+\textit{Model outputs:}
+\begin{equation}
+\{ \text{gen}_{i,1,t}, \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_2:decision_variables}
+\end{equation}
+The model outputs are determined as the decision variables that solve the following optimisation problem:
+\begin{equation}
+\min \underbrace{ \sum_{i \in \mathcal{I}} \sum_{t=1}^{T} F_i^\text{gen} \text{gen}_{i,1,t}}_\text{generation cost}
+\label{eq:model_2:objective}
+\end{equation}
+\noindent subject to
+\begin{align}
+\sum_{i \in \mathcal{I}} \text{gen}_{i,1,t} = d_{1,t} \quad & \forall \: t \label{eq:model_2:demand_met} \\
+\text{gen}_{b,1,t} \le \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:gen_le_cap_b} \\
+\text{gen}_{p,1,t} \le \text{cap}_{p,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:gen_le_cap_p} \\
+\text{gen}_{w,1,t} \le \text{cap}_{w,1}^\text{gen} w_{1,t} \quad & \forall \: t \label{eq:model_2:gen_le_cap_w} \\
+|\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:ramping} \\
+\text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_2:ge_0}
+\end{align}
+\noindent where each constraint has the same meaning as for the planning model.
+
+
+
+
+
+
+
+\newpage
+\section{6-region model}
+
+\begin{figure}
+  \begin{tabular}{c}
+    \includegraphics[scale=0.3, trim=10 40 10 40, clip]{6_region_diagram.jpg}
+  \end{tabular}
+  \begin{tabular}{ l  c}
+  Bus & Demand/candidate generation \\ \hline
+  1 & baseload, peaking \\
+  2 & demand (DE), wind (DE) \\
+  3 & baseload, peaking \\
+  4 & demand (FR) \\
+  5 & demand (UK), wind (UK) \\
+  6 & baseload, peaking, wind (ES) \\ \hline
+\end{tabular}
+  \caption{6-bus model configuration. Demand must be met at buses 2, 5 and 6. Conventional generation (baseload or peaking) may be installed at buses 1, 3 and 6. Wind generation may be installed at buses 2, 5 and 6. Buses 2, 4, 5 and 6 use (demand or wind) time series data from Germany (DE), France (FR), the United Kingdom (UK) and Spain (ES) respectively.}
+  \label{fig:model_2:model_diagram}
+\end{figure}
+
+\noindent The \texttt{6\_region} model is a more complicated multi-region model. The system's 6-region topology is based on the \textit{IEEE 6-bus system}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by Kamalinia \& Shahidehpour (2010). Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration.
+
+The model takes 6 input time series: hourly demand levels and wind capacity factors in 3 regions each, where the data is based on European countries. In \texttt{plan} mode, the model leads to a generation \& transmission expansion planning problem where the optimal generation \& transmission capacities and hourly generation \& transmission levels for each technology are determined. This problem is either a continuous linear program (if \texttt{baseload\_integer=False}) or a mixed-integer linear program (if \texttt{baseload\_integer=True}). In \textit{operation} mode, the generation \& transmission capacities are fixed and only the hourly generation \& transmission levels are determined. The mathematical details for the model are provided below.
+
+The \texttt{6\_region} model has some solution nonuniqueness. For example, excess demand in region 2 has no preference between being met from regions 1 or 3. For this reason, the model should only be used for model-wide summary statistics (e.g. the total baseload capacity). If outputs at regional level are desired, regions must de differentiated by having different technologies in each (e.g. by changing the technology prices at regional level). 
+
+
+
+
+\subsection{Planning mode}
+\label{sec:appendix:optimisation:model_3}
+
+\noindent \textit{Model inputs}:
+\begin{equation}
+  \{C_{i}^\text{gen}, \hspace{0.5em} F_{i}^\text{gen}, \hspace{0.5em} d_{r, t}, \hspace{0.5em} w_{r, t} \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} r \in \mathcal{R}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_3:inputs}
+\end{equation}
+\textit{Model outputs:}
+\begin{equation}
+\{\text{cap}_{i,r}^\text{gen}, \hspace{0.5em} \text{cap}_{r,r'}^\text{tr}, \hspace{0.5em} \text{gen}_{i,r,t}, \hspace{0.5em} \text{tr}_{r,r',t} \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} r,r' \in \mathcal{R}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_3:decision_variables}
+\end{equation}
+The model outputs are determined as the decision variables that solve the following optimisation problem:
+\begin{equation}
+\min \sum_{r \in \mathcal{R}} \Bigg[ \frac{T}{8760} \Bigg( \underbrace{\sum_{i \in \mathcal{I}} C_i^\text{gen} \text{cap}_{i,r}^\text{gen}}_{\substack{\text{installation cost,} \\ \text{generation capacity}}} + \underbrace{ \frac{1}{2} \sum_{r' \in \mathcal{R}} C_{r,r'}^\text{tr} \text{cap}_{r,r'}^\text{tr} }_{\substack{\text{installation cost,} \\ \text{transmission capacity}}} \Bigg) + \underbrace{ \sum_{i \in \mathcal{I}} \sum_{t=1}^{T} F_i^\text{gen} \text{gen}_{i,r,t}}_\text{generation cost} \Bigg]
+\label{eq:model_3:objective}
+\end{equation}
+\noindent subject to
+\begin{align}
+\text{cap}_{b,r}^\text{gen} \big\rvert_{r \ne 1, 3, 6} = \text{cap}_{p,r}^\text{gen} \big\rvert_{r \ne 1, 3, 6} = \text{cap}_{w,r}^\text{gen} \big\rvert_{r \ne 2, 5, 6} &= 0 \label{eq:model_3:gen_topology} \\
+\text{cap}_{r, r'}^\text{tr} \big\rvert_{\{r, r'\} \ne \{1,2\}, \{1,5\}, \{1,6\}, \{2,3\}, \{3,4\}, \{4,5\}, \{5,6\}} &= 0 \label{eq:model_3:tr_topology} \\
+\sum_{i \in \mathcal{I}} \text{gen}_{i,r,t} + \sum_{r'=1}^6 \text{tr}_{r',r,t} = d_{r,t} \quad & \forall \: r, t \label{eq:model_3:demand_met} \\
+\text{tr}_{r,r',t} + \text{tr}_{r,'r,t} = 0 \quad & \forall \: r, r', t \label{eq:model_3:tr_balance} \\
+\text{gen}_{b,r,t} \le \text{cap}_{b,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_3:gen_le_cap_b} \\
+\text{gen}_{p,r,t} \le \text{cap}_{p,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_3:gen_le_cap_p} \\
+\text{gen}_{w,r,t} \le \text{cap}_{w,r}^\text{gen} w_{r,t} \quad & \forall \: r, t \label{eq:model_3:gen_le_cap_w} \\
+|\text{tr}_{r,r',t}| \le \text{cap}_{r,r'}^\text{tr} \quad & \forall \: r, r', t \label{eq:model_3:tr_le_cap_tr} \\
+\text{cap}_{b,r}^\text{gen} \in 3\mathbb{Z} \quad & \forall \: r \label{eq:model_3:integer} \\
+|\text{gen}_{b,r,t} - \text{gen}_{b,r,t+1}| \le 0.2 \text{cap}_{b,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_3:ramping} \\
+\text{cap}_{i,r}^\text{gen}, \text{cap}_{r,r'}^\text{tr}, \text{gen}_{i,r,t} \ge 0 \quad & \forall \: i, r, t. \label{eq:model_3:ge_0}
+\end{align}
+\noindent \eqref{eq:model_3:gen_topology}-\eqref{eq:model_3:tr_topology} stipulate the locations of generation technologies and the model's transmission topology. \eqref{eq:model_3:demand_met} and \eqref{eq:model_3:tr_balance} are the demand and power flow balance requirements. \eqref{eq:model_3:gen_le_cap_b}-\eqref{eq:model_3:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_3:tr_le_cap_tr} ensures transmission does not exceed transmission capacity. \eqref{eq:model_3:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_3:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_3:ge_0} enforces the nonnegativity of capacity and generation levels.
+
+
+
+
+
+\subsection{Operation mode}
+\label{sec:appendix:optimisation:model_4}
+\noindent \textit{Model inputs}:
+\begin{equation}
+  \{C_{i}^\text{gen}, \hspace{0.5em} F_{i}^\text{gen}, \hspace{0.5em} d_{r, t}, \hspace{0.5em} w_{r, t} \hspace{0.5em}, \text{cap}_{i,r}^\text{gen}, \hspace{0.5em} \text{cap}_{r,r'}^\text{tr}, \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} r,r' \in \mathcal{R}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_4:inputs}
+\end{equation}
+\textit{Model outputs:}
+\begin{equation}
+\{\text{gen}_{i,r,t}, \hspace{0.5em} \text{tr}_{r,r',t} \hspace{0.5em} : \hspace{0.5em} i \in \mathcal{I}; \hspace{0.5em} r,r' \in \mathcal{R}; \hspace{0.5em} t = 1 \ldots T\}.
+\label{eq:model_4:decision_variables}
+\end{equation}
+The model outputs are determined as the decision variables that solve the following optimisation problem:
+\begin{equation}
+\min \underbrace{ \sum_{r \in \mathcal{R}} \sum_{i \in \mathcal{I}} \sum_{t=1}^{T} F_i^\text{gen} \text{gen}_{i,r,t}}_\text{generation cost}
+\label{eq:model_4:objective}
+\end{equation}
+\noindent subject to
+\begin{align}
+\sum_{i \in \mathcal{I}} \text{gen}_{i,r,t} + \sum_{r'=1}^6 \text{tr}_{r',r,t} = d_{r,t} \quad & \forall \: r, t \label{eq:model_4:demand_met} \\
+\text{tr}_{r,r',t} + \text{tr}_{r,'r,t} = 0 \quad & \forall \: r, r', t \label{eq:model_4:tr_balance} \\
+\text{gen}_{b,r,t} \le \text{cap}_{b,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_4:gen_le_cap_b} \\
+\text{gen}_{p,r,t} \le \text{cap}_{p,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_4:gen_le_cap_p} \\
+\text{gen}_{w,r,t} \le \text{cap}_{w,r}^\text{gen} w_{r,t} \quad & \forall \: r, t \label{eq:model_4:gen_le_cap_w} \\
+|\text{tr}_{r,r',t}| \le \text{cap}_{r,r'}^\text{tr} \quad & \forall \: r, r', t \label{eq:model_4:tr_le_cap_tr} \\
+|\text{gen}_{b,r,t} - \text{gen}_{b,r,t+1}| \le 0.2 \text{cap}_{b,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_4:ramping} \\
+\text{gen}_{i,r,t} \ge 0 \quad & \forall \: i, r, t. \label{eq:model_4:ge_0}
+\end{align}
+\noindent where each constraint has the same meaning as for the planning model.
+
+
+
+\section{References}
+\label{sec:references}
+
+\noindent S Kamalinia, M Shahidehpour (2010). Generation expansion planning in wind-thermal power systems. \textit{IET Generation, Transmission \& Distribution, 4-8, 940-951}. doi:\texttt{doi.1049/iet-gtd.2009.0695}.
+
+
+
+
+
+
+
+
+\end{document}
