@@ -53,23 +53,16 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 ## Generation & transmission technologies
 
-#### Generation technologies
+| Type | Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
+| -- | -- | -- | -- | -- |
+| Generation   | Baseload      | 300 | 0.005 | 200 |
+| Generation   | Peaking       | 100 | 0.035 | 400 |
+| Generation   | Wind          | 100 |     - |   - |
+| Generation   | Unmet demand  |   - |     6 |   - |
+| Transmission | Regions 1-5   | 150 |     - |   - |
+| Transmission | Other regions | 100 |     - |   - |
 
-| Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
-| -- | -- | -- | -- |
-| Baseload     | 300 | 0.005 | 200 |
-| Peaking      | 100 | 0.035 | 400 |
-| Wind         | 100 |     0 |   0 |
-| Unmet demand |   0 |     6 |   0 |
-
-#### Transmission technologies
-
-| Regions | Installation cost <br> (£m/GWyr) |
-| -- | -- |
-| Region 1 to 5 | 150 |
-| Other         | 100 |
-
-The installation costs are annualised to reflect the cost per year of technology lifetime.
+For modelling purposes, unmet demand is considered a generation technology with no installation cost but a hig generation cost. The installation costs are annualised to reflect the cost per year of technology lifetime.
 
 
 
