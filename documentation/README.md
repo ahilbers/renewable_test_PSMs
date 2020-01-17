@@ -53,7 +53,7 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 ## Generation & transmission technologies
 
-### Generation technologies
+#### Generation technologies
 
 | Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
 | -- | -- | -- | -- |
@@ -62,7 +62,7 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 | Wind         | 100 |     0 |   0 |
 | Unmet demand |   0 |     6 |   0 |
 
-### Transmission technologies
+#### Transmission technologies
 
 | Regions | Installation cost <br> (£m/GWyr) |
 | -- | -- |
@@ -85,11 +85,3 @@ The installation costs are annualised to reflect the cost per year of technology
 ## Additional information
 
 Additional information, such as the precise mathematical optimisation problem solved by each model, are available in `documentation.pdf`.
-
-Additional information, such as the precise mathematical optimisation problem solved for each model setting, are available in the following paper:
-
-| Model in paper | Model in this repository |
-| -- | -- |
-| *1-region LP*   | `1 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region LP*   | `6 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region MILP*   | `6 region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |

@@ -90,6 +90,12 @@ Running `main.py` requires:
 - Other:
   - `gurobi`: a solver, used to solve the optimisation problems. It is not open-source but is free with an academic license. An alternative is `cbc` (see [this link](https://projects.coin-or.org/Cbc)), which is fully open-source. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
 
+| Model in paper | Model in this repository |
+| -- | -- |
+| *1-region LP*   | `1 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region LP*   | `6 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region MILP*   | `6 region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
+
 
 
 
