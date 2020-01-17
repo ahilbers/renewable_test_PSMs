@@ -34,23 +34,19 @@ The models may be customised further by editing the model-defining files:
 
 In this model, an hourly demand time series must be met by generation from a combination of baseload, peaking and wind technologies, with some allowance for unmet demand at high cost. The model takes two time series: hourly demand levels and wind capacity factors for the UK.
 
-| Region | Demand / candidate generation        |
-| ------:| ------------------------------------ | 
-| 1      | demand (UK), baseload, peaking, wind |
-
 
 #### `6_region`:
 
 This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695).
 
-| Bus | Demand / candidate generation |
-| ---:| ----------------------------- | 
-| 1   | baseload, peaking             |
-| 2   | demand (DE), wind (DE)        |
-| 3   | baseload, peaking             |
-| 4   | demand (FR)                   |
-| 5   | demand (UK), wind (UK)        |
-| 6   | baseload, peaking, wind (ES)  |
+| Region | Demand / candidate generation |
+| ------:| ----------------------------- | 
+| 1      | baseload, peaking             |
+| 2      | demand (DE), wind (DE)        |
+| 3      | baseload, peaking             |
+| 4      | demand (FR)                   |
+| 5      | demand (UK), wind (UK)        |
+| 6      | baseload, peaking, wind (ES)  |
 
 
 
