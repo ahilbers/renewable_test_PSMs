@@ -84,6 +84,8 @@ The installation costs are annualised to reflect the cost per year of technology
 
 ## Additional information
 
+Additional information, such as the precise mathematical optimisation problem solved by each model, are available in `documentation.pdf`.
+
 Additional information, such as the precise mathematical optimisation problem solved for each model setting, are available in the following paper:
 
 | Model in paper | Model in this repository |
