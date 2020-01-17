@@ -12,13 +12,16 @@ This repository seeks to provide simple test cases and sample code for renewable
 - `run_mode`:
   - `plan`: generation and transmission capacities are determined by minimising system (sum of installation and generation) costs.
   - `operate`: generation and transmission capacities are fixed and the system is operated to match supply and demand at minimum cost.
-- `baseload_integer`:
+- `baseload_integer`
   - `False`: baseload may be built to any nonnegative capacity (i.e. a continuous variable).
-  - `True`: baseload may be built only in blocks of 3GW, which makes a model in `plan` mode a mixed-integer linear program and slower to solve.
-  This switch matters only in `plan` mode, since in `operate` mode the capacities are user-defined.o
+  - `True`: baseload may be built only in blocks of 3GW, which makes a model in `plan` mode a mixed-integer linear program and slower to solve. This switch matters only in `plan` mode, since in `operate` mode the capacities are user-defined.
 - `baseload_ramping`:
   - `False`: baseload generation can change at any rate
   - `True`: baseload generation can only ramp up or down at 20% of its installed capacity per hour
+
+The models may be customised further by editing the model-defining files:
+- Costs associted with each generation & transmission technologies: change in `models/{MODEL_NAME}/techs.yaml`.
+- Fixed generation and transmission capacities used in `operate` mode: change in `models/{MODEL_NAME}/model.yaml`.
 
 
 ## Generation & transmission technologies
