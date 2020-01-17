@@ -13,33 +13,24 @@ EMISSION_INTENSITIES = {'baseload': 200,
                         'unmet': 0}
 
 
-def load_time_series_data(model_name, demand_region=None, wind_region=None):
+def load_time_series_data(model_name):
     """Load demand and wind time series data for model.
 
     Parameters:
     -----------
     model_name (str) : '1_region' or '6_region'
-    demand_region (str) : region in data/demand_wind.csv from which
-        to take demand data. Used only if model_name='1_region'
-    wind_region (str) : region in data/demand_wind.csv from which to
-        take wind data. Used only if model_name='1_region'
 
     Returns:
     --------
     ts_data (pandas DataFrame) : time series data for use in model
     """
 
-    if model_name == '1_region' and demand_region is None:
-        raise ValueError('For 1 region model, user must specify which region'
-                         ' to use demand and wind from.')
-
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
 
-    # If 1_region model, select regions from which to take demand, wind data
+    # If 1_region model, take demand and wind from region 5
     if model_name == '1_region':
-        ts_data = ts_data.loc[:, ['_'.join(('demand', demand_region)),
-                                  '_'.join(('wind', wind_region))]]
+        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
         ts_data.columns = ['demand', 'wind']
 
     return ts_data

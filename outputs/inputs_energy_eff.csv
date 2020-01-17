@@ -1,0 +1,15 @@
+locs,techs,energy_eff
+region1,transmission_other:region2,1.0
+region1,transmission_other:region6,1.0
+region1,transmission_region1to5:region5,1.0
+region2,transmission_other:region1,1.0
+region2,transmission_other:region3,1.0
+region3,transmission_other:region2,1.0
+region3,transmission_other:region4,1.0
+region4,transmission_other:region3,1.0
+region4,transmission_other:region5,1.0
+region5,transmission_other:region4,1.0
+region5,transmission_other:region6,1.0
+region5,transmission_region1to5:region1,1.0
+region6,transmission_other:region1,1.0
+region6,transmission_other:region5,1.0

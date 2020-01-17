@@ -1,0 +1,8 @@
+techs,inheritance
+wind,supply
+transmission_other,transmission
+baseload,supply
+unmet,supply
+transmission_region1to5,transmission
+demand_power,demand
+peaking,supply

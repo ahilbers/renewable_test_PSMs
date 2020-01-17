@@ -73,17 +73,17 @@
 
 \noindent There are two base models:
 \begin{itemize}
-\item The \texttt{1\_region} model has only one region, in which supply must match demand.
-\item The \texttt{6\_region} model has six regions. Supply must match demand across the mode, but electricity may be transmitted across the regions according to a transmission topology, taken from the \textit{IEEE 6-bus test system}.
+\item The \texttt{1\_region} model has one region in which supply must match demand.
+\item The \texttt{6\_region} model has six regions. Supply must match demand across the model as a whole, but electricity may be transmitted across the regions according to a transmission topology, taken from the \textit{IEEE 6-bus test system}.
 \end{itemize}
 For each of the two base models, there are a number of customisable inputs/settings that change the model's behaviour.
 \begin{itemize}
-\item The \texttt{run\_mode}. Each model can be run in either \texttt{plan} or \texttt{operate} mode. In \texttt{plan} mode, generation and transmission capacities are determined by minimising the sum of installation and generation costs. In \texttt{operate} mode, the installed capacities are user-defined, and a fixed model configuration is operated to determine the optimal generation and transmission levels.
+\item The \texttt{run\_mode}. Each model can be run in either \texttt{plan} or \texttt{operate} mode. In \texttt{plan} mode, generation and transmission capacities are determined by minimising the sum of installation and generation costs. The models are then generation \& transmission expansion planning models. In \texttt{operate} mode, the installed capacities are user-defined, and only the generation and transmission levels are determined by minimising the generation cost subject to a fixed model configuration.
 \item Each technology's install and generation cost. 
 \item The (demand and wind) time series inputs.
-\item The \texttt{baseload\_integer} constraint. If \texttt{False}, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If \texttt{True}, baseload may be built in blocks of 3GW. This constraint applies only in \texttt{plann} mode.
-\item The \texttt{baseload\_ramping} constraint. If \texttt{False}, baseload generation can change arbitrarily quickly between time steps. If \texttt{True}, baseload generation levels can ramp up or down at at most 20\% of its installed capacity.
-\item The installed capacities of generation and technology technologies. This applies only in \texttt{operate} mode.
+\item The \texttt{baseload\_integer} constraint. If \texttt{False}, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If \texttt{True}, baseload may be built in blocks of 3GW. This constraint applies only in \texttt{plan} mode.
+\item The \texttt{baseload\_ramping} constraint. If \texttt{False}, baseload generation can change arbitrarily quickly between time steps. If \texttt{True}, baseload generation levels can ramp up or down at most 20\% of its installed capacity in an hour.
+\item The installed capacities of generation and technology technologies. These are model inputs only in \texttt{operate} mode, and are model outputs (hence not user-defined) in \texttt{plan} mode.
 \end{itemize}
 The install and generation costs are specified in \texttt{models/\{MODEL\_NAME\}/techs.yaml}. The installed capacities are specified in \texttt{models/\{MODEL\_NAME\}/model.yaml}. All other settings \& inputs are specified when conducting model runs (see \texttt{main.py}).
 
@@ -111,20 +111,21 @@ Other links & $C_{r,r'}^\text{tr} = 100$ & - & - \\ \hline
 \label{table:tech_characteristics}
 \end{table}
 
-\noindent In each model, three generation technologies are considered: baseload, peaking and wind. Baseload and peaking are conventional technologies that run on fuel and whose generation levels can be controlled. Wind has no generation cost but generation levels that are capped by the time-varying wind capacity factors. Unmet demand is considered, for modelling purposes, a fourth technology with no install but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
+\noindent In each model, three generation technologies are allowed: baseload, peaking and wind. Baseload and peaking are conventional technologies whose generation levels can be controlled. Wind has no generation cost but generation levels that are capped by the time-varying wind capacity factors. Unmet demand is considered, for modelling purposes, a fourth technology with no install cost but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
 
 
 
 
+\section{Time series inputs}
+
+Time series inputs consist of hourly demand levels and wind capacity factors in different European countries over the period 1980-2017. Long-term anthropogenic demand trends such as GDP growth and efficiency improvements are removed so that the time series can be viewed as being drawn from the same underlying demand distribution. Details on the construction of the time series can be found in (Bloomfield et al, 2019).
 
 
 
 
 \section{1-region model}
 
-\noindent The \texttt{1\_region model} considers a single node and a choice of the 3 generation technologies and unmet demand. It takes two input time series (hourly demand levels and wind capacity factors in the United Kingdom). In \texttt{plan} mode, the model leads to a generation expansion planning problem where the optimal generation capacities and hourly generation levels for each technology are determined. 
-
-
+\noindent The \texttt{1\_region} model considers a single node and a choice of the three generation technologies. It takes two input time series: hourly demand levels and wind capacity factors in the United Kingdom. In \texttt{plan} mode, the model leads to a generation expansion planning problem where the optimal generation capacities and hourly generation levels for each technology are model outputs. This problem is either a continuous linear program or a mixed-integer linear program, depending on whether the \texttt{baseload\_integer} constraint is activated.
 
 
 \subsection{Planning mode}
@@ -157,8 +158,6 @@ The model outputs are determined as the decision variables that solve the follow
 \noindent \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
 
 
-
-
 \subsection{Operation mode}
 \label{sec:appendix:optimisation:model_2}
 \noindent \textit{Model inputs}:
@@ -185,7 +184,7 @@ The model outputs are determined as the decision variables that solve the follow
 |\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:ramping} \\
 \text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_2:ge_0}
 \end{align}
-\noindent where each constraint has the same meaning as for the planning model.
+\noindent where each constraint has the same meaning as in the planning model.
 
 
 
@@ -213,11 +212,11 @@ The model outputs are determined as the decision variables that solve the follow
   \label{fig:model_2:model_diagram}
 \end{figure}
 
-\noindent The \texttt{6\_region} model is a more complicated multi-region model. The system's 6-region topology is based on the \textit{IEEE 6-bus system}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by Kamalinia \& Shahidehpour (2010). Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration.
+\noindent The \texttt{6\_region} model is a more complicated multi-region model. The system's topology is based on the \textit{IEEE 6-bus system}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by Kamalinia \& Shahidehpour (2010). Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration.
 
-The model takes 6 input time series: hourly demand levels and wind capacity factors in 3 regions each, where the data is based on European countries. In \texttt{plan} mode, the model leads to a generation \& transmission expansion planning problem where the optimal generation \& transmission capacities and hourly generation \& transmission levels for each technology are determined. This problem is either a continuous linear program (if \texttt{baseload\_integer=False}) or a mixed-integer linear program (if \texttt{baseload\_integer=True}). In \textit{operation} mode, the generation \& transmission capacities are fixed and only the hourly generation \& transmission levels are determined. The mathematical details for the model are provided below.
+The model takes 6 input time series: hourly demand levels and wind capacity factors in three European countries each. In \texttt{plan} mode, the model leads to a generation \& transmission expansion planning problem where the optimal generation \& transmission capacities and hourly generation \& transmission levels for each technology are determined. This problem is either a continuous linear program or a mixed-integer linear program depending on whether the \texttt{baseload\_integer} constraint is activated. In \texttt{operate} mode, the generation \& transmission capacities are fixed and only the hourly generation \& transmission levels are determined. The mathematical details for the model are provided below.
 
-The \texttt{6\_region} model has some solution nonuniqueness. For example, excess demand in region 2 has no preference between being met from regions 1 or 3. For this reason, the model should only be used for model-wide summary statistics (e.g. the total baseload capacity). If outputs at regional level are desired, regions must de differentiated by having different technologies in each (e.g. by changing the technology prices at regional level). 
+The \texttt{6\_region} model leads to solution nonuniqueness. For example, excess demand in region 2 has no preference between being met from regions 1 or 3. For this reason, the model should only be used for model-wide summary statistics (e.g. the total baseload capacity). If outputs at regional level are desired, regions must de differentiated by having different technologies in each (e.g. by changing the technology prices at regional level). 
 
 
 
@@ -295,7 +294,9 @@ The model outputs are determined as the decision variables that solve the follow
 \section{References}
 \label{sec:references}
 
-\noindent S Kamalinia, M Shahidehpour (2010). Generation expansion planning in wind-thermal power systems. \textit{IET Generation, Transmission \& Distribution, 4-8, 940-951}. doi:\texttt{doi.1049/iet-gtd.2009.0695}.
+\noindent HC Bloomfield, DJ Brayshaw, A Charlton-Perez (2019). Characterising the winter meteorological drivers of the European electricity system using targeted circulation types. \textit{Meteorological Applications}. doi:\texttt{10.1002/met.1858}. \\
+
+\noindent S Kamalinia, M Shahidehpour (2010). Generation expansion planning in wind-thermal power systems. \textit{IET Generation, Transmission \& Distribution, 4-8, 940-951}. doi:\texttt{10.1049/iet-gtd.2009.0695}.
 
 
 

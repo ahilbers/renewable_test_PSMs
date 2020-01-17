@@ -1,0 +1,5 @@
+carriers,techs,systemwide_capacity_factor
+power,wind,0.0
+power,baseload,0.778845049283154
+power,unmet,4.4433933691756273e-10
+power,peaking,0.20278532258064513

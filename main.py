@@ -6,6 +6,7 @@ import models
 
 
 def run_example(model_name,
+                ts_data,
                 run_mode,
                 baseload_integer,
                 baseload_ramping):
@@ -14,16 +15,8 @@ def run_example(model_name,
     # Choose correct model and time series data properties
     if model_name == '1_region':
         Model = models.OneRegionModel
-        demand_region, wind_region = 'region5', 'region5'
     if model_name == '6_region':
         Model = models.SixRegionModel
-        demand_region, wind_region = None, None
-
-    # Load and subset time series data
-    ts_data = models.load_time_series_data(model_name=model_name,
-                                           demand_region=demand_region,
-                                           wind_region=wind_region)
-    ts_data = ts_data.loc['2017-01']    # Can be customised as desired
 
     # Create and run model
     model = Model(ts_data=ts_data,
@@ -52,17 +45,23 @@ def run_example_from_command_line():
     # Create the correct run dictionary. The following 3 serve only
     # as examples -- they can be customised as desired.
     if args.run_name == '1_region_plan_LP':
+        ts_data = models.load_time_series_data(model_name='1_region')
         run_dict = {'model_name': '1_region',
+                    'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'plan',
                     'baseload_integer': False,
                     'baseload_ramping': False}
     elif args.run_name == '6_region_plan_MILP':
+        ts_data = models.load_time_series_data(model_name='6_region')
         run_dict = {'model_name': '6_region',
+                    'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'plan',
                     'baseload_integer': True,
                     'baseload_ramping': True}
     elif args.run_name == '6_region_operate':
+        ts_data = models.load_time_series_data(model_name='6_region')
         run_dict = {'model_name': '6_region',
+                    'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'operate',
                     'baseload_integer': False,
                     'baseload_ramping': False}
