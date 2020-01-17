@@ -62,12 +62,14 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 | Wind         | 100 |     0 |   0 |
 | Unmet demand |   0 |     6 |   0 |
 
-### Transmission technologies (in `6 region` model)
+### Transmission technologies
 
 | Regions | Installation cost <br> (£m/GWyr) |
 | -- | -- |
 | Region 1 to 5 | 150 |
 | Other         | 100 |
+
+The installation costs are annualised to reflect the cost per year of technology lifetime.
 
 
 
