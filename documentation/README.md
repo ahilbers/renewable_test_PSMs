@@ -44,6 +44,7 @@ This model has 6 regions. Supply and demand must meet across the model as a whol
 - Region 4: demand
 - Region 5: demand and wind generation
 - Region 6: baseload, peaking & wind generation
+
 Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 
