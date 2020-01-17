@@ -28,7 +28,9 @@ The models may be customised further by editing the model-defining files:
 
 ## Model details
 
-#### `1_region` model:
+<img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
+
+#### `1_region`:
 
 In this model, an hourly demand time series must be met by generation from a combination of baseload, peaking and wind technologies, with some allowance for unmet demand at high cost. The model takes two time series: hourly demand levels and wind capacity factors for the UK.
 
@@ -38,8 +40,6 @@ In this model, an hourly demand time series must be met by generation from a com
 
 
 #### `6_region`:
-
-<img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
 
 This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695).
 
@@ -51,29 +51,6 @@ This model has 6 regions. Supply and demand must meet across the model as a whol
 | 4   | demand (FR)                   |
 | 5   | demand (UK), wind (UK)        |
 | 6   | baseload, peaking, wind (ES)  |
-
-
-
-# Rule 1
-Description for rule 1.
-
-<div style="-webkit-column-count: 2; -moz-column-count: 2; column-count: 2; -webkit-column-rule: 1px dotted #e0e0e0; -moz-column-rule: 1px dotted #e0e0e0; column-rule: 1px dotted #e0e0e0;">
-    <div style="display: inline-block;">
-        <h2>Good</h2>
-        <pre><code class="language-c">int foo (void) 
-{
-    int i;
-}
-</code></pre>
-    </div>
-    <div style="display: inline-block;">
-        <h2>Bad</h2>
-        <pre><code class="language-c">int foo (void) {
-    int i;
-}
-</code></pre>
-    </div>
-</div>
 
 
 
