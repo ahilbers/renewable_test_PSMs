@@ -37,11 +37,20 @@ In this model, an hourly demand time series must be met by generation from a com
 | 1      | demand (UK), baseload, peaking, wind |
 
 
-#### `6_region model`:
+#### `6_region`:
 
 <img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
 
-This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2019)](https://doi.org/10.1049/iet-gtd.2009.0695).
+This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695).
+
+| Bus | Demand / candidate generation |
+| ---:| ----------------------------- | 
+| 1   | baseload, peaking             |
+| 2   | demand (DE), wind (DE)        |
+| 3   | baseload, peaking             |
+| 4   | demand (FR)                   |
+| 5   | demand (UK), wind (UK)        |
+| 6   | baseload, peaking, wind (ES)  |
 
 
 
@@ -68,14 +77,7 @@ This model has 6 regions. Supply and demand must meet across the model as a whol
 
 
 
-| Bus | Demand / candidate generation |
-| ---:| ----------------------------- | 
-| 1   | baseload, peaking             |
-| 2   | demand (DE), wind (DE)        |
-| 3   | baseload, peaking             |
-| 4   | demand (FR)                   |
-| 5   | demand (UK), wind (UK)        |
-| 6   | baseload, peaking, wind (ES)  |
+
 
 
 
