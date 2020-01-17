@@ -90,11 +90,22 @@ Running `main.py` requires:
 - Other:
   - `gurobi`: a solver, used to solve the optimisation problems. It is not open-source but is free with an academic license. An alternative is `cbc` (see [this link](https://projects.coin-or.org/Cbc)), which is fully open-source. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
 
+
+
+
+## Use in bootstrap uncertainty quantification paper
+
+The models in this repository were used in the following paper:
+
+AP Hilbers, DJ Brayshaw, A Gandy (2020, *in review*). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
+
+The models correspond as follows:
+
 | Model in paper | Model in this repository |
 | -- | -- |
-| *1-region LP*   | `1 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region LP*   | `6 region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region MILP*   | `6 region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
+| *1-region LP*   | `model_name=1_region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region LP*   | `model_name=6_region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
+| *6-region MILP*   | `model_name=6_region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
 
 
 
@@ -102,7 +113,7 @@ Running `main.py` requires:
 
 ## Contact
 
-Adriaan Hilbers. Department of Mathematics, Imperial College London. [a.hilbers17@imperial.ac.uk](mailto:a.hilbers17@imperial.ac.uk).
+[Adriaan Hilbers](https://ahilbers.github.io). Department of Mathematics, Imperial College London. [a.hilbers17@imperial.ac.uk](mailto:a.hilbers17@imperial.ac.uk).
 
 
 
