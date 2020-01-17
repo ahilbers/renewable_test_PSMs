@@ -28,14 +28,14 @@ The models may be customised further by editing the model-defining files:
 
 ## Model details
 
-<img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
-
 #### `1_region`:
 
 In this model, an hourly demand time series must be met by generation from a combination of baseload, peaking and wind technologies, with some allowance for unmet demand at high cost. The model takes two time series: hourly demand levels and wind capacity factors for the UK.
 
 
 #### `6_region`:
+
+<img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
 
 This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695). The regions contain the following demand and generation technologies:
 - Region 1: baseload & peaking generation
