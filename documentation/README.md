@@ -62,7 +62,7 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 | Transmission | Regions 1-5   | 150 |     - |   - |
 | Transmission | Other regions | 100 |     - |   - |
 
-For modelling purposes, unmet demand is considered a generation technology with no installation cost but a hig generation cost. The installation costs are annualised to reflect the cost per year of technology lifetime.
+For modelling purposes, unmet demand is considered a generation technology with no installation cost but a highy generation cost. The installation costs are annualised to reflect the cost per year of technology lifetime.
 
 
 
