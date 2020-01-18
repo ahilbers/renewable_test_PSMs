@@ -18,12 +18,10 @@ In renewable energy policy and planning, open-source models and data typically r
 <img align="right" src="documentation/6_region_diagram.jpg" alt="drawing" width="450" height="375">
 
 The models are designed to be simple "toy" examples (and hence run fast in most settings), but have all the features of "real" power system models. There are two base models:
-- The `1 region` model has only one region in which supply and demand must be met.
-- The `6 region` model has six regions with a transmission topology, and supply and demand must be matched across the model but transmitted between the regions. It is based on a renewable version of the *IEEE 6-bus test system*.
+- The `1_region` model has only one region in which supply and demand must be met.
+- The `6_region` model has six regions with a transmission topology, and supply and demand must be matched across the model but transmitted between the regions. It is based on a renewable version of the *IEEE 6-bus test system*.
 
-Both models can be run in both planning mode, where the optimal system design (generation and transmssion capacities) are determined by minimising system cost, or in operational mode, where the system design is user-defined and the model finds the optimal generation and distribution to balance the grid. Furthermore, integer and ramping constraints can be easily activated or deactivated depending on the modelling context.
-
-See `documentation/` for details on the models.
+Both models can be run in both planning mode, where the optimal system design (generation and transmssion capacities) are determined by minimising system cost, or in operational mode, where the system design is user-defined and the model finds the optimal generation and distribution levels to balance the grid. Furthermore, integer and ramping constraints can be easily activated or deactivated depending on the modelling context. See `documentation/` for details on the models.
 
 
 
@@ -44,9 +42,9 @@ AP Hilbers, DJ Brayshaw, A Gandy (2020, *in review*). Quantifying demand and wea
 The easiest way to start using these models is by modifying the example script provided. The file `main.py` contains three example runs with different specs.
 - `1_region_plan_LP`: run the `1 region` model in planning mode. For baseload technology, any nonnegative capacity is allowed and there is no ramping constraint. This makes the optimisation problem a continuous linear program.
 - `6_region_plan_MILP`: run the `6 region` model in planning mode. Baseload technology may only be installed in integer units of 3GW, and has a ramping constraint of 20%/hr. This makes the optimisation problem a mixed-integer linear program.
-- `6_region_operate`: run the `6 region` model in operate mode. Baseload technology has a ramping constraint. The installed capacities of the generation and transmission capacities across the model are defined in `models/6_region/model.yaml`, and only the generation levels are determined by the model.
+- `6_region_operate`: run the `6 region` model in operate mode. Baseload technology has a ramping constraint. The installed capacities of the generation and transmission technologies are defined in `models/6_region/model.yaml`, and only the generation levels are determined by the model.
 
-Each of these examples can be run from a unix command line via
+Each of these examples can be run from a unix command line via:
 
 ```
 python3 main.py --run_name {RUN_NAME}
@@ -63,13 +61,13 @@ A run may be customised by creating a custom `run_dict` and `ts_data` in `main.p
 
 ### Modelling & data files
 - `models/`: the files that define the power system model, in the open-source modelling framework `Calliope` (see acknowledgements)
-- `data/demand_wind.csv`: the full 38-year demand and wind time series data for the `6 region` model. For the `1 region` model, specific demand and wind columns must be chosen. By default these are both taken from `region_5`.
+- `data/demand_wind.csv`: the full 38-year demand and wind time series data for the `6_region` model. For the `1_region` model, specific demand and wind columns must be chosen. By default these are both taken from `region_5`.
 
 
 ### Code
 - `main.py`: example runs of the models
 - `models.py`: the models as Python classes, along with some helper functions
-- `tests.py`: tests used in the development of the model. These tests can be modified and may be helpful if you want to create customised versions of these models.
+- `tests.py`: tests used in development to check the models behave as expected. These tests can be modified and may be helpful if you want to customise the models.
 
 
 ### Miscellaneous
@@ -86,7 +84,6 @@ Since `main.py` is a short file with only a few functions, it's probably easier 
 Running `main.py` requires:
 - Python modules:
   - `Calliope 0.6.4`:  see [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation
-  - `numpy 1.62.2`
   - `pandas 0.24.2`
 - Other:
   - `gurobi`: a solver, used to solve the optimisation problems. It is not open-source but is free with an academic license. An alternative is `cbc` (see [this link](https://projects.coin-or.org/Cbc)), which is fully open-source. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
@@ -131,6 +128,6 @@ The demand and wind dataset is based on work by Hannah Bloomfield et al. Details
 
 - HC Bloomfield, DJ Brayshaw, A Charlton-Perez (2019). Characterising the winter meteorological drivers of the European electricity system using Targeted Circulation Types. Meteorological Applications. ISSN 1469-8080 (in press). doi:[10.1002/met.1858](https://doi.org/10.1002/met.1858)
 
-The `6 region` model topology is based on the IEEE 6-bus test system, used in many previous studies. The renewable-ready topology, including the links and locations of demand & supply technologies, is based on a renewable 6-bus model, introduced in the following paper:
+The `6_region` model topology is based on the IEEE 6-bus test system, used in many previous studies. The renewable-ready topology, including the links and locations of demand & supply technologies, is based on a renewable 6-bus model, introduced in the following paper:
 
 - S Kamalinia, M Shahidehpour (2010). Generation expansion planning in wind-thermal power systems. IET Generation, Transmission & Distribution, 4(8), 940-951. doi:[10.1049/iet-gtd.2009.0695](https://doi.org/10.1049/iet-gtd.2009.0695)
