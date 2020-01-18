@@ -36,7 +36,7 @@
 
 
 
-
+\noindent \textbf{Documentation}
 \section{Overview}
 
 \begin{table}
@@ -155,7 +155,7 @@ The model outputs are determined as the decision variables that solve the follow
 |\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:ramping} \\
 \text{cap}_{i,1}^\text{gen}, \text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_1:ge_0}
 \end{align}
-\noindent \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
+\noindent The $\frac{T}{8760}$ factor ensures the installation and generation costs are scaled correctly in model runs of different simulation lengths. \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
 
 
 \subsection{Operation mode}
@@ -253,7 +253,7 @@ The model outputs are determined as the decision variables that solve the follow
 |\text{gen}_{b,r,t} - \text{gen}_{b,r,t+1}| \le 0.2 \text{cap}_{b,r}^\text{gen} \quad & \forall \: r, t \label{eq:model_3:ramping} \\
 \text{cap}_{i,r}^\text{gen}, \text{cap}_{r,r'}^\text{tr}, \text{gen}_{i,r,t} \ge 0 \quad & \forall \: i, r, t. \label{eq:model_3:ge_0}
 \end{align}
-\noindent \eqref{eq:model_3:gen_topology}-\eqref{eq:model_3:tr_topology} stipulate the locations of generation technologies and the model's transmission topology. \eqref{eq:model_3:demand_met} and \eqref{eq:model_3:tr_balance} are the demand and power flow balance requirements. \eqref{eq:model_3:gen_le_cap_b}-\eqref{eq:model_3:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_3:tr_le_cap_tr} ensures transmission does not exceed transmission capacity. \eqref{eq:model_3:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_3:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_3:ge_0} enforces the nonnegativity of capacity and generation levels.
+\noindent The $\frac{T}{8760}$ factor ensures the installation and generation costs are scaled correctly in model runs of different simulation lengths. \eqref{eq:model_3:gen_topology}-\eqref{eq:model_3:tr_topology} stipulate the locations of generation technologies and the model's transmission topology. \eqref{eq:model_3:demand_met} and \eqref{eq:model_3:tr_balance} are the demand and power flow balance requirements. \eqref{eq:model_3:gen_le_cap_b}-\eqref{eq:model_3:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_3:tr_le_cap_tr} ensures transmission does not exceed transmission capacity. \eqref{eq:model_3:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_3:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_3:ge_0} enforces the nonnegativity of capacity and generation levels.
 
 
 

@@ -5,23 +5,23 @@
 
 ## Usage & customisation
 
-This repository seeks to provide simple test cases and sample code for renewable energy and time series analysis. For this reason, the models are simple, but have all the features of full-scale models. The code has been written to make the models as accessible and quick-to-use as possible. Running a model is as simple as modifying `main.py` with different values for the following entries in the `run_dict`:
+This repository provides simple test models and sample code for renewable energy and time series analysis. For this reason, the models are simple but have most of the features of full-scale models. The code has been written to make the models as accessible and quick-to-use as possible: simply modify `main.py` with different values for the following entries in the `run_dict`:
 
-- `model_name`: which model to run `1_region` or `6_region`.
-- `ts_data`: the demand and wind time series data to use in the model.
+- `model_name`: which model to run -- `1_region` or `6_region`.
+- `ts_data`: the demand and wind time series data to use
 - `run_mode`:
-  - `plan`: generation and transmission capacities are determined by minimising system (sum of installation and generation) costs.
-  - `operate`: generation and transmission capacities are fixed and the system is operated to match supply and demand at minimum cost.
+  - `plan`: generation and transmission capacities are determined by minimising sum of installation and generation costs
+  - `operate`: generation and transmission capacities are fixed and the system is operated to match supply and demand at minimum cost
 - `baseload_integer`
-  - `False`: baseload may be built to any nonnegative capacity (i.e. a continuous variable).
+  - `False`: baseload may be built to any nonnegative capacity (as a continuous variable)
   - `True`: baseload may be built only in blocks of 3GW, which makes a model in `plan` mode a mixed-integer linear program and slower to solve. This switch matters only in `plan` mode, since in `operate` mode the capacities are user-defined.
 - `baseload_ramping`:
   - `False`: baseload generation can change at any rate
-  - `True`: baseload generation can only ramp up or down at 20% of its installed capacity per hour
+  - `True`: baseload generation can ramp up or down at most 20% of its installed capacity per hour
 
 The models may be customised further by editing the model-defining files:
-- Costs associted with each generation & transmission technologies: change in `models/{MODEL_NAME}/techs.yaml`.
-- Fixed generation and transmission capacities used in `operate` mode: change in `models/{MODEL_NAME}/model.yaml`.
+- Costs associted with each generation & transmission technologies: `models/{MODEL_NAME}/techs.yaml`.
+- Fixed generation and transmission capacities used in `operate` mode: `models/{MODEL_NAME}/model.yaml`.
 
 
 
@@ -37,7 +37,7 @@ In this model, an hourly demand time series must be met by generation from a com
 
 <img align="right" src="6_region_diagram.jpg" alt="drawing" width="500" height="415">
 
-This model has 6 regions. Supply and demand must meet across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695). The regions contain the following demand and generation technologies:
+This model has 6 regions. Supply and demand must match across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695). The regions contain the following demand and generation technologies:
 - Region 1: baseload & peaking generation
 - Region 2: demand and wind generation
 - Region 3: baseload & peaking generation
