@@ -149,7 +149,7 @@ class OneRegionModel(calliope.Model):
         # Detect missing leap days -- reset index if so
         if detect_missing_leap_days(ts_data):
             print('WARNING: missing leap days detected in input time'
-                  'series. Time series index has been reset to start in 2017.')
+                  'series. Time series index reset to start in 2017.')
             ts_data.index = pd.date_range(start='2017-01-01',
                                           periods=self.num_timesteps,
                                           freq='h')
@@ -185,12 +185,14 @@ class OneRegionModel(calliope.Model):
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
             outputs.loc['gen_{}_total'.format(tech)] = \
                 corrfac * float(self.results.carrier_prod.loc[
-                    'region1::{}::power'.format(tech)].sum())
+                    'region1::{}::power'.format(tech)
+                ].sum())
 
         # Insert annualised demand levels
         outputs.loc['demand_total'] = \
             -corrfac * float(self.results.carrier_con.loc[
-                'region1::demand_power::power'].sum())
+                'region1::demand_power::power'
+            ].sum())
 
         # Insert annualised total system cost
         outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
@@ -254,7 +256,7 @@ class SixRegionModel(calliope.Model):
         # Detect missing leap days -- reset index if so
         if detect_missing_leap_days(ts_data):
             print('WARNING: missing leap days detected in input time'
-                  'series. Time series index has been reset to start in 2017.')
+                  'series. Time series index reset to start in 2017.')
             ts_data.index = pd.date_range(start='2017-01-01',
                                           periods=self.num_timesteps,
                                           freq='h')
@@ -289,7 +291,8 @@ class SixRegionModel(calliope.Model):
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = \
                         float(self.results.energy_cap.loc[
-                            '{}::{}'.format(region, tech)])
+                            '{}::{}'.format(region, tech)
+                        ])
                 except KeyError:
                     pass
 
@@ -298,7 +301,8 @@ class SixRegionModel(calliope.Model):
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = \
                         float(self.results.resource_area.loc[
-                            '{}::{}'.format(region, tech)])
+                            '{}::{}'.format(region, tech)
+                        ])
                 except KeyError:
                     pass
 
@@ -310,11 +314,12 @@ class SixRegionModel(calliope.Model):
                     if int(region[-1]) < int(region_to[-1]):
                         try:
                             outputs.loc['cap_transmission_{}_{}'.format(
-                                region, region_to)] = \
-                            float(self.results.energy_cap.loc[
+                                region, region_to
+                            )] = float(self.results.energy_cap.loc[
                                 '{}::{}:{}'.format(region,
                                                    transmission_type,
-                                                   region_to)])
+                                                   region_to)
+                            ])
                         except KeyError:
                             pass
 
@@ -323,7 +328,8 @@ class SixRegionModel(calliope.Model):
                 try:
                     outputs.loc['gen_{}_{}'.format(tech, region)] = \
                         corrfac * float(self.results.carrier_prod.loc[
-                            '{}::{}::power'.format(region, tech)].sum())
+                            '{}::{}::power'.format(region, tech)
+                        ].sum())
                 except KeyError:
                     pass
 
@@ -331,19 +337,22 @@ class SixRegionModel(calliope.Model):
             try:
                 outputs.loc['demand_{}'.format(region)] = \
                     -corrfac * float(self.results.carrier_con.loc[
-                        '{}::demand_power::power'.format(region)].sum())
+                        '{}::demand_power::power'.format(region)
+                    ].sum())
             except KeyError:
                 pass
 
         # Insert total capacities
         for tech in ['baseload', 'peaking', 'wind', 'transmission']:
             outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
-                outputs.index.str.contains('cap_{}'.format(tech))].sum()
+                outputs.index.str.contains('cap_{}'.format(tech))
+            ].sum()
 
         # Insert total annualised generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
             outputs.loc['gen_{}_total'.format(tech)] = outputs.loc[
-                outputs.index.str.contains('gen_{}'.format(tech))].sum()
+                outputs.index.str.contains('gen_{}'.format(tech))
+            ].sum()
 
         # Insert total annualised demand levels
         outputs.loc['demand_total'] = \

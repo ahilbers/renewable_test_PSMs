@@ -3,9 +3,7 @@
 
 import os
 import pandas as pd
-import time
 import models
-import pdb
 
 
 # Install costs and generation costs. These should match the information
@@ -281,9 +279,7 @@ def run_model_tests(model_name, run_mode, baseload_integer, baseload_ramping):
     """ Run tests to see if models give the expected outputs."""
 
     # Load time series data
-    ts_data = models.load_time_series_data(model_name=model_name,
-                                           demand_region='region5',
-                                           wind_region='region5')
+    ts_data = models.load_time_series_data(model_name=model_name)
     ts_data = ts_data.loc['2017-01']    # Should match benchmarks
 
     # Run a simulation on which to run tests

@@ -5,12 +5,20 @@ import argparse
 import models
 
 
-def run_example(model_name,
-                ts_data,
-                run_mode,
-                baseload_integer,
-                baseload_ramping):
-    """Conduct an example model run."""
+def run_example(model_name, ts_data, run_mode,
+                baseload_integer, baseload_ramping):
+    """Conduct an example model run.
+
+    Parameters:
+    -----------
+    model_name (str) : '1_region' or '6_region'
+    ts_data (pandas DataFrame) : time series with demand and wind data
+    run_mode (str) : 'plan' or 'operate': whether to let the model
+        determine the optimal capacities or work with prescribed ones
+    baseload_integer (bool) : activate baseload integer capacity
+        constraint (built in units of 3GW)
+    baseload_ramping (bool) : enforce baseload ramping constraint
+    """
 
     # Choose correct model and time series data properties
     if model_name == '1_region':
