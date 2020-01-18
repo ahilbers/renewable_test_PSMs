@@ -15,7 +15,7 @@ In renewable energy policy and planning, open-source models and data typically r
 
 #### Models
 
-<img align="right" src="documentation/6_region_diagram.jpg" alt="drawing" width="500" height="415">
+<img align="right" src="documentation/6_region_diagram.jpg" alt="drawing" width="450" height="375">
 
 The models are designed to be simple "toy" examples (and hence run fast in most settings), but have all the features of "real" power system models. There are two base models:
 - The `1 region` model has only one region in which supply and demand must be met.
