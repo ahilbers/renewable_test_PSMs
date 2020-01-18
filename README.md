@@ -7,11 +7,11 @@
 
 #### Summary
 
-This repository contains model files, time series data and example code for a class of simple renewable test case power system models on which to conduct renewable energy analysis.
+This repository contains model files, time series data and example code for a class of simple test power system models on which to conduct renewable energy and time series analysis.
 
 #### Rationale
 
-In renewable energy policy and planning, open-source models and data typically represent a real system and may be highly computationally expensive to run. In more pure power system research, the standard test case benchmark models (e.g. the various IEEE X-bus test case systems) are usually not designed for renewable analysis and/or require time series data that is not publicly available. This repository provides some simple "toy" test-case power system models on which to test methodologies, particularly those related to time series and renewable energy analysis. The repository is fully self-contained; all the files required to create the models, 38 years of time series data, and sample code is provided.
+In renewable energy policy and planning, open-source models and data typically represent a real system and may be highly computationally expensive to run. In more pure power system research, the standard benchmark models (e.g. the various IEEE X-bus test systems) are usually not designed for renewable analysis and/or require time series data that is not publicly available. This repository fills this gap by providing a set of simple test power system models on which to develop and evaluate power system modelling methodologies. It is fully self-contained; all model files, 38 years of time series data and sample code is provided.
 
 #### Models
 
@@ -20,7 +20,8 @@ In renewable energy policy and planning, open-source models and data typically r
 The models are designed to be simple "toy" examples (and hence run fast in most settings), but have all the features of "real" power system models. There are two base models:
 - The `1 region` model has only one region in which supply and demand must be met.
 - The `6 region` model has six regions with a transmission topology, and supply and demand must be matched across the model but transmitted between the regions. It is based on a renewable version of the *IEEE 6-bus test system*.
-Both of the models can be run in both planning mode, where the optimal system design (generation and transmssion capacities) are determined by minimising system cost, or in operational mode, where the system design is user-defined and the model finds the optimal generation and distribution to balance the grid.
+
+Both models can be run in both planning mode, where the optimal system design (generation and transmssion capacities) are determined by minimising system cost, or in operational mode, where the system design is user-defined and the model finds the optimal generation and distribution to balance the grid. Furthermore, integer and ramping constraints can be easily activated or deactivated depending on the modelling context.
 
 See `documentation/` for details on the models.
 
