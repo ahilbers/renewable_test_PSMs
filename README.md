@@ -97,7 +97,7 @@ The models in this repository were used in the following paper:
 
 AP Hilbers, DJ Brayshaw, A Gandy (2020, *in review*). Quantifying demand and weather uncertainty in power system models using the *m* out of *n* bootstrap. [arXiv:1912.10326](https://arxiv.org/abs/1912.10326).
 
-The models correspond as follows:
+The models used in the paper were constructed using the version of this repository at the time of first release (`v1.0`). This release was given the following doi: [![DOI](https://zenodo.org/badge/229025818.svg)](https://zenodo.org/badge/latestdoi/229025818). The models correspond as follows:
 
 | Model in paper | Model in this repository |
 | -- | -- |
