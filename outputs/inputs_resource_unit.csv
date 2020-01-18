@@ -1,7 +1,0 @@
-locs,techs,resource_unit
-region2,demand_power,energy
-region2,wind,energy_per_area
-region4,demand_power,energy
-region5,demand_power,energy
-region5,wind,energy_per_area
-region6,wind,energy_per_area

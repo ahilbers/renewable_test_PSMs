@@ -1,7 +1,0 @@
-carriers,locs,lookup_loc_carriers
-power,region1,"region1::transmission_other:region2::power,region1::peaking::power,region1::baseload::power,region1::transmission_region1to5:region5::power,region1::transmission_other:region6::power"
-power,region2,"region2::demand_power::power,region2::wind::power,region2::transmission_other:region1::power,region2::transmission_other:region3::power,region2::unmet::power"
-power,region3,"region3::transmission_other:region2::power,region3::peaking::power,region3::baseload::power,region3::transmission_other:region4::power"
-power,region4,"region4::transmission_other:region5::power,region4::transmission_other:region3::power,region4::demand_power::power,region4::unmet::power"
-power,region5,"region5::transmission_other:region4::power,region5::wind::power,region5::transmission_other:region6::power,region5::unmet::power,region5::demand_power::power,region5::transmission_region1to5:region1::power"
-power,region6,"region6::baseload::power,region6::wind::power,region6::peaking::power,region6::transmission_other:region1::power,region6::transmission_other:region5::power"
