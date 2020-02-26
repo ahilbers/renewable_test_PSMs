@@ -26,7 +26,7 @@ Both models can be run in two modes. In `plan` mode, both the optimal system des
 
 #### Data
 
-The time series input data consists of hourly demand levels and wind capacity factors for different European countries, forming a subset of the data available [here](https://doi.org/10.17864/1947.239).
+The time series input data consists of hourly demand levels and wind capacity factors for different European countries, forming a subset of the data available [here](https://doi.org/10.17864/1947.239). See `documentation/` for details.
 
 
 
