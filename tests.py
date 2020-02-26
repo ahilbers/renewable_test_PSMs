@@ -2,6 +2,7 @@
 
 
 import os
+import logging
 import pandas as pd
 import models
 
@@ -66,9 +67,9 @@ def test_output_consistency_1_region(model, run_mode):
                 res.cost_investment[0].loc['region1::{}'.format(tech)]
             )
             if abs(cost_method1 - cost_method2) > 0.1:
-                print('FAIL: {} install costs do not match!\n'
-                      '    manual: {}, model: {}'.format(
-                          tech, cost_method1, cost_method2))
+                logging.error('FAIL: %s install costs do not match!\n'
+                              '    manual: %s, model: %s',
+                              tech, cost_method1, cost_method2)
                 passing = False
             cost_total_method1 += cost_method1
 
@@ -80,9 +81,9 @@ def test_output_consistency_1_region(model, run_mode):
             'region1::{}'.format(tech)
         ].sum())
         if abs(cost_method1 - cost_method2) > 0.1:
-            print('FAIL: {} generation costs do not match!\n'
-                  '    manual: {}, model: {}'.format(
-                      tech, cost_method1, cost_method2))
+            logging.error('FAIL: %s generation costs do not match!\n'
+                          '    manual: %s, model: %s',
+                          tech, cost_method1, cost_method2)
             passing = False
         cost_total_method1 += cost_method1
 
@@ -90,9 +91,9 @@ def test_output_consistency_1_region(model, run_mode):
     if run_mode == 'plan':
         cost_total_method2 = corrfac * float(res.cost.sum())
         if abs(cost_total_method1 - cost_total_method2) > 0.1:
-            print('FAIL: total system costs do not match!\n'
-                  '    manual: {}, model: {}'.format(cost_total_method1,
-                                                     cost_total_method2))
+            logging.error('FAIL: total system costs do not match!\n'
+                          '    manual: %s, model: %s',
+                          cost_total_method1, cost_total_method2)
             passing = False
 
     # Test if supply matches demand
@@ -102,9 +103,9 @@ def test_output_consistency_1_region(model, run_mode):
                                       'gen_unmet_total']].sum())
     demand_total = float(out.loc['demand_total'])
     if abs(generation_total - demand_total) > 0.1:
-        print('FAIL: generation does not match demand!\n'
-              '    generation: {}, demand: {}'.format(generation_total,
-                                                      demand_total))
+        logging.error('FAIL: generation does not match demand!\n'
+                      '    generation: {}, demand: {}'.format(generation_total,
+                                                              demand_total))
         passing = False
 
     return passing
@@ -141,11 +142,9 @@ def test_output_consistency_6_region(model, run_mode):
                 res.cost_investment[0].loc['{}::{}'.format(region, tech)]
             )
             if abs(cost_method1 - cost_method2) > 0.1:
-                print('FAIL: {} install costs in {} do not match!\n'
-                      '    manual: {}, model: {}'.format(tech,
-                                                         region,
-                                                         cost_method1,
-                                                         cost_method2))
+                logging.error('FAIL: %s install costs in %s do not match!\n'
+                              '    manual: %s, model: %s',
+                              tech, region, cost_method1, cost_method2)
                 passing = False
             cost_total_method1 += cost_method1
 
@@ -163,12 +162,12 @@ def test_output_consistency_6_region(model, run_mode):
                     '{}::{}:{}'.format(region_a, tech, region_b)
                 ])
             if abs(cost_method1 - cost_method2) > 0.1:
-                print('FAIL: {} install costs from {} to {} do not match!\n'
-                      '    manual: {}, model: {}'.format(tech,
-                                                         region_a,
-                                                         region_b,
-                                                         cost_method1,
-                                                         cost_method2))
+                logging.error('FAIL: {} install costs from {} to {} do not match!\n'
+                              '    manual: {}, model: {}'.format(tech,
+                                                                 region_a,
+                                                                 region_b,
+                                                                 cost_method1,
+                                                                 cost_method2))
                 passing = False
             cost_total_method1 += cost_method1
 
@@ -182,9 +181,9 @@ def test_output_consistency_6_region(model, run_mode):
             res.cost_var[0].loc[region + '::' + tech].sum()
         )
         if abs(cost_method1 - cost_method2) > 0.1:
-            print('FAIL: {} generation costs in {} do not match!\n'
-                  '    manual: {}, model: {}'.format(
-                      tech, region, cost_method1, cost_method2))
+            logging.error('FAIL: %s generation costs in %s do not match!\n'
+                          '    manual: %s, model: %s', 
+                          tech, region, cost_method1, cost_method2)
             passing = False
         cost_total_method1 += cost_method1
 
@@ -192,9 +191,9 @@ def test_output_consistency_6_region(model, run_mode):
     if run_mode == 'plan':
         cost_total_method2 = corrfac * float(res.cost.sum())
         if abs(cost_total_method1 - cost_total_method2) > 0.1:
-            print('FAIL: total system costs do not match!\n'
-                  '    manual: {}, model: {}'.format(cost_total_method1,
-                                                     cost_total_method2))
+            logging.error('FAIL: total system costs do not match!\n'
+                          '    manual: %s, model: %s',
+                          cost_total_method1, cost_total_method2)
             passing = False
 
     # Test if supply matches demand
@@ -204,44 +203,36 @@ def test_output_consistency_6_region(model, run_mode):
                                       'gen_unmet_total']].sum())
     demand_total = float(out.loc['demand_total'])
     if abs(generation_total - demand_total) > 0.1:
-        print('FAIL: generation does not match demand!\n'
-              '    generation: {}, demand: {}'.format(generation_total,
-                                                      demand_total))
+        logging.error('FAIL: generation does not match demand!\n'
+                      '    generation: %s, demand: %s',
+                      generation_total, demand_total)
         passing = False
 
     return passing
 
 
-def test_output_consistency(model, model_name, run_mode):
-    """Check if model outputs are internally consistent.
-
-    Parameters:
-    -----------
-    model (calliope.Model) : instance of OneRegionModel or SixRegionModel
-    model_name (str) : '1_region' or '6_region'
-    run_mode (str) : 'plan' or 'operate'
-
-    Returns:
-    --------
-    passing: True if test is passed, False otherwise
-    """
-
-    # Run the consistency tests
-    if model_name == '1_region':
-        passing = test_output_consistency_1_region(model, run_mode)
-    if model_name == '6_region':
-        passing = test_output_consistency_6_region(model, run_mode)
-
-    if passing:
-        print('PASS: model outputs are consistent.')
-
-    return passing
-
-
-def test_outputs_against_benchmark(model, model_name, run_mode,
+def test_outputs_against_benchmark(model_name, run_mode,
                                    baseload_integer, baseload_ramping):
     """Test model outputs against benchmark."""
 
+    # Load time series data
+    ts_data = models.load_time_series_data(model_name=model_name)
+    ts_data = ts_data.loc['2017-01']    # Should match benchmarks
+
+    # Run a simulation on which to run tests
+    logging.info('TESTS: Running test simulation...')
+    if model_name == '1_region':
+        Model = models.OneRegionModel
+    elif model_name == '6_region':
+        Model = models.SixRegionModel
+    else:
+        raise ValueError('Valid model names: 1_region, 6_region')
+    model = Model(ts_data, run_mode, baseload_integer, baseload_ramping)
+    model.run()
+    logging.info('TESTS: Done running test simulation \n')
+    summary_outputs = model.get_summary_outputs()
+
+    # Load benchmarks
     if not baseload_integer and not baseload_ramping:
         baseload_name = 'continuous'
     elif baseload_integer and baseload_ramping:
@@ -249,54 +240,30 @@ def test_outputs_against_benchmark(model, model_name, run_mode,
     else:
         raise ValueError('Benchmark outputs not available for '
                          'this model setup.')
-
-    passing = True
-
-    # Get model outputs
-    summary_outputs = model.get_summary_outputs()
-
-    # Load benchmarks
     benchmark_outputs = pd.read_csv(
         os.path.join('benchmarks', '{}_{}_{}_2017-01.csv'.format(
             model_name, run_mode, baseload_name)),
         index_col=0
     )
 
+    # Test outputs against benchmark
+    passing = True
     if float(abs(summary_outputs - benchmark_outputs).max()) > 1:
-        print('FAIL: Model outputs do not match benchmark outputs!')
-        print('Model outputs:\n', summary_outputs)
-        print('')
-        print('Benchmark outputs:\n', benchmark_outputs)
+        logging.error('FAIL: Model outputs do not match benchmark outputs!\n'
+                      'Model outputs: \n%s\n \nBenchmark outputs:\n%s\n',
+                      summary_outputs, benchmark_outputs)
         passing = False
 
     if passing:
-        print('PASS: model outputs match benchmark outputs.')
+        print('PASS: model outputs match benchmarks.')   # To stdout
 
     return passing
 
 
-def run_model_tests(model_name, run_mode, baseload_integer, baseload_ramping):
-    """ Run tests to see if models give the expected outputs."""
+if __name__ == '__main__':
 
-    # Load time series data
-    ts_data = models.load_time_series_data(model_name=model_name)
-    ts_data = ts_data.loc['2017-01']    # Should match benchmarks
-
-    # Run a simulation on which to run tests
-    print('TESTS: Running test simulation...')
-    if model_name == '1_region':
-        Model = models.OneRegionModel
-    elif model_name == '6_region':
-        Model = models.SixRegionModel
-    else:
-        raise ValueError('Valid model names: 1_region, 6_region')
-
-    model = Model(ts_data, run_mode, baseload_integer, baseload_ramping)
-    model.run()
-    print('TESTS: Done running test simulation \n')
-
-    # Run the tests
-    print('TESTS: Starting tests\n---------------------')
-    test_output_consistency(model, model_name, run_mode)
-    test_outputs_against_benchmark(model, model_name, run_mode,
-                                   baseload_integer, baseload_ramping)
+    # Change as desired
+    test_outputs_against_benchmark(model_name='1_region',
+                                   run_mode='plan',
+                                   baseload_integer=False,
+                                   baseload_ramping=False)

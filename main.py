@@ -4,6 +4,7 @@
 import argparse
 import logging
 import models
+import tests
 
 
 def run_example(model_name, ts_data, run_mode,
@@ -24,8 +25,10 @@ def run_example(model_name, ts_data, run_mode,
     # Choose correct model and time series data properties
     if model_name == '1_region':
         Model = models.OneRegionModel
+        test_output_consistency = tests.test_output_consistency_1_region
     if model_name == '6_region':
         Model = models.SixRegionModel
+        test_output_consistency = tests.test_output_consistency_6_region
 
     # Create and run model
     model = Model(ts_data=ts_data,
@@ -37,6 +40,13 @@ def run_example(model_name, ts_data, run_mode,
     # Get DataFrame of key outputs and save to csv
     summary_outputs = model.get_summary_outputs()
     summary_outputs.to_csv('summary_outputs.csv')
+
+    # Test consistency of summary outputs
+    consistent_outputs = test_output_consistency(model, run_mode)
+    if consistent_outputs:
+        logging.info('Summary outputs are consistent.')
+    else:
+        logging.error('FAIL: Summary outputs are not consistent.')
 
     # Save full set of model outputs in new directory
     model.to_csv('full_outputs')
