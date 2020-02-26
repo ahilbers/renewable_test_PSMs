@@ -2,6 +2,7 @@
 
 
 import argparse
+import logging
 import models
 
 
@@ -37,8 +38,8 @@ def run_example(model_name, ts_data, run_mode,
     summary_outputs = model.get_summary_outputs()
     summary_outputs.to_csv('summary_outputs.csv')
 
-    # Save full set of model outputs in new directory called 'outputs'
-    model.to_csv('outputs')
+    # Save full set of model outputs in new directory
+    model.to_csv('full_outputs')
 
 
 def run_example_from_command_line():
@@ -48,7 +49,21 @@ def run_example_from_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run_name', required=True,
                         help='Name of example to run')
+    parser.add_argument('--logging_level', required=False, type=str,
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
+                                 'CRITICAL'], default='INFO',
+                        help='Python logging module verbosity level')
     args = parser.parse_args()
+
+    # Read in command line arguments
+    logging.basicConfig(
+        format='[%(asctime)s] %(levelname)s: %(message)s',
+        level=getattr(logging, args.logging_level),
+        datefmt='%Y-%m-%d,%H:%M:%S'
+    )
+
+    # Log the run characteristics
+    logging.info('Run dictionary: \n%s\n', args)
 
     # Create the correct run dictionary. The following 3 serve only
     # as examples -- they can be customised as desired.

@@ -2,9 +2,14 @@
 
 
 import os
+import logging
+import shutil
 import pandas as pd
 import calliope
 
+
+# Currently a constant, but can be modified if runs are done in parallel
+RUN_ID = 'SERIES_' + str(0)
 
 # Emission intensities of technologies, in ton CO2 equivalent per GWh
 EMISSION_INTENSITIES = {'baseload': 200,
@@ -25,13 +30,14 @@ def load_time_series_data(model_name):
     ts_data (pandas DataFrame) : time series data for use in model
     """
 
+    ####
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
-
     # If 1_region model, take demand and wind from region 5
     if model_name == '1_region':
         ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
         ts_data.columns = ['demand', 'wind']
+    ####
 
     return ts_data
 
@@ -42,8 +48,13 @@ def detect_missing_leap_days(ts_data):
     Parameters:
     -----------
     ts_data (pandas DataFrame) : time series
+
+    Returns:
+    --------
+    missing_leap_days (bool) : True if missing leap days detected,
     """
 
+    missing_leap_days = False
     feb28_index = ts_data.index[(ts_data.index.year % 4 == 0)
                                 & (ts_data.index.month == 2)
                                 & (ts_data.index.day == 28)]
@@ -54,9 +65,9 @@ def detect_missing_leap_days(ts_data):
                                 & (ts_data.index.month == 3)
                                 & (ts_data.index.day == 1)]
     if len(feb29_index) < min((len(feb28_index), len(mar01_index))):
-        return True
+        missing_leap_days = True
 
-    return False
+    return missing_leap_days
 
 
 def get_scenario(run_mode, baseload_integer, baseload_ramping):
@@ -86,6 +97,63 @@ def get_scenario(run_mode, baseload_integer, baseload_ramping):
     return scenario
 
 
+def get_cap_override_dict(model_name, fixed_caps):
+    """Create an override dictionary that can be used to set fixed
+    fixed capacities in a Calliope model run.
+
+    Parameters:
+    -----------
+    model_name (str) : '1_region' or '6_region'
+    fixed_caps (pandas DataFrame or dict) : the fixed capacities.
+        A DataFrame created via model.get_summary_outputs (at
+        regional level) will work.
+
+    Returns:
+    --------
+    o_dict (dict) : A dict that can be fed as override_dict into Calliope
+        model in operate mode
+    """
+
+    o_dict = {}
+
+    # Add baseload, peaking and wind capacities
+    if model_name == '1_region':
+        for tech, attribute in [('baseload', 'energy_cap_equals'),
+                                ('peaking', 'energy_cap_equals'),
+                                ('wind', 'resource_area_equals')]:
+            idx = ('locations.region1.techs.{}.constraints.{}'.
+                   format(tech, attribute))
+            o_dict[idx] = fixed_caps['cap_{}_total'.format(tech)]
+
+    # Add baseload, peaking, wind and transmission capacities
+    if model_name == '6_region':
+        for region in ['region{}'.format(i+1) for i in range(6)]:
+            for tech, attribute in [('baseload', 'energy_cap_equals'),
+                                    ('peaking', 'energy_cap_equals'),
+                                    ('wind', 'resource_area_equals')]:
+                try:
+                    idx = ('locations.{}.techs.{}.constraints.{}'.
+                           format(region, tech, attribute))
+                    o_dict[idx] = \
+                        fixed_caps['cap_{}_{}'.format(tech, region)]
+                except KeyError:
+                    pass
+            for region_to in ['region{}'.format(i+1) for i in range(6)]:
+                if (region, region_to) == ('region1', 'region5'):
+                    tech = 'transmission_region1to5'
+                else:
+                    tech = 'transmission_other'
+                idx = ('links.{},{}.techs.{}.constraints.energy_cap_equals'.
+                       format(region, region_to, tech))
+                try:
+                    o_dict[idx] = fixed_caps['cap_transmission_{}_{}'.
+                                             format(region, region_to)]
+                except KeyError:
+                    pass
+
+    return o_dict
+
+
 def calculate_carbon_emissions(generation_levels):
     """Calculate total carbon emissions.
 
@@ -107,18 +175,20 @@ def calculate_carbon_emissions(generation_levels):
 class OneRegionModel(calliope.Model):
     """Instance of 1-region power system model."""
 
-    def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False):
+    def __init__(self, ts_data, run_mode, baseload_integer=False,
+                 baseload_ramping=False, fixed_caps=None):
         """Create instance of 1-region model in Calliope.
 
         Parameters:
         -----------
-        ts_data (pandas DataFrame) : time series with demand and wind data
+        ts_data (pandas DataFrame) : time series with demand and wind data.
+            It may also contain custom time step weights
         run_mode (str) : 'plan' or 'operate': whether to let the model
             determine the optimal capacities or work with prescribed ones
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
+        fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
         """
 
         self._base_dir = 'models/1_region'
@@ -126,38 +196,66 @@ class OneRegionModel(calliope.Model):
 
         scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
 
-        # Calliope requires a CSV file of time series data to be present
-        # at time of model initialisation. This code creates a CSV with the
-        # right format, initialises the model, then deletes the CSV
+        if fixed_caps is not None:
+            override_dict = get_cap_override_dict(model_name='1_region',
+                                                  fixed_caps=fixed_caps)
+        else:
+            override_dict = None
+
+        # Create a directory containing the data -- unique if run on HPC
+        self._base_dir_iter = self._base_dir + '_' + str(RUN_ID)
+        if os.path.exists(self._base_dir_iter):
+            shutil.rmtree(self._base_dir_iter)
+        shutil.copytree(self._base_dir, self._base_dir_iter)
+
+        # Calliope requires a CSV file of the time series data to be present
+        # at time of initialisation. This creates a new directory with the
+        # model files and data for the model, then deletes it once the model
+        # exists in Python
         ts_data = self._create_init_time_series(ts_data)
-        ts_data_init_path = os.path.join(self._base_dir, 'demand_wind.csv')
+        ts_data_init_path = os.path.join(self._base_dir_iter,
+                                         'demand_wind.csv')
         ts_data.to_csv(ts_data_init_path)
-        super(OneRegionModel, self).__init__(os.path.join(self._base_dir,
+        super(OneRegionModel, self).__init__(os.path.join(self._base_dir_iter,
                                                           'model.yaml'),
-                                             scenario=scenario)
-        os.remove(ts_data_init_path)
+                                             scenario=scenario,
+                                             override_dict=override_dict)
+        shutil.rmtree(self._base_dir_iter)
+
+        # Adjust weights if these are included in ts_data
+        if 'weight' in ts_data.columns:
+            self.inputs.timestep_weights.values = \
+                ts_data.loc[:, 'weight'].values
+
+        logging.info('Time series inputs:\n%s', ts_data)
+        logging.info('Override dict:\n%s', override_dict)
+        if run_mode == 'operate' and fixed_caps is None:
+            logging.warning('No fixed cap override passed into model call. '
+                            'Will read fixed capacities from model.yaml')
 
     def _create_init_time_series(self, ts_data):
         """Create demand and wind time series data for Calliope model
         initialisation.
         """
 
-        # Test if correct columns are present
-        if set(ts_data.columns) != set(['demand', 'wind']):
+        # Avoid changing ts_data outside function
+        ts_data_used = ts_data.copy()
+
+        if not {'demand', 'wind'}.issubset(ts_data.columns):
             raise AttributeError('Input time series: incorrect columns')
 
         # Detect missing leap days -- reset index if so
-        if detect_missing_leap_days(ts_data):
-            print('WARNING: missing leap days detected in input time'
-                  'series. Time series index reset to start in 2017.')
-            ts_data.index = pd.date_range(start='2017-01-01',
-                                          periods=self.num_timesteps,
-                                          freq='h')
+        if detect_missing_leap_days(ts_data_used):
+            logging.warning('Missing leap days detected in input time series.'
+                            'Time series index reset to start in 2020.')
+            ts_data_used.index = pd.date_range(start='2020-01-01',
+                                               periods=self.num_timesteps,
+                                               freq='h')
 
-        # Create CSV for model intialisation
-        ts_data.loc[:, 'demand'] = -ts_data.loc[:, 'demand']
+        # Create DataFrame for model intialisation
+        ts_data_used.loc[:, 'demand'] = -ts_data_used.loc[:, 'demand']
 
-        return ts_data
+        return ts_data_used
 
     def get_summary_outputs(self):
         """Create pandas DataFrame of a subset of model outputs.
@@ -180,19 +278,23 @@ class OneRegionModel(calliope.Model):
             float(self.results.energy_cap.loc['region1::peaking'])
         outputs.loc['cap_wind_total'] = \
             float(self.results.resource_area.loc['region1::wind'])
+        outputs.loc['cap_unmet_total'] = \
+            float(self.results.carrier_prod.loc[
+                'region1::unmet::power'
+            ].max())
 
         # Insert generation levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
-            outputs.loc['gen_{}_total'.format(tech)] = \
-                corrfac * float(self.results.carrier_prod.loc[
-                    'region1::{}::power'.format(tech)
-                ].sum())
+            outputs.loc['gen_{}_total'.format(tech)] = corrfac * float(
+                (self.results.carrier_prod.loc['region1::{}::power'.format(tech)]
+                 * self.inputs.timestep_weights).sum()
+            )
 
         # Insert annualised demand levels
-        outputs.loc['demand_total'] = \
-            -corrfac * float(self.results.carrier_con.loc[
-                'region1::demand_power::power'
-            ].sum())
+        outputs.loc['demand_total'] = -corrfac * float(
+            (self.results.carrier_con.loc['region1::demand_power::power']
+             * self.inputs.timestep_weights).sum()
+        )
 
         # Insert annualised total system cost
         outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
@@ -213,18 +315,20 @@ class OneRegionModel(calliope.Model):
 class SixRegionModel(calliope.Model):
     """Instance of 6-region power system model."""
 
-    def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False):
+    def __init__(self, ts_data, run_mode, baseload_integer=False,
+                 baseload_ramping=False, fixed_caps=None):
         """Create instance of 1-region model in Calliope.
 
         Parameters:
         -----------
-        ts_data (pandas DataFrame) : time series with demand and wind data
+        ts_data (pandas DataFrame) : time series with demand and wind data.
+            It may also contain custom time step weights.
         run_mode (str) : 'plan' or 'operate': whether to let the model
             determine the optimal capacities or work with prescribed ones
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
+        fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
         """
 
         self._base_dir = 'models/6_region'
@@ -232,41 +336,72 @@ class SixRegionModel(calliope.Model):
 
         scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
 
-        # Calliope requires a CSV file of time series data to be present
-        # at time of model initialisation. This code creates a CSV with the
-        # right format, initialises the model, then deletes the CSV
+        if fixed_caps is not None:
+            override_dict = get_cap_override_dict(model_name='6_region',
+                                                  fixed_caps=fixed_caps)
+        else:
+            override_dict = None
+
+        # Create a directory containing the data -- unique if run on HPC
+        self._base_dir_iter = self._base_dir + '_' + str(RUN_ID)
+        if os.path.exists(self._base_dir_iter):
+            shutil.rmtree(self._base_dir_iter)
+        shutil.copytree(self._base_dir, self._base_dir_iter)
+
+        # Calliope requires a CSV file of the time series data to be present
+        # at time of initialisation. This creates a new directory with the
+        # model files and data for the model, then deletes it once the model
+        # exists in Python
         ts_data = self._create_init_time_series(ts_data)
-        ts_data_init_path = os.path.join(self._base_dir, 'demand_wind.csv')
+        ts_data_init_path = os.path.join(self._base_dir_iter, 'demand_wind.csv')
         ts_data.to_csv(ts_data_init_path)
-        super(SixRegionModel, self).__init__(os.path.join(self._base_dir,
+        super(SixRegionModel, self).__init__(os.path.join(self._base_dir_iter,
                                                           'model.yaml'),
-                                             scenario=scenario)
-        os.remove(ts_data_init_path)
+                                             scenario=scenario,
+                                             override_dict=override_dict)
+        shutil.rmtree(self._base_dir_iter)
+
+        # Adjust weights if these are included in ts_data
+        if 'weight' in ts_data.columns:
+            self.inputs.timestep_weights.values = \
+                ts_data.loc[:, 'weight'].values
+
+        logging.info('Time series inputs:\n%s', ts_data)
+        logging.info('Override dict:\n%s', override_dict)
+        if run_mode == 'operate' and fixed_caps is None:
+            logging.warning('No fixed cap override passed into model call. '
+                            'Will read fixed capacities from model.yaml')
 
     def _create_init_time_series(self, ts_data):
         """Create demand and wind time series data for Calliope model
         initialisation."""
 
+        # Avoid changing ts_data outside function
+        ts_data_used = ts_data.copy()
+
         # Test if correct columns are present
-        if set(ts_data.columns) != set(['demand_region2', 'demand_region4',
-                                        'demand_region5', 'wind_region2',
-                                        'wind_region5', 'wind_region6']):
+        if not {'demand_region2', 'demand_region4',
+                'demand_region5', 'wind_region2',
+                'wind_region5', 'wind_region6'}.issubset(ts_data.columns):
             raise AttributeError('Input time series: incorrect columns')
 
         # Detect missing leap days -- reset index if so
-        if detect_missing_leap_days(ts_data):
-            print('WARNING: missing leap days detected in input time'
-                  'series. Time series index reset to start in 2017.')
-            ts_data.index = pd.date_range(start='2017-01-01',
-                                          periods=self.num_timesteps,
-                                          freq='h')
+        if detect_missing_leap_days(ts_data_used):
+            logging.warning('Missing leap days detected in input time series.'
+                            'Time series index reset to start in 2020.')
+            ts_data_used.index = pd.date_range(start='2020-01-01',
+                                               periods=self.num_timesteps,
+                                               freq='h')
 
-        # Create CSV for model intialisation
-        ts_data.loc[:, 'demand_region2'] = -ts_data.loc[:, 'demand_region2']
-        ts_data.loc[:, 'demand_region4'] = -ts_data.loc[:, 'demand_region4']
-        ts_data.loc[:, 'demand_region5'] = -ts_data.loc[:, 'demand_region5']
+        # Create DataFrame for model intialisation
+        ts_data_used.loc[:, 'demand_region2'] = \
+            -ts_data_used.loc[:, 'demand_region2']
+        ts_data_used.loc[:, 'demand_region4'] = \
+            -ts_data_used.loc[:, 'demand_region4']
+        ts_data_used.loc[:, 'demand_region5'] = \
+            -ts_data_used.loc[:, 'demand_region5']
 
-        return ts_data
+        return ts_data_used
 
     def get_summary_outputs(self, at_regional_level=False):
         """Create a pandas DataFrame of a subset of relevant model outputs
@@ -306,6 +441,16 @@ class SixRegionModel(calliope.Model):
                 except KeyError:
                     pass
 
+            # Unmet capacity (peak unmet generation)
+            for tech in ['unmet']:
+                try:
+                    outputs.loc['cap_{}_{}'.format(tech, region)] = \
+                        float(self.results.carrier_prod.loc[
+                            '{}::{}::power'.format(region, tech)
+                        ].max())
+                except KeyError:
+                    pass
+
             # Transmission capacity
             for transmission_type in ['transmission_region1to5',
                                       'transmission_other']:
@@ -327,23 +472,27 @@ class SixRegionModel(calliope.Model):
             for tech in ['baseload', 'peaking', 'wind', 'unmet']:
                 try:
                     outputs.loc['gen_{}_{}'.format(tech, region)] = \
-                        corrfac * float(self.results.carrier_prod.loc[
-                            '{}::{}::power'.format(region, tech)
-                        ].sum())
+                        corrfac * float(
+                            (self.results.carrier_prod.loc[
+                                '{}::{}::power'.format(region, tech)]
+                             *self.inputs.timestep_weights).sum()
+                        )
                 except KeyError:
                     pass
 
             # Demand levels
             try:
-                outputs.loc['demand_{}'.format(region)] = \
-                    -corrfac * float(self.results.carrier_con.loc[
-                        '{}::demand_power::power'.format(region)
-                    ].sum())
+                outputs.loc['demand_{}'.format(region)] = -corrfac * float(
+                    (self.results.carrier_con.loc[
+                        '{}::demand_power::power'.format(region)]
+                     * self.inputs.timestep_weights).sum()
+                )
             except KeyError:
                 pass
 
         # Insert total capacities
-        for tech in ['baseload', 'peaking', 'wind', 'transmission']:
+        for tech in ['baseload', 'peaking', 'wind', 'unmet',
+                     'transmission']:
             outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
                 outputs.index.str.contains('cap_{}'.format(tech))
             ].sum()

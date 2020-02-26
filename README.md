@@ -59,7 +59,7 @@ Each of these examples can be run from a unix command line via:
 python3 main.py --run_name {RUN_NAME}
 ```
 
-where `{RUN_NAME}` is either `1_region_plan_LP`, `6_region_plan_MILP` or `6_region_operate`.
+where `{RUN_NAME}` is either `1_region_plan_LP`, `6_region_plan_MILP` or `6_region_operate`. By default, the verbosity of logging (print statements) is `INFO`. This can be changed (e.g. to `WARNING`) via an additional `--logging_level` argument.
 
 A run may be customised by creating a custom `run_dict` and `ts_data` in `main.py`. Runs may give various warnings from the `Calliope` backend. These can usually be ignored as they refer to deliberate choices that do not affect model results. If you want to check the models are behaving as expected, the `summary_outputs.csv` of the three test simulations above should match `1_region_plan_continuous_2017-01.csv`, `6_region_plan_integer_ramping_2017-01.csv` and `6_region_operate_integer_ramping_2017-01.csv` respectively in the `benchmarks/` directory.
 
