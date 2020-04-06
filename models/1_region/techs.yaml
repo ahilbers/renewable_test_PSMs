@@ -46,7 +46,7 @@ techs:
             lifetime: 1  # yr
         costs:
             monetary:
-                energy_cap: 0  # GBP m per GW
+                energy_cap: 1e10  # GBP m per GW
                 om_con: 6  # GBP m per GWh
                 interest_rate: 0
     demand_power:

@@ -8,7 +8,8 @@ import tests
 
 
 def run_example(model_name, ts_data, run_mode,
-                baseload_integer, baseload_ramping):
+                baseload_integer, baseload_ramping,
+                allow_unmet):
     """Conduct an example model run.
 
     Parameters:
@@ -20,6 +21,8 @@ def run_example(model_name, ts_data, run_mode,
     baseload_integer (bool) : activate baseload integer capacity
         constraint (built in units of 3GW)
     baseload_ramping (bool) : enforce baseload ramping constraint
+    allow_unmet (bool) : allow unmet demand in planning mode (always
+        allowed in operate mode)
     """
 
     # Choose correct model and time series data properties
@@ -34,7 +37,8 @@ def run_example(model_name, ts_data, run_mode,
     model = Model(ts_data=ts_data,
                   run_mode=run_mode,
                   baseload_integer=baseload_integer,
-                  baseload_ramping=baseload_ramping)
+                  baseload_ramping=baseload_ramping,
+                  allow_unmet=allow_unmet)
     model.run()
 
     # Get DataFrame of key outputs and save to csv
@@ -83,21 +87,24 @@ def run_example_from_command_line():
                     'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'plan',
                     'baseload_integer': False,
-                    'baseload_ramping': False}
-    elif args.run_name == '6_region_plan_MILP':
+                    'baseload_ramping': False,
+                    'allow_unmet': False}
+    elif args.run_name == '6_region_plan_MILP_unmet':
         ts_data = models.load_time_series_data(model_name='6_region')
         run_dict = {'model_name': '6_region',
                     'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'plan',
                     'baseload_integer': True,
-                    'baseload_ramping': True}
+                    'baseload_ramping': True,
+                    'allow_unmet': True}
     elif args.run_name == '6_region_operate':
         ts_data = models.load_time_series_data(model_name='6_region')
         run_dict = {'model_name': '6_region',
                     'ts_data': ts_data.loc['2017-01'],
                     'run_mode': 'operate',
                     'baseload_integer': False,
-                    'baseload_ramping': False}
+                    'baseload_ramping': False,
+                    'allow_unmet': True}
     else:
         raise ValueError('No run dictionary associated with this run_name.')
 
@@ -105,17 +112,5 @@ def run_example_from_command_line():
     run_example(**run_dict)
 
 
-def _dev_test():
-    model_name = '6_region'
-    ts_data = models.load_time_series_data(model_name=model_name)
-    model = models.ModelBase(model_name=model_name,
-                             ts_data=ts_data,
-                             run_mode='plan',
-                             baseload_integer=False,
-                             baseload_ramping=False,
-                             fixed_caps=None)
-
-
 if __name__ == '__main__':
-    # run_example_from_command_line()
-    _dev_test()
+    run_example_from_command_line()

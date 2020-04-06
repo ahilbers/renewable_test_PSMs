@@ -210,7 +210,8 @@ def test_output_consistency_6_region(model, run_mode):
 
 
 def test_outputs_against_benchmark(model_name, run_mode,
-                                   baseload_integer, baseload_ramping):
+                                   baseload_integer, baseload_ramping,
+                                   allow_unmet):
     """Test model outputs against benchmark."""
 
     # Load time series data
@@ -225,7 +226,8 @@ def test_outputs_against_benchmark(model_name, run_mode,
         Model = models.SixRegionModel
     else:
         raise ValueError('Valid model names: 1_region, 6_region')
-    model = Model(ts_data, run_mode, baseload_integer, baseload_ramping)
+    model = Model(ts_data, run_mode, baseload_integer, baseload_ramping,
+                  allow_unmet)
     model.run()
     logging.info('TESTS: Done running test simulation \n')
     summary_outputs = model.get_summary_outputs()
@@ -235,12 +237,10 @@ def test_outputs_against_benchmark(model_name, run_mode,
         baseload_name = 'continuous'
     elif baseload_integer and baseload_ramping:
         baseload_name = 'integer_ramping'
-    else:
-        raise ValueError('Benchmark outputs not available for '
-                         'this model setup.')
+    unmet_name = 'unmet' if allow_unmet else 'nounmet'
     benchmark_outputs = pd.read_csv(
-        os.path.join('benchmarks', '{}_{}_{}_2017-01.csv'.format(
-            model_name, run_mode, baseload_name)), index_col=0
+        os.path.join('benchmarks', '{}_{}_{}_{}_2017-01.csv'.format(
+            model_name, run_mode, baseload_name, unmet_name)), index_col=0
     )
 
     # Test outputs against benchmark
@@ -259,25 +259,32 @@ def test_outputs_against_benchmark(model_name, run_mode,
 
 
 def run_all_benchmarks():
-    passing = []
-    runs = [('1_region', 'plan', False, False),
-            ('1_region', 'plan', True, True),
-            ('1_region', 'operate', False, False),
-            ('1_region', 'operate', True, True),
-            ('6_region', 'plan', False, False),
-            ('6_region', 'plan', True, True),
-            ('6_region', 'operate', False, False),
-            ('6_region', 'operate', True, True)]
-    for model_name, run_mode, baseload_integer, baseload_ramping in runs:
-        print('{}, {}, baseload_integer: {}, baseload_ramping: {}'.format(
-            model_name, run_mode, baseload_integer, baseload_ramping))
+    passing_list = []
+    runs = [('1_region', 'plan', False, False, False),
+            ('1_region', 'plan', False, False, True),
+            ('1_region', 'plan', True, True, False),
+            ('1_region', 'plan', True, True, True),
+            ('1_region', 'operate', False, False, True),
+            ('1_region', 'operate', True, True, True),
+            ('6_region', 'plan', False, False, False),
+            ('6_region', 'plan', False, False, True),
+            ('6_region', 'plan', True, True, False),
+            ('6_region', 'plan', True, True, True),
+            ('6_region', 'operate', False, False, True),
+            ('6_region', 'operate', True, True, True)]
+    for model_name, run_mode, baseload_integer, baseload_ramping, allow_unmet in runs:
+        print('{}, {}, baseload_integer: {}, baseload_ramping: {}, allow_unmet: {}'.format(
+            model_name, run_mode, baseload_integer,
+            baseload_ramping, allow_unmet))
         print('----------------------------------------------------------')
-        passing.append(test_outputs_against_benchmark(
-            model_name, run_mode, baseload_integer, baseload_ramping
+        passing_list.append(test_outputs_against_benchmark(
+            model_name, run_mode, baseload_integer, baseload_ramping, allow_unmet
         ))
         print('\n\n')
-    if all(passing):
+    if all(passing_list):
         print('PASS: all model outputs match benchmarks.')
+    else:
+        print('FAIL: some benchmarks have failed.')
 
 
 if __name__ == '__main__':

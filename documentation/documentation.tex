@@ -83,6 +83,7 @@ For each of the two base models, there are a number of customisable inputs/setti
 \item The (demand and wind) time series inputs.
 \item The \texttt{baseload\_integer} constraint. If \texttt{False}, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If \texttt{True}, baseload may be built in blocks of 3GW. This constraint applies only in \texttt{plan} mode.
 \item The \texttt{baseload\_ramping} constraint. If \texttt{False}, baseload generation can change arbitrarily quickly between time steps. If \texttt{True}, baseload generation levels can ramp up or down at most 20\% of its installed capacity in an hour.
+\item The \texttt{allow\_unmet} constraint. If \texttt{False}, all demand must be met. If \texttt{True}, some unmet demand is allowed at high cost, if this leads to a lower total system cost. In \texttt{operate} mode, unmet demand is always allowed to keep solutions feasible, since the capacities are fixed.
 \item The installed capacities of generation and technology technologies. These are model inputs only in \texttt{operate} mode, and are model outputs (hence not user-defined) in \texttt{plan} mode.
 \end{itemize}
 The install and generation costs are specified in \texttt{models/\{MODEL\_NAME\}/techs.yaml}. The installed capacities are specified in \texttt{models/\{MODEL\_NAME\}/model.yaml}. All other settings \& inputs are specified when conducting model runs (see \texttt{main.py}).

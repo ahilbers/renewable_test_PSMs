@@ -65,7 +65,7 @@ def detect_missing_leap_days(ts_data):
     return False
 
 
-def get_scenario(run_mode, baseload_integer, baseload_ramping):
+def get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet):
     """Get the scenario name for different run settings.
 
     Parameters:
@@ -75,6 +75,8 @@ def get_scenario(run_mode, baseload_integer, baseload_ramping):
     baseload_integer (bool) : activate baseload integer capacity
         constraint (built in units of 3GW)
     baseload_ramping (bool) : enforce baseload ramping constraint
+    allow_unmet (bool) : allow unmet demand in planning mode (always
+        allowed in operate mode)
 
     Returns:
     --------
@@ -83,11 +85,13 @@ def get_scenario(run_mode, baseload_integer, baseload_ramping):
 
     scenario = run_mode
     if run_mode == 'plan' and not baseload_integer:
-        scenario = scenario + ',' + 'continuous'
+        scenario = scenario + ',continuous'
     if run_mode == 'plan' and baseload_integer:
-        scenario = scenario + ',' + 'integer'
+        scenario = scenario + ',integer'
+    if run_mode == 'plan' and allow_unmet:
+        scenario = scenario + ',allow_unmet'
     if baseload_ramping:
-        scenario = scenario + ',' + 'ramping'
+        scenario = scenario + ',ramping'
 
     return scenario
 
@@ -172,7 +176,7 @@ class ModelBase(calliope.Model):
 
     def __init__(self, model_name, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
-                 fixed_caps=None):
+                 allow_unmet=False, fixed_caps=None):
         """
         Create instance of either 1-region or 6-region model.
 
@@ -186,6 +190,8 @@ class ModelBase(calliope.Model):
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
+        allow_unmet (bool) : allow unmet demand in planning mode (always
+            allowed in operate mode)
         fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
         """
 
@@ -197,10 +203,10 @@ class ModelBase(calliope.Model):
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
 
-        scenario = get_scenario(run_mode, baseload_integer, baseload_ramping)
+        scenario = get_scenario(run_mode, baseload_integer,
+                                baseload_ramping, allow_unmet)
         override_dict = (get_cap_override_dict(model_name, fixed_caps)
                          if fixed_caps is not None else None)
-
 
         # Calliope requires a CSV file of the time series data to be present
         # at time of initialisation. This creates a new directory with the

@@ -23,6 +23,9 @@ overrides:
     # baseload capacity in units of 3GW
         techs.baseload.constraints.units_max: inf
         techs.baseload.constraints.energy_cap_per_unit: 3
+    allow_unmet:
+        # plan mode only, unmet demand always allowed in operate mode
+        techs.unmet.costs.monetary.energy_cap: 0
     operate:
         run:
             mode: operate

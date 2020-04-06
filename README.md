@@ -49,9 +49,9 @@ If you use this repository in your own research, please cite the following paper
 ## Usage
 
 The easiest way to start using these models is by modifying the example script provided. The file `main.py` contains three example runs with different specs.
-- `1_region_plan_LP`: run the `1 region` model in planning mode. For baseload technology, any nonnegative capacity is allowed and there is no ramping constraint. This makes the optimisation problem a continuous linear program.
-- `6_region_plan_MILP`: run the `6 region` model in planning mode. Baseload technology may only be installed in integer units of 3GW, and has a ramping constraint of 20%/hr. This makes the optimisation problem a mixed-integer linear program.
-- `6_region_operate`: run the `6 region` model in operate mode. Baseload technology has a ramping constraint. The installed capacities of the generation and transmission technologies are defined in `models/6_region/model.yaml`, and only the generation levels are determined by the model.
+- `1_region_plan_LP`: run the `1 region` model in planning mode. For baseload technology, any nonnegative capacity is allowed and there is no ramping constraint. This makes the optimisation problem a continuous linear program. All demand must be met -- no unmet demand is allowed.
+- `6_region_plan_MILP_unmet`: run the `6 region` model in planning mode. Baseload technology may only be installed in integer units of 3GW, and has a ramping constraint of 20%/hr. This makes the optimisation problem a mixed-integer linear program. Unmet demand is allowed at high cost. 
+- `6_region_operate`: run the `6 region` model in operate mode. Baseload technology has a ramping constraint. The installed capacities of the generation and transmission technologies are defined in `models/6_region/model.yaml`, and only the generation levels are determined by the model. Unmet demand is allowed at high cost.
 
 Each of these examples can be run from a unix command line via:
 
