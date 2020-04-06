@@ -162,12 +162,10 @@ def test_output_consistency_6_region(model, run_mode):
                     '{}::{}:{}'.format(region_a, tech, region_b)
                 ])
             if abs(cost_method1 - cost_method2) > 0.1:
-                logging.error('FAIL: {} install costs from {} to {} do not match!\n'
-                              '    manual: {}, model: {}'.format(tech,
-                                                                 region_a,
-                                                                 region_b,
-                                                                 cost_method1,
-                                                                 cost_method2))
+                logging.error('FAIL: %s install costs from %s to %s do '
+                              'not match!\n    manual: %s, model: %s',
+                              tech, region_a, region_b,
+                              cost_method1, cost_method2)
                 passing = False
             cost_total_method1 += cost_method1
 
@@ -242,13 +240,13 @@ def test_outputs_against_benchmark(model_name, run_mode,
                          'this model setup.')
     benchmark_outputs = pd.read_csv(
         os.path.join('benchmarks', '{}_{}_{}_2017-01.csv'.format(
-            model_name, run_mode, baseload_name)),
-        index_col=0
+            model_name, run_mode, baseload_name)), index_col=0
     )
 
     # Test outputs against benchmark
     passing = True
-    if float(abs(summary_outputs - benchmark_outputs).max()) > 1:
+    rel_error = (summary_outputs - benchmark_outputs) / benchmark_outputs
+    if float((rel_error).max()) > 1e-6:
         logging.error('FAIL: Model outputs do not match benchmark outputs!\n'
                       'Model outputs: \n%s\n \nBenchmark outputs:\n%s\n',
                       summary_outputs, benchmark_outputs)
@@ -260,10 +258,27 @@ def test_outputs_against_benchmark(model_name, run_mode,
     return passing
 
 
-if __name__ == '__main__':
+def run_all_benchmarks():
+    passing = []
+    runs = [('1_region', 'plan', False, False),
+            ('1_region', 'plan', True, True),
+            ('1_region', 'operate', False, False),
+            ('1_region', 'operate', True, True),
+            ('6_region', 'plan', False, False),
+            ('6_region', 'plan', True, True),
+            ('6_region', 'operate', False, False),
+            ('6_region', 'operate', True, True)]
+    for model_name, run_mode, baseload_integer, baseload_ramping in runs:
+        print('{}, {}, baseload_integer: {}, baseload_ramping: {}'.format(
+            model_name, run_mode, baseload_integer, baseload_ramping))
+        print('----------------------------------------------------------')
+        passing.append(test_outputs_against_benchmark(
+            model_name, run_mode, baseload_integer, baseload_ramping
+        ))
+        print('\n\n')
+    if all(passing):
+        print('PASS: all model outputs match benchmarks.')
 
-    # Change as desired
-    test_outputs_against_benchmark(model_name='1_region',
-                                   run_mode='plan',
-                                   baseload_integer=False,
-                                   baseload_ramping=False)
+
+if __name__ == '__main__':
+    run_all_benchmarks()

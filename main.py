@@ -105,5 +105,17 @@ def run_example_from_command_line():
     run_example(**run_dict)
 
 
+def _dev_test():
+    model_name = '6_region'
+    ts_data = models.load_time_series_data(model_name=model_name)
+    model = models.ModelBase(model_name=model_name,
+                             ts_data=ts_data,
+                             run_mode='plan',
+                             baseload_integer=False,
+                             baseload_ramping=False,
+                             fixed_caps=None)
+
+
 if __name__ == '__main__':
-    run_example_from_command_line()
+    # run_example_from_command_line()
+    _dev_test()
