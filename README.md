@@ -110,9 +110,9 @@ The models used in the paper were constructed using the version of this reposito
 
 | Model in paper | Model in this repository |
 | -- | -- |
-| *1-region LP*   | `model_name=1_region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region LP*   | `model_name=6_region, run_mode=plan, baseload_integer=False, baseload_ramping=False` |
-| *6-region MILP*   | `model_name=6_region, run_mode=plan, baseload_integer=True, baseload_ramping=True` |
+| *1-region LP*   | `model_name=1_region, run_mode=plan, baseload_integer=False, baseload_ramping=False, allow_unmet=True` |
+| *6-region LP*   | `model_name=6_region, run_mode=plan, baseload_integer=False, baseload_ramping=False, allow_unmet=True` |
+| *6-region MILP*   | `model_name=6_region, run_mode=plan, baseload_integer=True, baseload_ramping=True, allow_unmet=True` |
 
 Code for the results in this paper is available in [this repository](https://github.com/ahilbers/2020_bootstrap_uncertainty_quantification).
 
