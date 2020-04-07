@@ -271,9 +271,14 @@ class ModelBase(calliope.Model):
 class OneRegionModel(ModelBase):
     """Instance of 1-region power system model."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ts_data, run_mode,
+                 baseload_integer=False, baseload_ramping=False,
+                 allow_unmet=False, fixed_caps=None):
         """Initialize model from ModelBase parent."""
-        super(OneRegionModel, self).__init__('1_region', *args, **kwargs)
+        super(OneRegionModel, self).__init__(
+            '1_region', ts_data, run_mode,
+            baseload_integer, baseload_ramping, allow_unmet, fixed_caps
+        )
 
     def get_summary_outputs(self):
         """Create pandas DataFrame of a subset of model outputs.
@@ -337,9 +342,14 @@ class OneRegionModel(ModelBase):
 class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ts_data, run_mode,
+                 baseload_integer=False, baseload_ramping=False,
+                 allow_unmet=False, fixed_caps=None):
         """Initialize model from ModelBase parent."""
-        super(SixRegionModel, self).__init__('6_region', *args, **kwargs)
+        super(SixRegionModel, self).__init__(
+            '6_region', ts_data, run_mode,
+            baseload_integer, baseload_ramping, allow_unmet, fixed_caps
+        )
 
     def get_summary_outputs(self, at_regional_level=False):
         """Create a pandas DataFrame of a subset of relevant model outputs
