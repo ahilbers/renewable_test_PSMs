@@ -9,11 +9,13 @@
 
 #### Summary
 
-This repository contains model files, time series data and example code for a class of simple test power system models on which to conduct renewable energy and time series analysis.
+This repository contains model files, time series data and example code for a class of simple test power system models to use as benchmarks in renewable energy, time series and optimisation method analysis.
 
 #### Rationale
 
-In renewable energy policy and planning, open-source models and data typically represent a real system and may be highly computationally expensive to run. In more pure power system research, the standard benchmark models (e.g. the various IEEE X-bus test systems) have usually not been written implemented into code, are not designed for renewable analysis and/or require time series data that is not publicly available. This repository fills this gap by providing a set of simple test power system models, with most system features available, on which to develop and evaluate power system modelling methodologies. It is fully self-contained; all model files, 38 years of time series data and sample code is provided.
+In many fields, standard benchmarks exist; notable examples are (MNIST)[http://yann.lecun.com/exdb/mnist/] or (CIFAR)[http://www.cs.toronto.edu/~kriz/cifar.html] in Computer Vision and the [Lorenz 63](https://en.wikipedia.org/wiki/Lorenz_system) system in Dynamical Systems. In contrast, test models used in power system research tend to differ per investigation, with each paper using a different (often not open-source) model. The closest thing in power system applications are the various IEEE n-bus test systems, but the code, technology characteristics and time series data are usually not standardised or provided open-source.
+
+This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain contain most features seen in more complicated systems. These models are not modelling frameworks like (OseMOSYS)[http://www.osemosys.org/] or (Calliope)[https://calliope.readthedocs.io/en/stable/] (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the Calliope package. Documentation and examples can be found below.
 
 #### Models
 

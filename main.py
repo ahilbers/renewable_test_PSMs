@@ -69,7 +69,7 @@ def run_example_from_command_line():
                         help='Python logging module verbosity level')
     args = parser.parse_args()
 
-    # Read in command line arguments
+    # Set log level
     logging.basicConfig(
         format='[%(asctime)s] %(levelname)s: %(message)s',
         level=getattr(logging, args.logging_level),
