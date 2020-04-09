@@ -8,9 +8,6 @@ import pandas as pd
 import calliope
 
 
-# Currently a constant, but can be modified if runs are done in parallel
-RUN_ID = 'SERIES_' + str(0)
-
 # Emission intensities of technologies, in ton CO2 equivalent per GWh
 EMISSION_INTENSITIES = {'baseload': 200,
                         'peaking': 400,
@@ -176,7 +173,7 @@ class ModelBase(calliope.Model):
 
     def __init__(self, model_name, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None):
+                 allow_unmet=False, fixed_caps=None, run_id=0):
         """
         Create instance of either 1-region or 6-region model.
 
@@ -193,6 +190,7 @@ class ModelBase(calliope.Model):
         allow_unmet (bool) : allow unmet demand in planning mode (always
             allowed in operate mode)
         fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
+        run_id (int) : can be changed if multiple models are run in parallel
         """
 
         if model_name not in ['1_region', '6_region']:
@@ -212,7 +210,7 @@ class ModelBase(calliope.Model):
         # at time of initialisation. This creates a new directory with the
         # model files and data for the model, then deletes it once the model
         # exists in Python
-        self._base_dir_iter = self.base_dir + '_' + str(RUN_ID)
+        self._base_dir_iter = self.base_dir + '_' + str(run_id)
         if os.path.exists(self._base_dir_iter):
             shutil.rmtree(self._base_dir_iter)
         shutil.copytree(self.base_dir, self._base_dir_iter)
@@ -281,7 +279,7 @@ class OneRegionModel(ModelBase):
 
     def __init__(self, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None):
+                 allow_unmet=False, fixed_caps=None, run_id=0):
         """Initialize model from ModelBase parent."""
         super(OneRegionModel, self).__init__(
             '1_region', ts_data, run_mode,
@@ -352,7 +350,7 @@ class SixRegionModel(ModelBase):
 
     def __init__(self, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None):
+                 allow_unmet=False, fixed_caps=None, run_id=0):
         """Initialize model from ModelBase parent."""
         super(SixRegionModel, self).__init__(
             '6_region', ts_data, run_mode,
