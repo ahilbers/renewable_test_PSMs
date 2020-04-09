@@ -268,6 +268,14 @@ class ModelBase(calliope.Model):
         return ts_data_used
 
 
+def _dev_test():
+    ts_data = load_time_series_data(model_name='6_region')
+    ts_data = ts_data.loc['2017-01']
+    model = SixRegionModel(ts_data=ts_data, run_mode='operate')
+    model.run()
+    print(model.get_summary_outputs())
+
+
 class OneRegionModel(ModelBase):
     """Instance of 1-region power system model."""
 
@@ -308,7 +316,7 @@ class OneRegionModel(ModelBase):
             float(self.results.carrier_prod.loc[
                 'region1::unmet::power'
             ].max())
-        )
+        )    # Equal to peak unmet demand
 
         # Insert generation levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
@@ -391,7 +399,7 @@ class SixRegionModel(ModelBase):
                 except KeyError:
                     pass
 
-            # Unmet capacity (peak unmet generation)
+            # Unmet capacity (peak unmet demand)
             for tech in ['unmet']:
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = (
@@ -442,7 +450,9 @@ class SixRegionModel(ModelBase):
             except KeyError:
                 pass
 
-        # Insert total capacities
+        # Insert total capacities. cap_unmet_total is the sum of peak
+        # unmet demand levels across the regions, but not necessarily
+        # the systemwide peak unmet demand
         for tech in ['baseload', 'peaking', 'wind', 'unmet',
                      'transmission']:
             outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
@@ -477,9 +487,13 @@ class SixRegionModel(ModelBase):
         if not at_regional_level:
             outputs = outputs.loc[[
                 'cap_baseload_total', 'cap_peaking_total', 'cap_wind_total',
-                'cap_transmission_total', 'gen_baseload_total',
+                'cap_unmet_total', 'cap_transmission_total', 'gen_baseload_total',
                 'gen_peaking_total', 'gen_wind_total', 'gen_unmet_total',
                 'demand_total', 'cost_total', 'emissions_total'
                 ]]
 
         return outputs
+
+
+if __name__ == '__main__':
+    _dev_test()

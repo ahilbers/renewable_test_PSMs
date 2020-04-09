@@ -2,11 +2,12 @@
 cap_baseload_total,60.0
 cap_peaking_total,150.0
 cap_wind_total,240.0
+cap_unmet_total,63.207
 cap_transmission_total,201.0
 gen_baseload_total,409360.9579032258
 gen_peaking_total,266459.9138709677
-gen_wind_total,730511.8359677419
+gen_wind_total,730511.8359677418
 gen_unmet_total,116772.37774193547
 demand_total,1523105.085483871
-cost_total,529733333.1606001
+cost_total,529733333.1168002
 emissions_total,188456157.12903225

@@ -2,6 +2,7 @@
 cap_baseload_total,10.0
 cap_peaking_total,20.0
 cap_wind_total,30.0
+cap_unmet_total,19.722
 gen_baseload_total,84810.77596774192
 gen_peaking_total,122505.27967741936
 gen_wind_total,121848.96258064514
