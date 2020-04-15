@@ -100,7 +100,7 @@ def get_cap_override_dict(model_name, fixed_caps):
     Parameters:
     -----------
     model_name (str) : '1_region' or '6_region'
-    fixed_caps (pandas DataFrame or dict) : the fixed capacities.
+    fixed_caps (pandas Series/DataFrame or dict) : the fixed capacities.
         A DataFrame created via model.get_summary_outputs (at
         regional level) will work.
 
@@ -109,6 +109,9 @@ def get_cap_override_dict(model_name, fixed_caps):
     o_dict (dict) : A dict that can be fed as override_dict into Calliope
         model in operate mode
     """
+
+    if isinstance(fixed_caps, pd.DataFrame):
+        fixed_caps = fixed_caps.iloc[:, 0]  # Change to Series
 
     o_dict = {}
 
@@ -146,6 +149,10 @@ def get_cap_override_dict(model_name, fixed_caps):
                                              format(region, region_to)]
                 except KeyError:
                     pass
+
+    if len(o_dict.keys()) == 0:
+        raise AttributeError('Override dict is empty. Check if something '
+                             'has gone wrong.')
 
     return o_dict
 
@@ -283,7 +290,8 @@ class OneRegionModel(ModelBase):
         """Initialize model from ModelBase parent."""
         super(OneRegionModel, self).__init__(
             '1_region', ts_data, run_mode,
-            baseload_integer, baseload_ramping, allow_unmet, fixed_caps
+            baseload_integer, baseload_ramping, allow_unmet,
+            fixed_caps, run_id
         )
 
     def get_summary_outputs(self):
@@ -354,7 +362,8 @@ class SixRegionModel(ModelBase):
         """Initialize model from ModelBase parent."""
         super(SixRegionModel, self).__init__(
             '6_region', ts_data, run_mode,
-            baseload_integer, baseload_ramping, allow_unmet, fixed_caps
+            baseload_integer, baseload_ramping, allow_unmet,
+            fixed_caps, run_id
         )
 
     def get_summary_outputs(self, at_regional_level=False):

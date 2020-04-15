@@ -18,6 +18,9 @@ This repository provides simple test models and sample code for renewable energy
 - `baseload_ramping`:
   - `False`: baseload generation can change at any rate
   - `True`: baseload generation can ramp up or down at most 20% of its installed capacity per hour
+- `allow_unmet`:
+  - `False`: all demand must be met
+  - `True`: some demand may be left unmet, with a cost equal to the "value of lost load"
 
 The models may be customised further by editing the model-defining files:
 - Costs associted with each generation & transmission technologies: `models/{MODEL_NAME}/techs.yaml`.
@@ -62,7 +65,7 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 | Transmission | Regions 1-5   | 150 |     - |   - |
 | Transmission | Other regions | 100 |     - |   - |
 
-For modelling purposes, unmet demand is considered a generation technology with no installation cost but a highy generation cost. The installation costs are annualised to reflect the cost per year of technology lifetime.
+For modelling purposes, unmet demand is considered a generation technology with no installation cost but a highy generation cost ("value of lost load"). The installation costs are annualised to reflect the cost per year of technology lifetime.
 
 
 
