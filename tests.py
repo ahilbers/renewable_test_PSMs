@@ -10,12 +10,33 @@ import models
 # Install costs and generation costs. These should match the information
 # provided in the model.yaml and techs.yaml files in the model definition
 COSTS = pd.DataFrame(columns=['install', 'generation'])
-COSTS.loc['baseload']                = [300., 0.005]
-COSTS.loc['peaking']                 = [100., 0.035]
-COSTS.loc['wind']                    = [100., 0.   ]
-COSTS.loc['unmet']                   = [  0., 6.   ]
-COSTS.loc['transmission_other']      = [100., 0.   ]
-COSTS.loc['transmission_region1to5'] = [150., 0.   ]
+
+# Costs for 1 region model
+COSTS.loc['baseload'] = [300., 0.005]
+COSTS.loc['peaking']  = [100., 0.035]
+COSTS.loc['wind']     = [100., 0.000]
+COSTS.loc['unmet']    = [  0., 6.000]
+
+# Heterogenised costs for 6 region model
+COSTS.loc['baseload_region1'] = [300.1, 0.005001]
+COSTS.loc['baseload_region3'] = [300.3, 0.005003]
+COSTS.loc['baseload_region6'] = [300.6, 0.005006]
+COSTS.loc['peaking_region1']  = [100.1, 0.035001]
+COSTS.loc['peaking_region3']  = [100.3, 0.035003]
+COSTS.loc['peaking_region6']  = [100.6, 0.035006]
+COSTS.loc['wind_region2']     = [100.2, 0.000002]
+COSTS.loc['wind_region5']     = [100.5, 0.000005]
+COSTS.loc['wind_region6']     = [100.6, 0.000006]
+COSTS.loc['unmet_region2']    = [  0.0, 6.000002]
+COSTS.loc['unmet_region4']    = [  0.0, 6.000004]
+COSTS.loc['unmet_region5']    = [  0.0, 6.000005]
+COSTS.loc['transmission_region1_region2'] = [100.12, 0]
+COSTS.loc['transmission_region1_region5'] = [150.15, 0]
+COSTS.loc['transmission_region1_region6'] = [100.16, 0]
+COSTS.loc['transmission_region2_region3'] = [100.23, 0]
+COSTS.loc['transmission_region3_region4'] = [100.34, 0]
+COSTS.loc['transmission_region4_region5'] = [100.45, 0]
+COSTS.loc['transmission_region5_region6'] = [100.56, 0]
 
 
 # Topology of 6 region model. These should match the information provided
@@ -27,22 +48,21 @@ BASELOAD_TOP, PEAKING_TOP, WIND_TOP, UNMET_TOP, DEMAND_TOP = (
     [('unmet', i) for i in ['region2', 'region4', 'region5']],
     [('demand', i) for i in ['region2', 'region4', 'region5']]
 )
-TRANSMISSION_REGION1TO5_TOP, TRANSMISSION_OTHER_TOP = (
-    [('transmission_region1to5', 'region1', 'region5')],
-    [('transmission_other', *i) for i in [('region1', 'region2'),
-                                          ('region1', 'region6'),
-                                          ('region2', 'region3'),
-                                          ('region3', 'region4'),
-                                          ('region4', 'region5'),
-                                          ('region5', 'region6')]]
-)
+TRANSMISSION_TOP = [('transmission', *i)
+                    for i in [('region1', 'region2'),
+                              ('region1', 'region5'),
+                              ('region1', 'region6'),
+                              ('region2', 'region3'),
+                              ('region3', 'region4'),
+                              ('region4', 'region5'),
+                              ('region5', 'region6')]]
 
 
 def test_output_consistency_1_region(model, run_mode):
     """Check if model outputs are internally consistent for 6 region model.
 
     Parameters:
-    -----------
+   -----------
     model (calliope.Model) : instance of OneRegionModel or SixRegionModel
     run_mode (str) : 'plan' or 'operate'
 
@@ -127,7 +147,7 @@ def test_output_consistency_6_region(model, run_mode):
     passing = True
     cost_total_method1 = 0
 
-    out = model.get_summary_outputs(at_regional_level=True)
+    out = model.get_summary_outputs()
     res = model.results
     corrfac = 8760/model.num_timesteps    # For annualisation
 
@@ -135,11 +155,13 @@ def test_output_consistency_6_region(model, run_mode):
     if run_mode == 'plan':
         for tech, region in BASELOAD_TOP + PEAKING_TOP + WIND_TOP:
             cost_method1 = float(
-                COSTS.loc[tech, 'install'] *
+                COSTS.loc['{}_{}'.format(tech, region), 'install'] *
                 out.loc['cap_{}_{}'.format(tech, region)]
             )
             cost_method2 = corrfac * float(
-                res.cost_investment[0].loc['{}::{}'.format(region, tech)]
+                res.cost_investment[0].loc['{}::{}_{}'.format(region,
+                                                              tech,
+                                                              region)]
             )
             if abs(cost_method1 - cost_method2) > 0.1:
                 logging.error('FAIL: %s install costs in %s do not match!\n'
@@ -150,16 +172,21 @@ def test_output_consistency_6_region(model, run_mode):
 
     # Test if transmission installation costs are consistent
     if run_mode == 'plan':
-        for tech, region_a, region_b in \
-            TRANSMISSION_REGION1TO5_TOP + TRANSMISSION_OTHER_TOP:
+        for tech, region_a, region_b in TRANSMISSION_TOP:
             cost_method1 = float(
-                COSTS.loc[tech, 'install'] * out.loc[
+                COSTS.loc[
+                    '{}_{}_{}'.format(tech, region_a, region_b), 'install'
+                ] * out.loc[
                     'cap_transmission_{}_{}'.format(region_a, region_b)
                 ]
             )
             cost_method2 = 2 * corrfac * \
                 float(res.cost_investment[0].loc[
-                    '{}::{}:{}'.format(region_a, tech, region_b)
+                    '{}::{}_{}_{}:{}'.format(region_a,
+                                             tech,
+                                             region_a,
+                                             region_b,
+                                             region_b)
                 ])
             if abs(cost_method1 - cost_method2) > 0.1:
                 logging.error('FAIL: %s install costs from %s to %s do '
@@ -172,15 +199,15 @@ def test_output_consistency_6_region(model, run_mode):
     # Test if generation costs are consistent
     for tech, region in BASELOAD_TOP + PEAKING_TOP + WIND_TOP + UNMET_TOP:
         cost_method1 = float(
-            COSTS.loc[tech, 'generation']
+            COSTS.loc['{}_{}'.format(tech, region), 'generation']
             * out.loc['gen_{}_{}'.format(tech, region)]
         )
         cost_method2 = corrfac * float(
-            res.cost_var[0].loc[region + '::' + tech].sum()
+            res.cost_var[0].loc['{}::{}_{}'.format(region, tech, region)].sum()
         )
         if abs(cost_method1 - cost_method2) > 0.1:
             logging.error('FAIL: %s generation costs in %s do not match!\n'
-                          '    manual: %s, model: %s', 
+                          '    manual: %s, model: %s',
                           tech, region, cost_method1, cost_method2)
             passing = False
         cost_total_method1 += cost_method1
@@ -232,6 +259,11 @@ def test_outputs_against_benchmark(model_name, run_mode,
     logging.info('TESTS: Done running test simulation \n')
     summary_outputs = model.get_summary_outputs()
 
+    if model_name == '1_region':
+        test_output_consistency_1_region(model, run_mode)
+    elif model_name == '6_region':
+        test_output_consistency_6_region(model, run_mode)
+
     # Load benchmarks
     if not baseload_integer and not baseload_ramping:
         baseload_name = 'continuous'
@@ -273,13 +305,15 @@ def run_all_benchmarks():
             ('6_region', 'operate', False, False, True),
             ('6_region', 'operate', True, True, True)]
     for model_name, run_mode, baseload_integer, baseload_ramping, allow_unmet in runs:
-        print('{}, {}, baseload_integer: {}, baseload_ramping: {}, allow_unmet: {}'.format(
-            model_name, run_mode, baseload_integer,
-            baseload_ramping, allow_unmet))
+        print('{}, {}, baseload_integer: {}, baseload_ramping: {}, '
+              'allow_unmet: {}'.format(model_name, run_mode, baseload_integer,
+                                       baseload_ramping, allow_unmet))
         print('----------------------------------------------------------')
-        passing_list.append(test_outputs_against_benchmark(
-            model_name, run_mode, baseload_integer, baseload_ramping, allow_unmet
-        ))
+        passing_list.append(test_outputs_against_benchmark(model_name,
+                                                           run_mode,
+                                                           baseload_integer,
+                                                           baseload_ramping,
+                                                           allow_unmet))
         print('\n\n')
     if all(passing_list):
         print('PASS: all model outputs match benchmarks.')

@@ -9,7 +9,7 @@ import tests
 
 def run_example(model_name, ts_data, run_mode,
                 baseload_integer, baseload_ramping,
-                allow_unmet):
+                allow_unmet, extra_override=None):
     """Conduct an example model run.
 
     Parameters:
@@ -23,6 +23,8 @@ def run_example(model_name, ts_data, run_mode,
     baseload_ramping (bool) : enforce baseload ramping constraint
     allow_unmet (bool) : allow unmet demand in planning mode (always
         allowed in operate mode)
+    extra_override (str) : name of additional override, to customise
+        model. The override should be defined in the relevant model.yaml
     """
 
     # Choose correct model and time series data properties
@@ -112,5 +114,21 @@ def run_example_from_command_line():
     run_example(**run_dict)
 
 
+def _dev_test():
+    ts_data = models.load_time_series_data(model_name='6_region')
+    ts_data = ts_data.loc['2017-01']
+    model = models.SixRegionModel(ts_data=ts_data,
+                                  run_mode='operate',
+                                  baseload_integer=True,
+                                  baseload_ramping=True,
+                                  allow_unmet=True,
+                                  fixed_caps=None)
+    model.run()
+    tests.test_output_consistency_6_region(model, run_mode='operate')
+    import pdb
+    pdb.set_trace()
+
+
 if __name__ == '__main__':
-    run_example_from_command_line()
+    # run_example_from_command_line()
+    _dev_test()

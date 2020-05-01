@@ -2,68 +2,62 @@ locations:
     region1:
         coordinates: {lat: 3, lon: 2}
         techs:
-            baseload:
-            peaking:
+            baseload_region1:
+            peaking_region1:
     region2:
         coordinates: {lat: 3, lon: 1}
         techs:
-            wind:
-                constraints:
-                    resource: file=demand_wind.csv:wind_region2
+            wind_region2:
+                constraints.resource: file=demand_wind.csv:wind_region2
             demand_power:
-                constraints:
-                    resource: file=demand_wind.csv:demand_region2
-            unmet:
+                constraints.resource: file=demand_wind.csv:demand_region2
+            unmet_region2:
     region3:
         coordinates: {lat: 2, lon: 0}
         techs:
-            baseload:
-            peaking:
+            baseload_region3:
+            peaking_region3:
     region4:
         coordinates: {lat: 1, lon: 0}
         techs:
             demand_power:
-                constraints:
-                    resource: file=demand_wind.csv:demand_region4
-            unmet:
+                constraints.resource: file=demand_wind.csv:demand_region4
+            unmet_region4:
     region5:
         coordinates: {lat: 0, lon: 1}
         techs:
-            wind:
-                constraints:
-                    resource: file=demand_wind.csv:wind_region5
+            wind_region5:
+                constraints.resource: file=demand_wind.csv:wind_region5
             demand_power:
-                constraints:
-                    resource: file=demand_wind.csv:demand_region5
-            unmet:
+                constraints.resource: file=demand_wind.csv:demand_region5
+            unmet_region5:
     region6:
         coordinates: {lat: 0, lon: 2}
         techs:
-            baseload:
-            peaking:
-            wind:
-                constraints:
-                    resource: file=demand_wind.csv:wind_region6
+            baseload_region6:
+            peaking_region6:
+            wind_region6:
+                constraints.resource: file=demand_wind.csv:wind_region6
 
 links:
     region1,region2:
         techs:
-            transmission_other:
+            transmission_region1_region2:
     region1,region5:
         techs:
-            transmission_region1to5:
+            transmission_region1_region5:
     region1,region6:
         techs:
-            transmission_other:
+            transmission_region1_region6:
     region2,region3:
         techs:
-            transmission_other:
+            transmission_region2_region3:
     region3,region4:
         techs:
-            transmission_other:
+            transmission_region3_region4:
     region4,region5:
         techs:
-            transmission_other:
+            transmission_region4_region5:
     region5,region6:
         techs:
-            transmission_other:
+            transmission_region5_region6:

@@ -6,6 +6,7 @@ import logging
 import shutil
 import pandas as pd
 import calliope
+import tests
 
 
 # Emission intensities of technologies, in ton CO2 equivalent per GWh
@@ -180,7 +181,8 @@ class ModelBase(calliope.Model):
 
     def __init__(self, model_name, ts_data, run_mode,
                  baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None, run_id=0):
+                 allow_unmet=False, fixed_caps=None, extra_override=None,
+                 run_id=0):
         """
         Create instance of either 1-region or 6-region model.
 
@@ -197,6 +199,8 @@ class ModelBase(calliope.Model):
         allow_unmet (bool) : allow unmet demand in planning mode (always
             allowed in operate mode)
         fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
+        extra_override (str) : name of additional override, to customise
+            model. The override should be defined in the relevant model.yaml
         run_id (int) : can be changed if multiple models are run in parallel
         """
 
@@ -208,8 +212,11 @@ class ModelBase(calliope.Model):
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
 
+        # Create scenarios and overrides
         scenario = get_scenario(run_mode, baseload_integer,
                                 baseload_ramping, allow_unmet)
+        if extra_override is not None:
+            scenario = ','.join((scenario, extra_override))
         override_dict = (get_cap_override_dict(model_name, fixed_caps)
                          if fixed_caps is not None else None)
 
@@ -284,23 +291,12 @@ def _dev_test():
 class OneRegionModel(ModelBase):
     """Instance of 1-region power system model."""
 
-    def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None, run_id=0):
+    def __init__(self, *args, **kwargs):
         """Initialize model from ModelBase parent."""
-        super(OneRegionModel, self).__init__(
-            '1_region', ts_data, run_mode,
-            baseload_integer, baseload_ramping, allow_unmet,
-            fixed_caps, run_id
-        )
+        super(OneRegionModel, self).__init__('1_region', *args, **kwargs)
 
     def get_summary_outputs(self):
-        """Create pandas DataFrame of a subset of model outputs.
-
-        Parameters:
-        -----------
-        save_csv (bool) : save CSV of summary outputs
-        """
+        """Create pandas DataFrame of subset of model outputs."""
 
         assert hasattr(self, 'results'), \
             'Model outputs have not been calculated: call self.run() first.'
@@ -318,7 +314,7 @@ class OneRegionModel(ModelBase):
         outputs.loc['cap_wind_total'] = (
             float(self.results.resource_area.loc['region1::wind'])
         )
-        outputs.loc['cap_unmet_total'] = (
+        outputs.loc['peak_unmet_total'] = (
             float(self.results.carrier_prod.loc[
                 'region1::unmet::power'
             ].max())
@@ -356,24 +352,12 @@ class OneRegionModel(ModelBase):
 class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
 
-    def __init__(self, ts_data, run_mode,
-                 baseload_integer=False, baseload_ramping=False,
-                 allow_unmet=False, fixed_caps=None, run_id=0):
+    def __init__(self, *args, **kwargs):
         """Initialize model from ModelBase parent."""
-        super(SixRegionModel, self).__init__(
-            '6_region', ts_data, run_mode,
-            baseload_integer, baseload_ramping, allow_unmet,
-            fixed_caps, run_id
-        )
+        super(SixRegionModel, self).__init__('6_region', *args, **kwargs)
 
-    def get_summary_outputs(self, at_regional_level=False):
-        """Create a pandas DataFrame of a subset of relevant model outputs
-
-        Parameters:
-        -----------
-        at_regional_level (bool) : give each model output at
-            regional level, otherwise the model totals
-        """
+    def get_summary_outputs(self):
+        """Create pandas DataFrame of subset of relevant model outputs."""
 
         assert hasattr(self, 'results'), \
             'Model outputs have not been calculated: call self.run() first.'
@@ -389,7 +373,7 @@ class SixRegionModel(ModelBase):
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = (
                         float(self.results.energy_cap.loc[
-                            '{}::{}'.format(region, tech)
+                            '{}::{}_{}'.format(region, tech, region)
                         ])
                     )
                 except KeyError:
@@ -400,26 +384,25 @@ class SixRegionModel(ModelBase):
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = (
                         float(self.results.resource_area.loc[
-                            '{}::{}'.format(region, tech)
+                            '{}::{}_{}'.format(region, tech, region)
                         ])
                     )
                 except KeyError:
                     pass
 
-            # Unmet capacity (peak unmet demand)
+            # Peak unmet demand
             for tech in ['unmet']:
                 try:
-                    outputs.loc['cap_{}_{}'.format(tech, region)] = (
+                    outputs.loc['peak_unmet_{}'.format(region)] = (
                         float(self.results.carrier_prod.loc[
-                            '{}::{}::power'.format(region, tech)
+                            '{}::{}_{}::power'.format(region, tech, region)
                         ].max())
                     )
                 except KeyError:
                     pass
 
             # Transmission capacity
-            for transmission_type in ['transmission_region1to5',
-                                      'transmission_other']:
+            for tech in ['transmission']:
                 for region_to in ['region{}'.format(i+1) for i in range(6)]:
                     # No double counting of links -- one way only
                     if int(region[-1]) < int(region_to[-1]):
@@ -427,9 +410,11 @@ class SixRegionModel(ModelBase):
                             outputs.loc['cap_transmission_{}_{}'.format(
                                 region, region_to
                             )] = float(self.results.energy_cap.loc[
-                                '{}::{}:{}'.format(
-                                    region, transmission_type, region_to
-                                )
+                                '{}::{}_{}_{}:{}'.format(region,
+                                                         tech,
+                                                         region,
+                                                         region_to,
+                                                         region_to)
                             ])
                         except KeyError:
                             pass
@@ -440,7 +425,9 @@ class SixRegionModel(ModelBase):
                     outputs.loc['gen_{}_{}'.format(tech, region)] = (
                         corrfac * float(
                             (self.results.carrier_prod.loc[
-                                '{}::{}::power'.format(region, tech)]
+                                '{}::{}_{}::power'.format(region,
+                                                          tech,
+                                                          region)]
                              *self.inputs.timestep_weights).sum()
                         )
                     )
@@ -457,14 +444,22 @@ class SixRegionModel(ModelBase):
             except KeyError:
                 pass
 
-        # Insert total capacities. cap_unmet_total is the sum of peak
-        # unmet demand levels across the regions, but not necessarily
-        # the systemwide peak unmet demand
-        for tech in ['baseload', 'peaking', 'wind', 'unmet',
-                     'transmission']:
+        # Insert total capacities
+        for tech in ['baseload', 'peaking', 'wind', 'transmission']:
             outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
                 outputs.index.str.contains('cap_{}'.format(tech))
             ].sum()
+
+        outputs.loc['peak_unmet_total'] = outputs.loc[
+            outputs.index.str.contains('peak_unmet')
+        ].sum()
+
+        # Insert total peak unmet demand -- not necessarily equal to
+        # peak_unmet_total. Total unmet capacity sums peak unmet demand
+        # across regions, whereas this is the systemwide peak unmet demand
+        outputs.loc['peak_unmet_systemwide'] = float(self.results.carrier_prod.loc[
+            self.results.carrier_prod.loc_tech_carriers_prod.str.contains(
+                'unmet')].sum(axis=0).max())
 
         # Insert total annualised generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'unmet']:
@@ -489,15 +484,6 @@ class SixRegionModel(ModelBase):
                 'unmet': outputs.loc['gen_unmet_total']
             }
         )
-
-        # Aggregate outputs across regions if desired
-        if not at_regional_level:
-            outputs = outputs.loc[[
-                'cap_baseload_total', 'cap_peaking_total', 'cap_wind_total',
-                'cap_unmet_total', 'cap_transmission_total', 'gen_baseload_total',
-                'gen_peaking_total', 'gen_wind_total', 'gen_unmet_total',
-                'demand_total', 'cost_total', 'emissions_total'
-                ]]
 
         return outputs
 
