@@ -28,14 +28,12 @@ def load_time_series_data(model_name):
     ts_data (pandas DataFrame) : time series data for use in model
     """
 
-    ####
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
     # If 1_region model, take demand and wind from region 5
     if model_name == '1_region':
         ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
         ts_data.columns = ['demand', 'wind']
-    ####
 
     return ts_data
 
@@ -283,9 +281,21 @@ class ModelBase(calliope.Model):
 class OneRegionModel(ModelBase):
     """Instance of 1-region power system model."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ts_data, run_mode, baseload_integer=False,
+                 baseload_ramping=False, allow_unmet=False,
+                 fixed_caps=None, extra_override=None, run_id=0):
         """Initialize model from ModelBase parent."""
-        super(OneRegionModel, self).__init__('1_region', *args, **kwargs)
+        super(OneRegionModel, self).__init__(
+            model_name='1_region',
+            ts_data=ts_data,
+            run_mode=run_mode,
+            baseload_integer=baseload_integer,
+            baseload_ramping=baseload_ramping,
+            allow_unmet=allow_unmet,
+            fixed_caps=fixed_caps,
+            extra_override=extra_override,
+            run_id=run_id
+        )
 
     def get_summary_outputs(self):
         """Create pandas DataFrame of subset of model outputs."""
@@ -344,9 +354,21 @@ class OneRegionModel(ModelBase):
 class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ts_data, run_mode, baseload_integer=False,
+                 baseload_ramping=False, allow_unmet=False,
+                 fixed_caps=None, extra_override=None, run_id=0):
         """Initialize model from ModelBase parent."""
-        super(SixRegionModel, self).__init__('6_region', *args, **kwargs)
+        super(SixRegionModel, self).__init__(
+            model_name='6_region',
+            ts_data=ts_data,
+            run_mode=run_mode,
+            baseload_integer=baseload_integer,
+            baseload_ramping=baseload_ramping,
+            allow_unmet=allow_unmet,
+            fixed_caps=fixed_caps,
+            extra_override=extra_override,
+            run_id=run_id
+        )
 
     def get_summary_outputs(self):
         """Create pandas DataFrame of subset of relevant model outputs."""

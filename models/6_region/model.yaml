@@ -14,6 +14,7 @@ run:
 
 overrides:
     plan:
+    # planning mode -- determine capacities
         run.mode: plan
     continuous:
     # continuous baseload capacity
@@ -34,6 +35,7 @@ overrides:
         techs.unmet_region4.costs.monetary.energy_cap: 0
         techs.unmet_region5.costs.monetary.energy_cap: 0
     operate:
+    # operate mode -- fixed capacities
         run:
             mode: operate
             cyclic_storage: False
@@ -79,3 +81,6 @@ overrides:
         techs.baseload_region1.constraints.energy_ramping: 0.2  # frac/hr
         techs.baseload_region3.constraints.energy_ramping: 0.2  # frac/hr
         techs.baseload_region6.constraints.energy_ramping: 0.2  # frac/hr
+    gurobi:
+    # run with gurobi (faster commercial solver)
+        run.solver: gurobi

@@ -14,19 +14,20 @@ run:
 
 overrides:
     plan:
-        run:
-            mode: plan
+    # planning mode -- determine capacities
+        run.mode: plan
     continuous:
-        # continuous baseload capacity
+    # continuous baseload capacity
         techs.baseload.constraints.energy_cap_max: inf
     integer:
-        # baseload capacity in units of 3GW
+    # baseload capacity in units of 3GW
         techs.baseload.constraints.units_max: inf
         techs.baseload.constraints.energy_cap_per_unit: 3
     allow_unmet:
-        # plan mode only, unmet demand always allowed in operate mode
+    # plan mode only, unmet demand always allowed in operate mode
         techs.unmet.costs.monetary.energy_cap: 0
     operate:
+    # operate mode -- fixed capacities
         run:
             mode: operate
             cyclic_storage: False
@@ -42,3 +43,6 @@ overrides:
                 techs.unmet.constraints.energy_cap_equals: 1e10
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr
+    gurobi:
+    # run with gurobi (faster commercial solver)
+        run.solver: gurobi

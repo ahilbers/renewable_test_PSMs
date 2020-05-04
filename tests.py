@@ -253,8 +253,10 @@ def test_outputs_against_benchmark(model_name, run_mode,
         Model = models.SixRegionModel
     else:
         raise ValueError('Valid model names: 1_region, 6_region')
-    model = Model(ts_data, run_mode, baseload_integer, baseload_ramping,
-                  allow_unmet)
+    model = Model(ts_data=ts_data, run_mode=run_mode,
+                  baseload_integer=baseload_integer,
+                  baseload_ramping=baseload_ramping,
+                  allow_unmet=allow_unmet, extra_override=None)
     model.run()
     logging.info('TESTS: Done running test simulation \n')
     summary_outputs = model.get_summary_outputs()
