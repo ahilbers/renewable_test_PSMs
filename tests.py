@@ -259,10 +259,13 @@ def test_outputs_against_benchmark(model_name, run_mode,
     logging.info('TESTS: Done running test simulation \n')
     summary_outputs = model.get_summary_outputs()
 
+    # Test internal consistency of outputs -- do costs add up?
     if model_name == '1_region':
-        test_output_consistency_1_region(model, run_mode)
+        passing_consistent = test_output_consistency_1_region(model,
+                                                              run_mode)
     elif model_name == '6_region':
-        test_output_consistency_6_region(model, run_mode)
+        passing_consistent = test_output_consistency_6_region(model,
+                                                              run_mode)
 
     # Load benchmarks
     if not baseload_integer and not baseload_ramping:
@@ -276,22 +279,25 @@ def test_outputs_against_benchmark(model_name, run_mode,
     )
 
     # Test outputs against benchmark
-    passing = True
+    passing_benchmarks = True
     rel_error = abs((summary_outputs - benchmark_outputs) / benchmark_outputs)
     if float(rel_error.max()) > 1e-6:
         logging.error('FAIL: Model outputs do not match benchmark outputs!\n'
                       'Model outputs: \n%s\n \nBenchmark outputs:\n%s\n',
                       summary_outputs, benchmark_outputs)
-        passing = False
+        passing_benchmarks = False
 
-    if passing:
+    if passing_consistent:
+        print('PASS: model outputs are consistent.')  # To stdout
+    if passing_benchmarks:
         print('PASS: model outputs match benchmarks.')   # To stdout
 
-    return passing
+    return passing_consistent, passing_benchmarks
 
 
 def run_all_benchmarks():
-    passing_list = []
+    passing_consistent_list = []
+    passing_benchmarks_list = []
     runs = [('1_region', 'plan', False, False, False),
             ('1_region', 'plan', False, False, True),
             ('1_region', 'plan', True, True, False),
@@ -309,13 +315,23 @@ def run_all_benchmarks():
               'allow_unmet: {}'.format(model_name, run_mode, baseload_integer,
                                        baseload_ramping, allow_unmet))
         print('----------------------------------------------------------')
-        passing_list.append(test_outputs_against_benchmark(model_name,
-                                                           run_mode,
-                                                           baseload_integer,
-                                                           baseload_ramping,
-                                                           allow_unmet))
+        passing_consistent, passing_benchmarks = (
+            test_outputs_against_benchmark(model_name=model_name,
+                                           run_mode=run_mode,
+                                           baseload_integer=baseload_integer,
+                                           baseload_ramping=baseload_ramping,
+                                           allow_unmet=allow_unmet)
+        )
+        passing_consistent_list.append(passing_consistent)
+        passing_benchmarks_list.append(passing_benchmarks)
         print('\n\n')
-    if all(passing_list):
+
+    # Display summaries -- to stdout (no logging here)
+    if all(passing_consistent_list):
+        print('PASS: all model outputs are consistent.')
+    else:
+        print('FAIL: some model outputs are not consistent.')
+    if all(passing_benchmarks_list):
         print('PASS: all model outputs match benchmarks.')
     else:
         print('FAIL: some benchmarks have failed.')

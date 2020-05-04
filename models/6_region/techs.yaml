@@ -177,7 +177,7 @@ techs:
                 om_con: 6.000005
 
 
-    # # Transmission
+    # Transmission
 
     transmission_region1_region2:
         essentials:
