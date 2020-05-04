@@ -100,8 +100,7 @@ def get_cap_override_dict(model_name, fixed_caps):
     -----------
     model_name (str) : '1_region' or '6_region'
     fixed_caps (pandas Series/DataFrame or dict) : the fixed capacities.
-        A DataFrame created via model.get_summary_outputs (at
-        regional level) will work.
+        A DataFrame created via model.get_summary_outputs will work.
 
     Returns:
     --------
@@ -130,19 +129,17 @@ def get_cap_override_dict(model_name, fixed_caps):
                                     ('peaking', 'energy_cap_equals'),
                                     ('wind', 'resource_area_equals')]:
                 try:
-                    idx = ('locations.{}.techs.{}.constraints.{}'.
-                           format(region, tech, attribute))
-                    o_dict[idx] = \
+                    idx = ('locations.{}.techs.{}_{}.constraints.{}'.
+                           format(region, tech, region, attribute))
+                    o_dict[idx] = (
                         fixed_caps['cap_{}_{}'.format(tech, region)]
+                    )
                 except KeyError:
                     pass
             for region_to in ['region{}'.format(i+1) for i in range(6)]:
-                if (region, region_to) == ('region1', 'region5'):
-                    tech = 'transmission_region1to5'
-                else:
-                    tech = 'transmission_other'
-                idx = ('links.{},{}.techs.{}.constraints.energy_cap_equals'.
-                       format(region, region_to, tech))
+                tech = 'transmission'
+                idx = ('links.{},{}.techs.{}_{}_{}.constraints.energy_cap_equals'.
+                       format(region, region_to, tech, region, region_to))
                 try:
                     o_dict[idx] = fixed_caps['cap_transmission_{}_{}'.
                                              format(region, region_to)]
