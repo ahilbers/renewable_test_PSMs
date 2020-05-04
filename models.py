@@ -280,14 +280,6 @@ class ModelBase(calliope.Model):
         return ts_data_used
 
 
-def _dev_test():
-    ts_data = load_time_series_data(model_name='6_region')
-    ts_data = ts_data.loc['2017-01']
-    model = SixRegionModel(ts_data=ts_data, run_mode='operate')
-    model.run()
-    print(model.get_summary_outputs())
-
-
 class OneRegionModel(ModelBase):
     """Instance of 1-region power system model."""
 
@@ -489,4 +481,4 @@ class SixRegionModel(ModelBase):
 
 
 if __name__ == '__main__':
-    _dev_test()
+    raise NotImplementedError()
