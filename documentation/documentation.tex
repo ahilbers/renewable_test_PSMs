@@ -113,6 +113,8 @@ Other links & $C_{r,r'}^\text{tr} = 100$ & - & - \\ \hline
 
 \noindent In each model, three generation technologies are allowed: baseload, peaking and wind. Baseload and peaking are conventional technologies whose generation levels can be controlled. Wind has no generation cost but generation levels that are capped by the time-varying wind capacity factors. Unmet demand is considered, for modelling purposes, a fourth technology with no install cost but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
 
+In the \texttt{6\_region} model, the costs of the same technologies in different regions (e.g. baseload in regions 1 and 3) are perturbed slightly to remove solution nonuniqueness between regions -- so baseload in region 1 is (very slightly) different than baseload in region 3. Details can be found in \texttt{models/6\_region/techs.yaml}.
+
 
 
 

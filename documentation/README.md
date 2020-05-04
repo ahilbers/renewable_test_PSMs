@@ -47,8 +47,9 @@ This model has 6 regions. Supply and demand must match across the model as a who
 - Region 4: demand
 - Region 5: demand and wind generation
 - Region 6: baseload, peaking & wind generation
-
 Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
+
+The costs of the same technologies in different regions (e.g. baseload in regions 1 and 3) are perturbed slightly to remove solution nonuniqueness between regions -- so baseload in region 1 is (very slightly) different than baseload in region 3. Details can be found in `models/6_region/techs.yaml`.
 
 
 
@@ -66,6 +67,8 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 | Transmission | Other regions | 100 |     - |   - |
 
 For modelling purposes, unmet demand is considered a generation technology with no installation cost but a highy generation cost ("value of lost load"). The installation costs are annualised to reflect the cost per year of technology lifetime.
+
+In the `6_region` model, the costs of the same technologies in different regions (e.g. baseload in regions 1 and 3) are perturbed slightly to remove solution nonuniqueness between regions -- so baseload in region 1 is (very slightly) different than baseload in region 3. Details can be found in `models/6_region/techs.yaml`.
 
 
 

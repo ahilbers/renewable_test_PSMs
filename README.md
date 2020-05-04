@@ -55,6 +55,15 @@ If you use this repository in your own research, please cite the following paper
 For a (very quick) tutorial, see the `tutorial.ipynb` notebook. This shows how to use the models and gives a feel for the syntax.
 
 
+#### Checking everything works
+
+The `tests.py` script is made to, after an install, check whether everything is working as expected. It checks whether the models run properly, whether their outputs are internally consistent and whether they match some benchmark outputs. It can be run from a unix command line via:
+
+```
+python3 tests.py
+```
+
+
 #### Using it yourself
 
 The easiest way to start using these models personally is by modifying the example script provided. The file `main.py` contains three example runs with different specs.
@@ -101,10 +110,10 @@ Since `main.py` is a short file with only a few functions, it's probably easier 
 
 Running `main.py` requires:
 - Python modules:
-  - `Calliope 0.6.5`:  see [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation
-  - `pandas 0.24.2`
+  - `Calliope 0.6.5`: the modelling framework creating and reading and in the results of the optimisation problem. See [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation.
+  - `pandas 0.24.2`.
 - Other:
-  - `gurobi`: a solver, used to solve the optimisation problems. It is not open-source but is free with an academic license. An alternative is `cbc` (see [this link](https://projects.coin-or.org/Cbc)), which is fully open-source. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
+  - `cbc`: an open-source solver, used to solve the optimisation problems. See [this link](https://projects.coin-or.org/Cbc) for installation. Faster solution times, especially when `baseload_integer=True`, can be achieved with `Gurobi`, a commercial solver that is free to use with an academic license. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
 
 
 
