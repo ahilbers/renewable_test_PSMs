@@ -26,6 +26,8 @@ The models may be customised further by editing the model-defining files:
 - Costs associted with each generation & transmission technologies: `models/{MODEL_NAME}/techs.yaml`.
 - Fixed generation and transmission capacities used in `operate` mode: `models/{MODEL_NAME}/model.yaml`.
 
+**Important note**: Any model outputs that are extensive (becoming larger with increasing simulation length, e.g. costs, generation levels, but not capacities) are annualised in the `get_summary_outputs`. This means that for a run of 1 year vs 2 years, the costs and generation levels do not double. To return to extensive values, multiply by the simulation length in years.
+
 
 
 
@@ -48,8 +50,6 @@ This model has 6 regions. Supply and demand must match across the model as a who
 - Region 5: demand and wind generation
 - Region 6: baseload, peaking & wind generation
 Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
-
-The costs of the same technologies in different regions (e.g. baseload in regions 1 and 3) are perturbed slightly to remove solution nonuniqueness between regions -- so baseload in region 1 is (very slightly) different than baseload in region 3. Details can be found in `models/6_region/techs.yaml`.
 
 
 
