@@ -26,7 +26,7 @@ The models may be customised further by editing the model-defining files:
 - Costs associted with each generation & transmission technologies: `models/{MODEL_NAME}/techs.yaml`.
 - Fixed generation and transmission capacities used in `operate` mode: `models/{MODEL_NAME}/model.yaml`.
 
-**Important note**: Any model outputs that are extensive (becoming larger with increasing simulation length, e.g. costs, generation levels, but not capacities) are annualised in the `get_summary_outputs`. This means that for a run of 1 year vs 2 years, the costs and generation levels do not double. To return to extensive values, multiply by the simulation length in years.
+**Important note**: Any model outputs that are extensive (becoming larger with increasing simulation length, e.g. costs, generation levels, but not capacities) are annualised when called from `get_summary_outputs`. This means that for a run of 1 year vs 2 years, the costs and generation levels do not double. To return to extensive values, multiply by the simulation length in years.
 
 
 
