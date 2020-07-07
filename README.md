@@ -9,13 +9,17 @@
 
 #### Summary
 
-This repository contains model files, time series data and example code for a class of simple test power system models to use as benchmarks in renewable energy, time series and optimisation method analysis.
+This repository contains model files, time series data and example code for a class of simple test power system models to use in renewable energy, time series and optimisation analysis. They include *generation & transmission expansion planning* (G/TEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
 
 #### Rationale
 
-In many fields, standard benchmarks exist; notable examples are [MNIST](http://yann.lecun.com/exdb/mnist/) or [CIFAR](http://www.cs.toronto.edu/~kriz/cifar.html) in Computer Vision and the [Lorenz 63](https://en.wikipedia.org/wiki/Lorenz_system) system in Dynamical Systems. In contrast, test models used in power system research tend to differ per investigation, with each paper using a different (often not open-source) model. The closest thing in power system applications are the various IEEE n-bus test systems, but the code, technology characteristics and time series data are usually not standardised or provided open-source.
+There is considerable research into methods for generation & transmission expansion planning (G/TEP), economic dispatch (ED) and unit commitment (UC) models. This includes:
+- Time series aggregation, see e.g. [this paper](https://doi.org/10.3390/en13030641)
+- Uncertainty analysis, see e.g. [this paper](https://doi.org/10.1016/j.esr.2018.06.003)
+- New solution methods.
+In most such investigations, a different model is used for each paper. Furthermore, models and the data used are usually not made public. This makes results from different studies hard to compare or reproduce. The closest thing to a standard for such applications are the various IEEE n-bus test systems, but the code, technology characteristics and time series data are usually not standardised or provided open-source.
 
-This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling frameworks like [OseMOSYS](http://www.osemosys.org/) or [Calliope](https://www.callio.pe/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below.
+This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling frameworks like [OseMOSYS](http://www.osemosys.org/) or [Calliope](https://www.callio.pe/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below. See `tutorial.ipynb` for a very quick introduction.
 
 #### Models
 

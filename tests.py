@@ -282,7 +282,8 @@ def test_outputs_against_benchmark(model_name, run_mode,
 
     # Test outputs against benchmark
     passing_benchmarks = True
-    rel_error = abs((summary_outputs - benchmark_outputs) / benchmark_outputs)
+    rel_error = abs((summary_outputs - benchmark_outputs)
+                    / (benchmark_outputs + 1e-8))
     if float(rel_error.max()) > 1e-6:
         logging.error('FAIL: Model outputs do not match benchmark outputs!\n'
                       'Model outputs: \n%s\n \nBenchmark outputs:\n%s\n',
