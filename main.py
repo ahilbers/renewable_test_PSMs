@@ -114,21 +114,5 @@ def run_example_from_command_line():
     run_example(**run_dict)
 
 
-def _dev_test():
-    ts_data = models.load_time_series_data(model_name='6_region')
-    ts_data = ts_data.loc['2017-01']
-    model = models.SixRegionModel(ts_data=ts_data,
-                                  run_mode='operate',
-                                  baseload_integer=True,
-                                  baseload_ramping=True,
-                                  allow_unmet=True,
-                                  fixed_caps=None)
-    model.run()
-    tests.test_output_consistency_6_region(model, run_mode='operate')
-    import pdb
-    pdb.set_trace()
-
-
 if __name__ == '__main__':
-    # run_example_from_command_line()
-    _dev_test()
+    run_example_from_command_line()
