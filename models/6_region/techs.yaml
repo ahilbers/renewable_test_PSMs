@@ -1,6 +1,5 @@
 # Notes:
 # - lifetimes used only in calculating cost - plants do not close after 1 yr
-# - technology costs are specified in locations.yaml
 
 techs:
 
