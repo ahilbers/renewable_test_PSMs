@@ -44,11 +44,11 @@ In this model, an hourly demand time series must be met by generation from a com
 
 This model has 6 regions. Supply and demand must match across the model as a whole but electricity may be transmitted around the grid according to a topology inspired by the *IEEE 6-bus test system* and [Kamalinia & Shahidehpour (2010)](https://doi.org/10.1049/iet-gtd.2009.0695). The regions contain the following demand and generation technologies:
 - Region 1: baseload & peaking generation
-- Region 2: demand and wind generation
+- Region 2: demand and wind generation, with time series from Germany
 - Region 3: baseload & peaking generation
-- Region 4: demand
-- Region 5: demand and wind generation
-- Region 6: baseload, peaking & wind generation
+- Region 4: demand, with time series from France
+- Region 5: demand and wind generation, with time series from the United Kingdom
+- Region 6: baseload, peaking & wind generation, with time series from Spain
 Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 
