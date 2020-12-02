@@ -7,6 +7,8 @@
 
 ## Overview
 
+**Note**: If you're looking for the tutorial given at the [workshop on climate forecasting for energy](https://s2s4e.eu/newsroom/climate-forecasting-for-energy-event), check out the [solar_power branch](https://github.com/ahilbers/renewable_test_PSMs/tree/solar_power) of this repo.
+
 #### Summary
 
 This repository contains model files, time series data and example code for a class of simple test power system models to use in renewable energy, time series and optimisation analysis. They include *generation & transmission expansion planning* (G/TEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
