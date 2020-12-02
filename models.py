@@ -30,10 +30,11 @@ def load_time_series_data(model_name):
 
     ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
+    
     # If 1_region model, take demand and wind from region 5
     if model_name == '1_region':
-        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5']]
-        ts_data.columns = ['demand', 'wind']
+        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5', 'solar_region5']]
+        ts_data.columns = ['demand', 'wind', 'solar']
 
     return ts_data
 
@@ -117,7 +118,8 @@ def get_cap_override_dict(model_name, fixed_caps):
     if model_name == '1_region':
         for tech, attribute in [('baseload', 'energy_cap_equals'),
                                 ('peaking', 'energy_cap_equals'),
-                                ('wind', 'resource_area_equals')]:
+                                ('wind', 'resource_area_equals'),
+                                ('solar', 'resource_area_equals')]:
             idx = ('locations.region1.techs.{}.constraints.{}'.
                    format(tech, attribute))
             o_dict[idx] = fixed_caps['cap_{}_total'.format(tech)]
@@ -313,6 +315,9 @@ class OneRegionModel(ModelBase):
         outputs.loc['cap_wind_total'] = (
             float(self.results.resource_area.loc['region1::wind'])
         )
+        outputs.loc['cap_solar_total'] = (
+            float(self.results.resource_area.loc['region1::solar'])
+        )
         outputs.loc['peak_unmet_total'] = (
             float(self.results.carrier_prod.loc[
                 'region1::unmet::power'
@@ -320,7 +325,7 @@ class OneRegionModel(ModelBase):
         )    # Equal to peak unmet demand
 
         # Insert generation levels
-        for tech in ['baseload', 'peaking', 'wind', 'unmet']:
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             outputs.loc['gen_{}_total'.format(tech)] = corrfac * float(
                 (self.results.carrier_prod.loc['region1::{}::power'.format(tech)]
                  * self.inputs.timestep_weights).sum()
