@@ -117,7 +117,7 @@ Since `main.py` is a short file with only a few functions, it's probably easier 
 
 Running `main.py` requires:
 - Python modules:
-  - `Calliope 0.6.5`: the modelling framework creating and reading and in the results of the optimisation problem. See [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation.
+  - `Calliope 0.6.6`: the modelling framework creating and reading and in the results of the optimisation problem. See [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation.
   - `pandas 0.24.2`.
 - Other:
   - `cbc`: an open-source solver, used to solve the optimisation problems. See [this link](https://projects.coin-or.org/Cbc) for installation. Faster solution times, especially when `baseload_integer=True`, can be achieved with `Gurobi`, a commercial solver that is free to use with an academic license. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
