@@ -7,6 +7,9 @@ locations:
             wind:
                 constraints:
                     resource: file=demand_wind.csv:wind
+            solar:
+                constraints:
+                    resource: file=demand_wind.csv:solar
             demand_power:
                constraints:
                     resource: file=demand_wind.csv:demand
