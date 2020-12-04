@@ -27,14 +27,19 @@ For a (very quick) tutorial, see the `tutorial.ipynb` notebook. This shows how t
 
 ## Requirements & Installation
 
-Since `main.py` is a short file with only a few functions, it's probably easier to directly copy-paste any relevant code into a personal project as opposed to installing a new module. For this reason, this repository does not contain a `setup.py` file.
+To run `tutorial.ipynb`, you need [Calliope](https://www.callio.pe/), an open-source energy modelling framework. To install it, you can use the `anaconda` package manager. If you don't have this yet, download a minimal version [here](https://docs.conda.io/en/latest/miniconda.html). From there, run the following lines of code in a command line in the directory containing this repo:
 
-Running `main.py` requires:
-- Python modules:
-  - `Calliope 0.6.6`: the modelling framework creating and reading and in the results of the optimisation problem. See [this link](https://calliope.readthedocs.io/en/stable/user/installation.html) for installation.
-  - `pandas 0.24.2`.
-- Other:
-  - `cbc`: an open-source solver, used to solve the optimisation problems. See [this link](https://projects.coin-or.org/Cbc) for installation. Faster solution times, especially when `baseload_integer=True`, can be achieved with `Gurobi`, a commercial solver that is free to use with an academic license. The solver can be specified in `models/{MODEL_NAME}/model.yaml`.
+```
+conda create -c conda-forge -n calliope calliope
+```
+
+This creates a new virtual environment called `calliope`. Activate it using `conda activate calliope`. Now, install the [jupyter notebook](https://jupyter.org/index.html) software using
+
+```
+conda install -c conda-forge jupyterlab
+```
+
+and, from here, call `jupyter notebook`. This opens a browser, and you should see `tutoria.ipynb`. You're all set!
 
 
 
