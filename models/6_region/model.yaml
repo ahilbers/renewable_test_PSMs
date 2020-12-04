@@ -4,7 +4,7 @@ import:
 
 model:
     name: 6-region model
-    calliope_version: 0.6.5
+    calliope_version: 0.6.6
     timeseries_data_path: ''
 
 run:

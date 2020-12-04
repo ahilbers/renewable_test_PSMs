@@ -1,3 +1,8 @@
+**Note**: If you're looking for the tutorial given at the [workshop on climate forecasting for energy](https://s2s4e.eu/newsroom/climate-forecasting-for-energy-event), check out the [solar_power branch](https://github.com/ahilbers/renewable_test_PSMs/tree/solar_power) of this repo.
+
+
+
+
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
 # Test case renewable power system models
