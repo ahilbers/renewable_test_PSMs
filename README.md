@@ -33,7 +33,13 @@ To run `tutorial.ipynb`, you need [Calliope](https://www.callio.pe/), an open-so
 conda create -c conda-forge -n calliope calliope
 ```
 
-This creates a new virtual environment called `calliope`. Activate it using `conda activate calliope`. Now, install the [jupyter notebook](https://jupyter.org/index.html) software using
+This creates a new virtual environment called `calliope`. Activate it using `conda activate calliope`. The next step is to install software that solves the optimisation problem. [CBC](https://projects.coin-or.org/Cbc) works well, and can be installed via
+
+```
+conda install -c conda-forge coincbc
+```
+
+Now, install the [jupyter notebook](https://jupyter.org/index.html) software using
 
 ```
 conda install -c conda-forge jupyterlab
