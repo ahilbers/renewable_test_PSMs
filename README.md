@@ -39,7 +39,7 @@ This creates a new virtual environment called `calliope`. Activate it using `con
 conda install -c conda-forge jupyterlab
 ```
 
-and, from here, call `jupyter notebook`. This opens a browser, and you should see `tutoria.ipynb`. You're all set!
+and, from here, call `jupyter notebook`. This opens a browser, and you should see `tutorial.ipynb`. You're all set!
 
 
 
