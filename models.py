@@ -6,7 +6,6 @@ import logging
 import shutil
 import pandas as pd
 import calliope
-import tests
 
 
 # Emission intensities of technologies, in ton CO2 equivalent per GWh
