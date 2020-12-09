@@ -11,9 +11,7 @@
 
 This repository contains model files, time series data and example code for very simple test power system models to use in renewable energy, time series and optimisation analysis, designed especially for climate scientists who want to get a feel for energy system models.
 
-This is a beta version that includes solar power. Currently, this has only been implemented for the `1_region` model. The original models (which contain only wind power but no solar), including tests and extensive documentation, are available under the branch `master`. The model in this repo is the `1_region` model in branch `master`, with solar power added on as well.
-
-**Note**: This repo is a simplified version of a larger set of test power system models that have been used in two papers. To see this repo, which has extensive documentation and unit tests, check out the branch [2020_papers](https://github.com/ahilbers/renewable_test_PSMs/tree/2020_papers) of this repo.
+**Note**: This is a beta version that includes solar power. The original models (which contain only wind power but no solar), including tests, are available under the branch `2020_papers`. If you're coming here after reading a paper, that branch probably contains the code you're looking for.
 
 
 
