@@ -13,6 +13,8 @@ This repository contains model files, time series data and example code for very
 
 This is a beta version that includes solar power. Currently, this has only been implemented for the `1_region` model. The original models (which contain only wind power but no solar), including tests and extensive documentation, are available under the branch `master`. The model in this repo is the `1_region` model in branch `master`, with solar power added on as well.
 
+**Note**: This repo is a simplified version of a larger set of test power system models that have been used in two papers. To see this repo, which has extensive documentation and unit tests, check out the branch [2020_papers](https://github.com/ahilbers/renewable_test_PSMs/tree/2020_papers) of this repo.
+
 
 
 
@@ -20,7 +22,7 @@ This is a beta version that includes solar power. Currently, this has only been 
 
 #### Getting started
 
-For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/solar_power). It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run as a docker, without having to install any pacakges on your own machine.
+For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/solar_power). It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run as a docker, without having to install any pacakges on your own machine. Thanks to [Anne Fouilloux](https://github.com/annefou) for setting this up.
 
 
 
