@@ -1,15 +1,15 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
-# A tutorial on energy system modelling for climate scientists
-
-
+# Renewable test power system models
 
 
 ## Overview
 
 #### Summary
 
-This repository contains model files, time series data and example code for very simple test power system models to use in renewable energy, time series and optimisation analysis, designed especially for climate scientists who want to get a feel for energy system models.
+This repository contains model files, time series data and example code for simple test power system models to use in renewable energy, time series and optimisation analysis. They have been designed to be easy-to-use for climate scientists who want to get a feel for energy system models. They include *generation & transmission expansion planning* (G/TEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
+
+If you're looking for the tutorial given at the [workshop on climate forecasting for energy](https://s2s4e.eu/newsroom/climate-forecasting-for-energy-event), see [getting started](#getting-started).
 
 **Note**: This is a beta version that includes solar power. The original models (which contain only wind power but no solar), including tests, are available under the branch `2020_papers`. If you're coming here after reading a paper, that branch probably contains the code you're looking for.
 
