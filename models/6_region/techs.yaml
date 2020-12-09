@@ -135,6 +135,45 @@ techs:
                 interest_rate: 0
                 resource_area: 100.6
                 om_con: 0.000006
+    solar_region2:
+        essentials:
+            carrier_out: power
+            name: solar
+            parent: supply
+        constraints:
+            lifetime: 1
+            resource_unit: energy_per_area
+        costs:
+            monetary:
+                interest_rate: 0
+                resource_area: 30.2
+                om_con: 0.000002
+    solar_region5:
+        essentials:
+            carrier_out: power
+            name: solar
+            parent: supply
+        constraints:
+            lifetime: 1
+            resource_unit: energy_per_area
+        costs:
+            monetary:
+                interest_rate: 0
+                resource_area: 30.5
+                om_con: 0.000005
+    solar_region6:
+        essentials:
+            carrier_out: power
+            name: solar
+            parent: supply
+        constraints:
+            lifetime: 1
+            resource_unit: energy_per_area
+        costs:
+            monetary:
+                interest_rate: 0
+                resource_area: 30.6
+                om_con: 0.000006
     unmet_region2:
         essentials:
             carrier_out: power

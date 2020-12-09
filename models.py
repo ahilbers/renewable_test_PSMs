@@ -12,11 +12,12 @@ import calliope
 EMISSION_INTENSITIES = {'baseload': 200,
                         'peaking': 400,
                         'wind': 0,
+                        'solar': 0,
                         'unmet': 0}
 
 
 def load_time_series_data(model_name):
-    """Load demand and wind time series data for model.
+    """Load demand, wind and solar time series data for model.
 
     Parameters:
     -----------
@@ -27,10 +28,10 @@ def load_time_series_data(model_name):
     ts_data (pandas DataFrame) : time series data for use in model
     """
 
-    ts_data = pd.read_csv('data/demand_wind.csv', index_col=0)
+    ts_data = pd.read_csv('data/demand_wind_solar.csv', index_col=0)
     ts_data.index = pd.to_datetime(ts_data.index)
     
-    # If 1_region model, take demand and wind from region 5
+    # If 1_region model, take demand, wind and solar from region 5
     if model_name == '1_region':
         ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5', 'solar_region5']]
         ts_data.columns = ['demand', 'wind', 'solar']
@@ -113,7 +114,7 @@ def get_cap_override_dict(model_name, fixed_caps):
 
     o_dict = {}
 
-    # Add baseload, peaking and wind capacities
+    # Add baseload, peaking, wind and solar capacities
     if model_name == '1_region':
         for tech, attribute in [('baseload', 'energy_cap_equals'),
                                 ('peaking', 'energy_cap_equals'),
@@ -123,12 +124,13 @@ def get_cap_override_dict(model_name, fixed_caps):
                    format(tech, attribute))
             o_dict[idx] = fixed_caps['cap_{}_total'.format(tech)]
 
-    # Add baseload, peaking, wind and transmission capacities
+    # Add baseload, peaking, wind, solar and transmission capacities
     if model_name == '6_region':
         for region in ['region{}'.format(i+1) for i in range(6)]:
             for tech, attribute in [('baseload', 'energy_cap_equals'),
                                     ('peaking', 'energy_cap_equals'),
-                                    ('wind', 'resource_area_equals')]:
+                                    ('wind', 'resource_area_equals'),
+                                    ('solar', 'resource_area_equals')]:
                 try:
                     idx = ('locations.{}.techs.{}_{}.constraints.{}'.
                            format(region, tech, region, attribute))
@@ -160,14 +162,16 @@ def calculate_carbon_emissions(generation_levels):
     Parameters:
     -----------
     generation_levels (pandas DataFrame or dict) : generation levels
-        for the 4 technologies (baseload, peaking, wind and unmet)
+        for the technologies (baseload, peaking, wind, solar and unmet)
     """
 
-    emissions_tot = \
-        EMISSION_INTENSITIES['baseload'] * generation_levels['baseload'] + \
-        EMISSION_INTENSITIES['peaking'] * generation_levels['peaking'] + \
-        EMISSION_INTENSITIES['wind'] * generation_levels['wind'] + \
-        EMISSION_INTENSITIES['unmet'] * generation_levels['unmet']
+    emissions_tot = (
+        EMISSION_INTENSITIES['baseload'] * generation_levels['baseload']
+        + EMISSION_INTENSITIES['peaking'] * generation_levels['peaking']
+        + EMISSION_INTENSITIES['wind'] * generation_levels['wind']
+        + EMISSION_INTENSITIES['solar'] * generation_levels['solar']
+        + EMISSION_INTENSITIES['unmet'] * generation_levels['unmet']
+    )
 
     return emissions_tot
 
@@ -185,7 +189,7 @@ class ModelBase(calliope.Model):
         Parameters:
         -----------
         model_name (str) : either '1_region' or '6_region'
-        ts_data (pandas DataFrame) : time series with demand and wind data.
+        ts_data (pandas DataFrame) : time series with time series data.
             It may also contain custom time step weights
         run_mode (str) : 'plan' or 'operate': whether to let the model
             determine the optimal capacities or work with prescribed ones
@@ -225,7 +229,7 @@ class ModelBase(calliope.Model):
             shutil.rmtree(self._base_dir_iter)
         shutil.copytree(self.base_dir, self._base_dir_iter)
         ts_data = self._create_init_time_series(ts_data)
-        ts_data.to_csv(os.path.join(self._base_dir_iter, 'demand_wind.csv'))
+        ts_data.to_csv(os.path.join(self._base_dir_iter, 'demand_wind_solar.csv'))
         super(ModelBase, self).__init__(os.path.join(self._base_dir_iter,
                                                      'model.yaml'),
                                         scenario=scenario,
@@ -244,19 +248,19 @@ class ModelBase(calliope.Model):
                             'Will read fixed capacities from model.yaml')
 
     def _create_init_time_series(self, ts_data):
-        """Create demand and wind time series data for Calliope model
-        initialisation.
-        """
+        """Create time series data for model initialisation."""
 
         # Avoid changing ts_data outside function
         ts_data_used = ts_data.copy()
 
         if self.model_name == '1_region':
-            expected_columns = {'demand', 'wind'}
+            expected_columns = {'demand', 'wind', 'solar'}
         elif self.model_name == '6_region':
             expected_columns = {'demand_region2', 'demand_region4',
                                 'demand_region5', 'wind_region2',
-                                'wind_region5', 'wind_region6'}
+                                'wind_region5', 'wind_region6',
+                                'solar_region2', 'solar_region5',
+                                'solar_region6'}
         if not expected_columns.issubset(ts_data.columns):
             raise AttributeError('Input time series: incorrect columns')
 
@@ -345,6 +349,7 @@ class OneRegionModel(ModelBase):
                 'baseload': outputs.loc['gen_baseload_total'],
                 'peaking': outputs.loc['gen_peaking_total'],
                 'wind': outputs.loc['gen_wind_total'],
+                'solar': outputs.loc['gen_solar_total'],
                 'unmet': outputs.loc['gen_unmet_total']
             }
         )
@@ -394,8 +399,8 @@ class SixRegionModel(ModelBase):
                 except KeyError:
                     pass
 
-            # Wind capacity
-            for tech in ['wind']:
+            # Wind and solar capacity
+            for tech in ['wind', 'solar']:
                 try:
                     outputs.loc['cap_{}_{}'.format(tech, region)] = (
                         float(self.results.resource_area.loc[
@@ -434,8 +439,8 @@ class SixRegionModel(ModelBase):
                         except KeyError:
                             pass
 
-            # Baseload, peaking, wind and unmet generation levels
-            for tech in ['baseload', 'peaking', 'wind', 'unmet']:
+            # Baseload, peaking, wind, solar and unmet generation levels
+            for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
                 try:
                     outputs.loc['gen_{}_{}'.format(tech, region)] = (
                         corrfac * float(
@@ -460,7 +465,7 @@ class SixRegionModel(ModelBase):
                 pass
 
         # Insert total capacities
-        for tech in ['baseload', 'peaking', 'wind', 'transmission']:
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'transmission']:
             outputs.loc['cap_{}_total'.format(tech)] = outputs.loc[
                 outputs.index.str.contains('cap_{}'.format(tech))
             ].sum()
@@ -477,7 +482,7 @@ class SixRegionModel(ModelBase):
                 'unmet')].sum(axis=0).max())
 
         # Insert total annualised generation and unmet demand levels
-        for tech in ['baseload', 'peaking', 'wind', 'unmet']:
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             outputs.loc['gen_{}_total'.format(tech)] = outputs.loc[
                 outputs.index.str.contains('gen_{}'.format(tech))
             ].sum()
@@ -496,6 +501,7 @@ class SixRegionModel(ModelBase):
                 'baseload': outputs.loc['gen_baseload_total'],
                 'peaking': outputs.loc['gen_peaking_total'],
                 'wind': outputs.loc['gen_wind_total'],
+                'solar': outputs.loc['gen_solar_total'],
                 'unmet': outputs.loc['gen_unmet_total']
             }
         )

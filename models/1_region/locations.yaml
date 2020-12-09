@@ -6,11 +6,11 @@ locations:
             peaking:
             wind:
                 constraints:
-                    resource: file=demand_wind.csv:wind
+                    resource: file=demand_wind_solar.csv:wind
             solar:
                 constraints:
-                    resource: file=demand_wind.csv:solar
+                    resource: file=demand_wind_solar.csv:solar
             demand_power:
                constraints:
-                    resource: file=demand_wind.csv:demand
+                    resource: file=demand_wind_solar.csv:demand
             unmet:

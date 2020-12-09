@@ -45,23 +45,26 @@ overrides:
                 window: 332880  # hours
         locations:
             region1:
-                techs.baseload_region1.constraints.energy_cap_equals: 10
-                techs.peaking_region1.constraints.energy_cap_equals: 40
+                techs.baseload_region1.constraints.energy_cap_equals: 21
+                techs.peaking_region1.constraints.energy_cap_equals: 31
             region2:
-                techs.wind_region2.constraints.resource_area_equals: 70
+                techs.wind_region2.constraints.resource_area_equals: 32
+                techs.solar_region2.constraints.resource_area_equals: 32
                 techs.unmet_region2.constraints.energy_cap_equals: 1e10
             region3:
-                techs.baseload_region3.constraints.energy_cap_equals: 20
-                techs.peaking_region3.constraints.energy_cap_equals: 50
+                techs.baseload_region3.constraints.energy_cap_equals: 23
+                techs.peaking_region3.constraints.energy_cap_equals: 33
             region4:
                 techs.unmet_region4.constraints.energy_cap_equals: 1e10
             region5:
-                techs.wind_region5.constraints.resource_area_equals: 80
+                techs.wind_region5.constraints.resource_area_equals: 35
+                techs.solar_region5.constraints.resource_area_equals: 35
                 techs.unmet_region5.constraints.energy_cap_equals: 1e10
             region6:
-                techs.baseload_region6.constraints.energy_cap_equals: 30
-                techs.peaking_region6.constraints.energy_cap_equals: 60
-                techs.wind_region6.constraints.resource_area_equals: 90
+                techs.baseload_region6.constraints.energy_cap_equals: 26
+                techs.peaking_region6.constraints.energy_cap_equals: 36
+                techs.wind_region6.constraints.resource_area_equals: 36
+                techs.solar_region6.constraints.resource_area_equals: 36
         links:
             region1,region2:
                 techs.transmission_region1_region2.constraints.energy_cap_equals: 12
