@@ -138,7 +138,7 @@ techs:
     solar_region2:
         essentials:
             carrier_out: power
-            name: solar
+            name: solar_region2
             parent: supply
         constraints:
             lifetime: 1
@@ -151,7 +151,7 @@ techs:
     solar_region5:
         essentials:
             carrier_out: power
-            name: solar
+            name: solar_region5
             parent: supply
         constraints:
             lifetime: 1
@@ -164,7 +164,7 @@ techs:
     solar_region6:
         essentials:
             carrier_out: power
-            name: solar
+            name: solar_region6
             parent: supply
         constraints:
             lifetime: 1

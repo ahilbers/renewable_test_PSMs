@@ -10,7 +10,7 @@ locations:
             wind_region2:
                 constraints.resource: file=demand_wind_solar.csv:wind_region2
             solar_region2:
-                constraints.resource: file=demand_wind_solar.csv:wind_region2
+                constraints.resource: file=demand_wind_solar.csv:solar_region2
             demand_power:
                 constraints.resource: file=demand_wind_solar.csv:demand_region2
             unmet_region2:
@@ -31,7 +31,7 @@ locations:
             wind_region5:
                 constraints.resource: file=demand_wind_solar.csv:wind_region5
             solar_region5:
-                constraints.resource: file=demand_wind_solar.csv:wind_region5
+                constraints.resource: file=demand_wind_solar.csv:solar_region5
             demand_power:
                 constraints.resource: file=demand_wind_solar.csv:demand_region5
             unmet_region5:
@@ -43,7 +43,7 @@ locations:
             wind_region6:
                 constraints.resource: file=demand_wind_solar.csv:wind_region6
             solar_region6:
-                constraints.resource: file=demand_wind_solar.csv:wind_region6
+                constraints.resource: file=demand_wind_solar.csv:solar_region6
 
 links:
     region1,region2:

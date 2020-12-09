@@ -48,6 +48,7 @@ This model has 6 regions. Supply and demand must match across the model as a who
 - Region 4: demand, with time series from France
 - Region 5: demand, wind and solar generation, with time series from the United Kingdom
 - Region 6: baseload, peaking, wind and solar generation, with time series from Spain
+
 Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 
