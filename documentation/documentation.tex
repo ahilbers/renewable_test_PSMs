@@ -42,25 +42,26 @@
 \begin{table}
   \centering
   \small
-\begin{tabular}{r p{5.3cm}}
+\begin{tabular}{r p{4.0cm}}
   Term & Description \\ \hline
   \multicolumn{2}{l}{\textbf{Indices}} \\
   $i$ & Generation technology \\
   $r$ , $r'$ & Region \\
   $t$ & Time step \\
   \multicolumn{2}{l}{\textbf{Sets}} \\
-  $\mathcal{I}$ & Technologies: baseload ($b$), peaking ($p$), wind ($w$), unmet demand ($u$) \\
+  $\mathcal{I}$ & Technologies: baseload ($b$), peaking ($p$), wind ($w$), solar ($s$), unmet demand ($u$) \\
   $\mathcal{D}$ & Decision variables \\
   \multicolumn{2}{l}{\textbf{Parameters}} \\
   $C_{i}^\text{gen}$ & Install cost, technology $i$ (\pounds m/GWyr)\\
   $C_{r, r'}^\text{tr}$ & Install cost, transmission, region $r$ to $r'$ (\pounds m/GWyr) \\
   $F_{i}^\text{gen}$ & Generation cost, technology $i$ (\pounds m/GWh) \\ \hline
-\end{tabular} \hspace{0.5em}
+\end{tabular} \hspace{0.1em}
 \begin{tabular}{r p{3.7cm}}
   Term & Description \\ \hline
   \multicolumn{2}{l}{\textbf{Time series}} \\
   $d_{r, t}$ & Demand, region $r$, time step $t$ (GWh) \\
   $w_{r, t}$ & Wind capacity factor, region $r$, time $t$ ($\in$ [0, 1]) \\
+  $s_{r, t}$ & Solar capacity factor, region $r$, time $t$ ($\in$ [0, 1]) \\
   \multicolumn{2}{l}{\textbf{Decision variables}} \\
   $\text{cap}_{i, r}^\text{gen}$ & Generation capacity, technology $i$, region $r$ (GW) \\
   $\text{cap}_{r, r'}^\text{tr}$ & Transmission capacity, region $r$ to $r'$ (GW) \\
@@ -80,7 +81,7 @@ For each of the two base models, there are a number of customisable inputs/setti
 \begin{itemize}
 \item The \texttt{run\_mode}. Each model can be run in either \texttt{plan} or \texttt{operate} mode. In \texttt{plan} mode, generation and transmission capacities are determined by minimising the sum of installation and generation costs. The models are then generation \& transmission expansion planning models. In \texttt{operate} mode, the installed capacities are user-defined, and only the generation and transmission levels are determined by minimising the generation cost subject to a fixed model configuration.
 \item Each technology's install and generation cost. 
-\item The (demand and wind) time series inputs.
+\item The (demand, wind and solar) time series inputs.
 \item The \texttt{baseload\_integer} constraint. If \texttt{False}, baseload may be built to any nonnegative capacity (i.e. a continuous variable). If \texttt{True}, baseload may be built in blocks of 3GW. This constraint applies only in \texttt{plan} mode.
 \item The \texttt{baseload\_ramping} constraint. If \texttt{False}, baseload generation can change arbitrarily quickly between time steps. If \texttt{True}, baseload generation levels can ramp up or down at most 20\% of its installed capacity in an hour.
 \item The \texttt{allow\_unmet} constraint. If \texttt{False}, all demand must be met. If \texttt{True}, some unmet demand is allowed at high cost, if this leads to a lower total system cost. In \texttt{operate} mode, unmet demand is always allowed to keep solutions feasible, since the capacities are fixed.
@@ -102,6 +103,7 @@ Technology &(\pounds m/GWyr) &(\pounds m/GWh) & (t CO$_2$/GWh) \\ \hline
 Baseload & $C_b^\text{gen} = 300$ & $F_b^\text{gen} = 0.005$ & $e_b = 200$ \\
 Peaking & $C_p^\text{gen} = 100$ & $F_p^\text{gen} = 0.035$ & $e_m = 400$ \\
 Wind & $C_w^\text{gen} = 100$ & $F_w^\text{gen} = 0$ & $e_w = 0$ \\
+Solar & $C_s^\text{gen} = 30$ & $F_s^\text{gen} = 0$ & $e_s = 0$ \\
 Unmet demand & $C_u^\text{gen} = 0$ & $F_u^\text{gen} = 6$ & $e_u = 0$ \\
 \multicolumn{4}{c}{\textbf{Transmission technologies}} \\  
 Regions 1 to 5 & $C_{1,5}^\text{tr} = 150$ & - & - \\
@@ -111,7 +113,7 @@ Other links & $C_{r,r'}^\text{tr} = 100$ & - & - \\ \hline
 \label{table:tech_characteristics}
 \end{table}
 
-\noindent In each model, three generation technologies are allowed: baseload, peaking and wind. Baseload and peaking are conventional technologies whose generation levels can be controlled. Wind has no generation cost but generation levels that are capped by the time-varying wind capacity factors. Unmet demand is considered, for modelling purposes, a fourth technology with no install cost but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
+\noindent In each model, three generation technologies are allowed: baseload, peaking, wind and solar. Baseload and peaking are conventional technologies whose generation levels can be controlled. Wind and solar have no generation cost but generation levels that are capped by the time-varying wind and solar capacity factors respectively. Unmet demand is considered, for modelling purposes, a fourth technology with no install cost but a high generation cost. The default characteristics of the the generation technologies is provided in Table \ref{table:tech_characteristics}. \\
 
 In the \texttt{6\_region} model, the costs of the same technologies in different regions (e.g. baseload in regions 1 and 3) are perturbed slightly to remove solution nonuniqueness between regions -- so baseload in region 1 is (very slightly) different than baseload in region 3. Details can be found in \texttt{models/6\_region/techs.yaml}.
 
@@ -120,14 +122,14 @@ In the \texttt{6\_region} model, the costs of the same technologies in different
 
 \section{Time series inputs}
 
-Time series inputs consist of hourly demand levels and wind capacity factors in different European countries over the period 1980-2017. Long-term anthropogenic demand trends such as GDP growth and efficiency improvements are removed so that the time series can be viewed as being drawn from the same underlying demand distribution. Details on the construction of the time series can be found in (Bloomfield et al, 2019).
+Time series inputs consist of hourly demand levels, wind capacity factors and solar capacity factor in different European countries over the period 1980-2017. Long-term anthropogenic demand trends such as GDP growth and efficiency improvements are removed so that the time series can be viewed as being drawn from the same underlying demand distribution. Details on the construction of the time series can be found in (Bloomfield et al, 2019).
 
 
 
 
 \section{1-region model}
 
-\noindent The \texttt{1\_region} model considers a single node and a choice of the three generation technologies. It takes two input time series: hourly demand levels and wind capacity factors in the United Kingdom. In \texttt{plan} mode, the model leads to a generation expansion planning problem where the optimal generation capacities and hourly generation levels for each technology are model outputs. This problem is either a continuous linear program or a mixed-integer linear program, depending on whether the \texttt{baseload\_integer} constraint is activated.
+\noindent The \texttt{1\_region} model considers a single node and a choice of the three generation technologies. It takes three input time series: hourly demand levels, wind capacity factors and solar capacity factor in the United Kingdom. In \texttt{plan} mode, the model leads to a generation expansion planning problem where the optimal generation capacities and hourly generation levels for each technology are model outputs. This problem is either a continuous linear program or a mixed-integer linear program, depending on whether the \texttt{baseload\_integer} constraint is activated.
 
 
 \subsection{Planning mode}
@@ -153,12 +155,13 @@ The model outputs are determined as the decision variables that solve the follow
 \text{gen}_{b,1,t} \le \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:gen_le_cap_b} \\
 \text{gen}_{p,1,t} \le \text{cap}_{p,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:gen_le_cap_p} \\
 \text{gen}_{w,1,t} \le \text{cap}_{w,1}^\text{gen} w_{1,t} \quad & \forall \: t \label{eq:model_1:gen_le_cap_w} \\
+\text{gen}_{s,1,t} \le \text{cap}_{s,1}^\text{gen} s_{1,t} \quad & \forall \: t \label{eq:model_1:gen_le_cap_s} \\
 \text{cap}_{b,1}^\text{gen} \in 3\mathbb{Z} \quad & \label{eq:model_1:integer} \\
 |\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_1:ramping} \\
 \text{gen}_{u,1,t} = 0 \quad & \forall \: t \label{eq:model_1:no_unmet} \\
 \text{cap}_{i,1}^\text{gen}, \text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_1:ge_0}
 \end{align}
-\noindent The $\frac{T}{8760}$ factor ensures the installation and generation costs are scaled correctly in model runs of different simulation lengths. \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_w} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the wind capacity factor (for wind). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:no_unmet} (active only if \texttt{allow\_unmet=False}) removes the possibility of unmet demand. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
+\noindent The $\frac{T}{8760}$ factor ensures the installation and generation costs are scaled correctly in model runs of different simulation lengths. \eqref{eq:model_1:demand_met} is the demand balance requirement. \eqref{eq:model_1:gen_le_cap_b}-\eqref{eq:model_1:gen_le_cap_s} ensure generation does not exceed installed capacity (for baseload and peaking) or installed capacity times the capacity factor (for wind and solar). \eqref{eq:model_1:integer} is the integer constraint (active only if \texttt{baseload\_integer=True}) for baseload capacity, which may only be installed in units of 3GW. \eqref{eq:model_1:ramping} is the ramping constraint (active only if \texttt{baseload\_ramping=True}) for baseload generation, which can ramp up or down at maximally 20\%/hr. \eqref{eq:model_1:no_unmet} (active only if \texttt{allow\_unmet=False}) removes the possibility of unmet demand. \eqref{eq:model_1:ge_0} enforces the nonnegativity of capacity and generation levels.
 
 
 \subsection{Operation mode}
@@ -184,6 +187,7 @@ The model outputs are determined as the decision variables that solve the follow
 \text{gen}_{b,1,t} \le \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:gen_le_cap_b} \\
 \text{gen}_{p,1,t} \le \text{cap}_{p,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:gen_le_cap_p} \\
 \text{gen}_{w,1,t} \le \text{cap}_{w,1}^\text{gen} w_{1,t} \quad & \forall \: t \label{eq:model_2:gen_le_cap_w} \\
+\text{gen}_{s,1,t} \le \text{cap}_{s,1}^\text{gen} s_{1,t} \quad & \forall \: t \label{eq:model_2:gen_le_cap_s} \\
 |\text{gen}_{b,1,t} - \text{gen}_{b,1,t+1}| \le 0.2 \text{cap}_{b,1}^\text{gen} \quad & \forall \: t \label{eq:model_2:ramping} \\
 \text{gen}_{u,1,t} = 0 \quad & \forall \: t \label{eq:model_2:no_unmet} \\
 \text{gen}_{i,1,t} \ge 0 \quad & \forall \: i, t. \label{eq:model_2:ge_0}
@@ -197,24 +201,24 @@ The model outputs are determined as the decision variables that solve the follow
 
 \begin{figure}
   \begin{tabular}{c}
-    \includegraphics[scale=0.38, trim=0 0 0 0, clip]{6_region_diagram.jpg}
+    \includegraphics[scale=0.33, trim=0 0 0 0, clip]{6_region_diagram.jpg}
   \end{tabular}
   \begin{tabular}{ l  c}
   Bus & Demand/candidate generation \\ \hline
   1 & baseload, peaking \\
-  2 & demand (DE), wind (DE) \\
+  2 & demand, wind, solar (DE) \\
   3 & baseload, peaking \\
   4 & demand (FR) \\
-  5 & demand (UK), wind (UK) \\
-  6 & baseload, peaking, wind (ES) \\ \hline
+  5 & demand, wind, solar (UK) \\
+  6 & baseload, peaking, wind, solar (ES) \\ \hline
 \end{tabular}
-  \caption{6-bus model configuration. Demand must be met at buses 2, 5 and 6. Conventional generation (baseload or peaking) may be installed at buses 1, 3 and 6. Wind generation may be installed at buses 2, 5 and 6. Buses 2, 4, 5 and 6 use (demand or wind) time series data from Germany (DE), France (FR), the United Kingdom (UK) and Spain (ES) respectively.}
+  \caption{6-bus model configuration. Demand must be met at buses 2, 5 and 6. Conventional generation (baseload or peaking) may be installed at buses 1, 3 and 6. Wind and solar generation may be installed at buses 2, 5 and 6. Buses 2, 4, 5 and 6 use (demand, wind or solar) time series data from Germany (DE), France (FR), the United Kingdom (UK) and Spain (ES) respectively.}
   \label{fig:model_2:model_diagram}
 \end{figure}
 
 \noindent The \texttt{6\_region} model is a more complicated multi-region model. The system's topology is based on the \textit{IEEE 6-bus system}. The available technologies at each bus are based on a renewables-ready version of the 6-bus system introduced by Kamalinia \& Shahidehpour (2010). Figure \ref{fig:model_2:model_diagram} provides a diagram of the model configuration.
 
-The model takes 6 input time series: hourly demand levels and wind capacity factors in three European countries each. In \texttt{plan} mode, the model leads to a generation \& transmission expansion planning problem where the optimal generation \& transmission capacities and hourly generation \& transmission levels for each technology are determined. This problem is either a continuous linear program or a mixed-integer linear program depending on whether the \texttt{baseload\_integer} constraint is activated. In \texttt{operate} mode, the generation \& transmission capacities are fixed and only the hourly generation \& transmission levels are determined. The mathematical details for the model are provided below.
+The model takes 9 input time series: hourly demand levels, wind capacity factors and solar capacity factor in European countries. In \texttt{plan} mode, the model leads to a generation \& transmission expansion planning problem where the optimal generation \& transmission capacities and hourly generation \& transmission levels for each technology are determined. This problem is either a continuous linear program or a mixed-integer linear program depending on whether the \texttt{baseload\_integer} constraint is activated. In \texttt{operate} mode, the generation \& transmission capacities are fixed and only the hourly generation \& transmission levels are determined. The mathematical details for the model are provided below.
 
 The \texttt{6\_region} model leads to solution nonuniqueness. For example, excess demand in region 2 has no preference between being met from regions 1 or 3. For this reason, the model should only be used for model-wide summary statistics (e.g. the total baseload capacity). If outputs at regional level are desired, regions must de differentiated by having different technologies in each (e.g. by changing the technology prices at regional level). 
 
