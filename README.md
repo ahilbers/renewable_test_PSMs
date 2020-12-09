@@ -1,6 +1,6 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
-# Test case renewable power system models
+# A tutorial on energy system modelling for climate scientists
 
 
 
@@ -9,9 +9,9 @@
 
 #### Summary
 
-This repository contains model files, time series data and example code for a class of simple test power system models to use in renewable energy, time series and optimisation analysis. They include *generation & transmission expansion planning* (G/TEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
+This repository contains model files, time series data and example code for very simple test power system models to use in renewable energy, time series and optimisation analysis, designed especially for climate scientists who want to get a feel for energy system models.
 
-This is a beta version that includes solar power. Currently, this has only been implemented for the `1_region` model. The original models (which contain only wind power but no solar), including tests and extensive documentation, are available under the branch `master`.
+This is a beta version that includes solar power. Currently, this has only been implemented for the `1_region` model. The original models (which contain only wind power but no solar), including tests and extensive documentation, are available under the branch `master`. The model in this repo is the `1_region` model in branch `master`, with solar power added on as well.
 
 
 
@@ -20,14 +20,14 @@ This is a beta version that includes solar power. Currently, this has only been 
 
 #### Getting started
 
-For a (very quick) tutorial, see the `tutorial.ipynb` notebook. This shows how to use the models and gives a feel for the syntax.
+For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/solar_power). It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run as a docker, without having to install any pacakges on your own machine.
 
 
 
 
 ## Requirements & Installation
 
-To run `tutorial.ipynb`, you need [Calliope](https://www.callio.pe/), an open-source energy modelling framework. To install it, you can use the `anaconda` package manager. If you don't have this yet, download a minimal version [here](https://docs.conda.io/en/latest/miniconda.html). From there, run the following lines of code in a command line in the directory containing this repo:
+If you'd like to run the code on your own machine, you'll need to install a few packages. Firstly, you need [Calliope](https://www.callio.pe/), an open-source energy modelling framework. To install it, you can use the `anaconda` package manager. If you don't have this yet, download a minimal version [here](https://docs.conda.io/en/latest/miniconda.html). From there, run the following lines of code in a command line in the directory containing this repo:
 
 ```
 conda create -c conda-forge -n calliope calliope
