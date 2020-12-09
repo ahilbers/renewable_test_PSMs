@@ -37,6 +37,19 @@ techs:
                 resource_area: 100  # GBP m per GW
                 om_con: 0  # GBP m per GWh
                 interest_rate: 0
+    solar:
+        essentials:
+            carrier_out: power
+            name: solar
+            parent: supply
+        constraints:
+            lifetime: 1  # yr
+            resource_unit: energy_per_area
+        costs:
+            monetary:
+                resource_area: 30  # GBP m per GW
+                om_con: 0  # GBP m per GWh
+                interest_rate: 0
     unmet:
         essentials:
             carrier_out: power
