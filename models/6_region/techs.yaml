@@ -3,9 +3,7 @@
 
 techs:
 
-
     # Demand
-
     demand_power:
         essentials:
             carrier: power
@@ -14,7 +12,6 @@ techs:
 
 
     # Generation
-
     baseload_region1:
         essentials:
             carrier_out: power
@@ -26,7 +23,7 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 300.1  # GBP per KW
-                om_con: 0.005001
+                om_con: 0.005001  # GBP per KWh
     baseload_region3:
         essentials:
             carrier_out: power
@@ -103,8 +100,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 100.2
-                om_con: 0.000002
+                resource_area: 100.2  # GBP per KW
+                om_con: 0.000002  # GBP per KWh
     wind_region5:
         essentials:
             carrier_out: power
@@ -118,8 +115,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 100.5
-                om_con: 0.000005
+                resource_area: 100.5  # GBP per KW
+                om_con: 0.000005  # GBP per KWh
     wind_region6:
         essentials:
             carrier_out: power
@@ -133,8 +130,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 100.6
-                om_con: 0.000006
+                resource_area: 100.6  # GBP per KW
+                om_con: 0.000006  # GBP per KWh
     solar_region2:
         essentials:
             carrier_out: power
@@ -146,8 +143,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 30.2
-                om_con: 0.000002
+                resource_area: 30.2  # GBP per KW
+                om_con: 0.000002  # GBP per KWh
     solar_region5:
         essentials:
             carrier_out: power
@@ -159,8 +156,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 30.5
-                om_con: 0.000005
+                resource_area: 30.5  # GBP per KW
+                om_con: 0.000005  # GBP per KWh
     solar_region6:
         essentials:
             carrier_out: power
@@ -172,8 +169,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                resource_area: 30.6
-                om_con: 0.000006
+                resource_area: 30.6  # GBP per KW
+                om_con: 0.000006  # GBP per KWh
     unmet_region2:
         essentials:
             carrier_out: power
@@ -185,8 +182,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 10000000002
-                om_con: 6.000002
+                energy_cap: 10000000002  # GBP per KW
+                om_con: 6.000002  # GBP per KWh
     unmet_region4:
         essentials:
             carrier_out: power
@@ -198,8 +195,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 10000000004
-                om_con: 6.000004
+                energy_cap: 10000000004  # GBP per KW
+                om_con: 6.000004  # GBP per KWh
     unmet_region5:
         essentials:
             carrier_out: power
@@ -211,8 +208,8 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 10000000005
-                om_con: 6.000005
+                energy_cap: 10000000005  # GBP per KW
+                om_con: 6.000005  # GBP per KWh
 
 
     # Transmission
@@ -228,7 +225,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.12
+                energy_cap: 100.12  # GBP per KW
     transmission_region1_region5:
         essentials:
             carrier: power
@@ -240,7 +237,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 150.15
+                energy_cap: 150.15  # GBP per KW
     transmission_region1_region6:
         essentials:
             carrier: power
@@ -252,7 +249,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.16
+                energy_cap: 100.16  # GBP per KW
     transmission_region2_region3:
         essentials:
             carrier: power
@@ -264,7 +261,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.23
+                energy_cap: 100.23  # GBP per KW
     transmission_region3_region4:
         essentials:
             carrier: power
@@ -276,7 +273,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.34
+                energy_cap: 100.34  # GBP per KW
     transmission_region4_region5:
         essentials:
             carrier: power
@@ -288,7 +285,7 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.45
+                energy_cap: 100.45  # GBP per KW
     transmission_region5_region6:
         essentials:
             carrier: power
@@ -300,4 +297,4 @@ techs:
         costs:
             monetary:
                 interest_rate: 0
-                energy_cap: 100.56
+                energy_cap: 100.56  # GBP per KW

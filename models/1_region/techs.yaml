@@ -9,8 +9,8 @@ techs:
             lifetime: 1  # yr
         costs:
             monetary:
-                energy_cap: 300  # GBP m per GW
-                om_con: 0.005  # GBP m per GWh
+                energy_cap: 300  # GBP per KW
+                om_con: 0.005  # GBP per KWh
                 interest_rate: 0               
     peaking:
         essentials:
@@ -21,8 +21,8 @@ techs:
             lifetime: 1  # yr
         costs:
             monetary:
-                energy_cap: 100  # GBP m per GW
-                om_con: 0.035  # GBP m per GWh
+                energy_cap: 100  # GBP per KW
+                om_con: 0.035  # GBP per KWh
                 interest_rate: 0
     wind:
         essentials:
@@ -34,8 +34,8 @@ techs:
             resource_unit: energy_per_area
         costs:
             monetary:
-                resource_area: 100  # GBP m per GW
-                om_con: 0  # GBP m per GWh
+                resource_area: 100  # GBP per KW
+                om_con: 0  # GBP per KWh
                 interest_rate: 0
     solar:
         essentials:
@@ -47,8 +47,8 @@ techs:
             resource_unit: energy_per_area
         costs:
             monetary:
-                resource_area: 30  # GBP m per GW
-                om_con: 0  # GBP m per GWh
+                resource_area: 30  # GBP per KW
+                om_con: 0  # GBP per KWh
                 interest_rate: 0
     unmet:
         essentials:
@@ -59,8 +59,8 @@ techs:
             lifetime: 1  # yr
         costs:
             monetary:
-                energy_cap: 1e10  # GBP m per GW
-                om_con: 6  # GBP m per GWh
+                energy_cap: 1e10  # GBP per KW
+                om_con: 6  # GBP per KWh
                 interest_rate: 0
     demand_power:
         essentials:
