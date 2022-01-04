@@ -4,4 +4,6 @@
 *.out
 *.spl
 __pycache__/*
+*/__pychache__
 *ipynb_checkpoints/*
+.vscode
