@@ -87,41 +87,24 @@ Hence, to run a simulation, you'll have to install this package (the python file
 
 #### Installing this package
 
-**Note**: *If you want to avoid `conda`, see the note below.*
+A key package used in this repo is [Calliope](https://www.callio.pe/), an open-source energy modelling framework. At the time of writing, the newest version of Calliope is `0.6.7`, which experiences bugs when installed with python `3.9` or higher. Hence, we recommend installing this package into python `3.8`. As usual, doing this via a virtual environment is recommended. From there, run
 
-To install this repo as a package:
+```
+pip install -e .
+```
 
-1. Install [Calliope](https://www.callio.pe/), an open-source energy modelling framework, using the `anaconda` package manager. If you don't have this yet, download a minimal version [here](https://docs.conda.io/en/latest/miniconda.html). From there, run in a command line:
 
-    ```
-    conda create -c conda-forge -n calliope calliope
-    ```
+#### Installing a solver
 
-    This creates a new virtual environment called `calliope` containing the required code.
+We recommend using [CBC](https://projects.coin-or.org/Cbc), which is open source and free-to-use. If you have `conda`, you can install it via
 
-2. Activate the virtual environment using `conda activate calliope`. 
+```
+conda install -c conda-forge coincbc
+```
 
-3. Install a solver. [CBC](https://projects.coin-or.org/Cbc) works well, and can be installed via
+If not, see install instructions for your system on the [project website](https://projects.coin-or.org/Cbc). 
 
-    ```
-    conda install -c conda-forge coincbc
-    ```
-
-4. [*optional*] If you want to run Jupyter notebooks, install them using
-
-    ```
-    conda install -c conda-forge jupyterlab
-    ```
-
-5. Install the package using 
-
-    ```
-    pip install -e .
-    ```
-
-You're now all set. When you want to run any code, enter the virtual environment using `conda activate calliope` and simulate away!
-
-**Note**: If you want to avoid using `conda`, you can skip steps 1-3 and run `pip install -e .` directly. However, at the time of writing, this failed with `python` version `3.9` and above, so stick to `3.8`. You'll then still need to install `cbc` -- check the [website](https://projects.coin-or.org/Cbc) to see how.
+[Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
 

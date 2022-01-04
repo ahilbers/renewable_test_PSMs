@@ -9,7 +9,7 @@ model:
 
 run:
     objective_options.cost_class.monetary: 1
-    solver: cbc
+    solver: cbc  # `gurobi` is faster but requires a license
     zero_threshold: 1e-10  # Round any value smaller to 0
 
 overrides:
