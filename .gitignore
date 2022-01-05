@@ -67,3 +67,6 @@ target/
 # IDE / Jupyter Notebooks
 *ipynb_checkpoints/*
 .vscode
+
+# Model outputs
+outputs*
