@@ -196,13 +196,15 @@ class ModelBase(calliope.Model):
         baseload_integer (bool) : activate baseload integer capacity
             constraint (built in units of 3GW)
         baseload_ramping (bool) : enforce baseload ramping constraint
-        allow_unmet (bool) : allow unmet demand in planning mode (always
-            allowed in operate mode)
+        allow_unmet (bool) : allow unmet demand in 'plan' mode (should always be allowed in 
+            'operate' mode)
         fixed_caps (dict or Pandas DataFrame) : fixed capacities as override
         extra_override (str) : name of additional override, to customise
             model. The override should be defined in the relevant model.yaml
         run_id (int) : can be changed if multiple models are run in parallel
         """
+
+        print(__name__)
 
         if model_name not in ['1_region', '6_region']:
             raise ValueError('Invalid model name '
@@ -243,9 +245,19 @@ class ModelBase(calliope.Model):
 
         logging.info('Time series inputs:\n%s', ts_data)
         logging.info('Override dict:\n%s', override_dict)
-        if run_mode == 'operate' and fixed_caps is None:
-            logging.warning('No fixed capacities passed into model call. '
-                            'Will read fixed capacities from model.yaml')
+
+        # Some checks when running in operate mode
+        if run_mode == 'operate':
+            # Throw warning if fixed capacities are not provided here
+            if fixed_caps is None:
+                logging.info(
+                    f'No fixed capacities passed into model call. '
+                    f'Reading fixed capacities from {model_name}/model.yaml'
+                )
+            # Raise error is not allowing unmet demand
+            if not allow_unmet:
+                raise ValueError('Must allow unmet demand when running in operate mode.')
+
 
     def _create_init_time_series(self, ts_data):
         """Create time series data for model initialisation."""
@@ -254,15 +266,18 @@ class ModelBase(calliope.Model):
         ts_data_used = ts_data.copy()
 
         if self.model_name == '1_region':
-            expected_columns = {'demand', 'wind', 'solar'}
+            expected_columns = ['demand', 'wind', 'solar']
         elif self.model_name == '6_region':
-            expected_columns = {'demand_region2', 'demand_region4',
-                                'demand_region5', 'wind_region2',
-                                'wind_region5', 'wind_region6',
-                                'solar_region2', 'solar_region5',
-                                'solar_region6'}
-        if not expected_columns.issubset(ts_data.columns):
-            raise AttributeError('Input time series: incorrect columns')
+            expected_columns = [
+                'demand_region2', 'demand_region4', 'demand_region5', 
+                'wind_region2', 'wind_region5', 'wind_region6',
+                'solar_region2', 'solar_region5', 'solar_region6'
+            ]
+        if not set(expected_columns).issubset(set(ts_data.columns)):
+            raise AttributeError(
+                f'Incorrect columns in input time series. '
+                f'Expected {expected_columns}, got {list(ts_data.columns)}.'
+            )
 
         # Detect missing leap days -- reset index if so
         if detect_missing_leap_days(ts_data_used):
