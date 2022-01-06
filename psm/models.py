@@ -3,157 +3,19 @@
 
 import os
 import logging
+import typing
 import shutil
 import pandas as pd
 import calliope
+from psm import utils
+
+
+logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be customised elsewhere
 
 
 # Emission intensities of technologies, in ton CO2 equivalent per GWh
-EMISSION_INTENSITIES = {'baseload': 200,
-                        'peaking': 400,
-                        'wind': 0,
-                        'solar': 0,
-                        'unmet': 0}
-
-
-def load_time_series_data(model_name):
-    """Load demand, wind and solar time series data for model.
-
-    Parameters:
-    -----------
-    model_name (str) : '1_region' or '6_region'
-
-    Returns:
-    --------
-    ts_data (pandas DataFrame) : time series data for use in model
-    """
-
-    ts_data = pd.read_csv('data/demand_wind_solar.csv', index_col=0)
-    ts_data.index = pd.to_datetime(ts_data.index)
-    
-    # If 1_region model, take demand, wind and solar from region 5
-    if model_name == '1_region':
-        ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5', 'solar_region5']]
-        ts_data.columns = ['demand', 'wind', 'solar']
-
-    return ts_data
-
-
-def detect_missing_leap_days(ts_data):
-    """Detect if a time series has missing leap days.
-
-    Parameters:
-    -----------
-    ts_data (pandas DataFrame) : time series
-    """
-
-    feb28_index = ts_data.index[(ts_data.index.year % 4 == 0)
-                                & (ts_data.index.month == 2)
-                                & (ts_data.index.day == 28)]
-    feb29_index = ts_data.index[(ts_data.index.year % 4 == 0)
-                                & (ts_data.index.month == 2)
-                                & (ts_data.index.day == 29)]
-    mar01_index = ts_data.index[(ts_data.index.year % 4 == 0)
-                                & (ts_data.index.month == 3)
-                                & (ts_data.index.day == 1)]
-    if len(feb29_index) < min((len(feb28_index), len(mar01_index))):
-        return True
-
-    return False
-
-
-def get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet):
-    """Get the scenario name for different run settings.
-
-    Parameters:
-    -----------
-    run_mode (str) : 'plan' or 'operate': whether to let the model
-        determine the optimal capacities or work with prescribed ones
-    baseload_integer (bool) : activate baseload integer capacity
-        constraint (built in units of 3GW)
-    baseload_ramping (bool) : enforce baseload ramping constraint
-    allow_unmet (bool) : allow unmet demand in planning mode (always
-        allowed in operate mode)
-
-    Returns:
-    --------
-    scenario (str) : name of scenario to pass in Calliope model
-    """
-
-    scenario = run_mode
-    if run_mode == 'plan' and not baseload_integer:
-        scenario = scenario + ',continuous'
-    if run_mode == 'plan' and baseload_integer:
-        scenario = scenario + ',integer'
-    if run_mode == 'plan' and allow_unmet:
-        scenario = scenario + ',allow_unmet'
-    if baseload_ramping:
-        scenario = scenario + ',ramping'
-
-    return scenario
-
-
-def get_cap_override_dict(model_name, fixed_caps):
-    """Create an override dictionary that can be used to set fixed
-    fixed capacities in a Calliope model run.
-
-    Parameters:
-    -----------
-    model_name (str) : '1_region' or '6_region'
-    fixed_caps (pandas Series/DataFrame or dict) : the fixed capacities.
-        A DataFrame created via model.get_summary_outputs will work.
-
-    Returns:
-    --------
-    o_dict (dict) : A dict that can be fed as override_dict into Calliope
-        model in operate mode
-    """
-
-    if isinstance(fixed_caps, pd.DataFrame):
-        fixed_caps = fixed_caps.iloc[:, 0]  # Change to Series
-
-    o_dict = {}
-
-    # Add baseload, peaking, wind and solar capacities
-    if model_name == '1_region':
-        for tech, attribute in [('baseload', 'energy_cap_equals'),
-                                ('peaking', 'energy_cap_equals'),
-                                ('wind', 'resource_area_equals'),
-                                ('solar', 'resource_area_equals')]:
-            idx = ('locations.region1.techs.{}.constraints.{}'.
-                   format(tech, attribute))
-            o_dict[idx] = fixed_caps['cap_{}_total'.format(tech)]
-
-    # Add baseload, peaking, wind, solar and transmission capacities
-    if model_name == '6_region':
-        for region in ['region{}'.format(i+1) for i in range(6)]:
-            for tech, attribute in [('baseload', 'energy_cap_equals'),
-                                    ('peaking', 'energy_cap_equals'),
-                                    ('wind', 'resource_area_equals'),
-                                    ('solar', 'resource_area_equals')]:
-                try:
-                    idx = ('locations.{}.techs.{}_{}.constraints.{}'.
-                           format(region, tech, region, attribute))
-                    o_dict[idx] = (
-                        fixed_caps['cap_{}_{}'.format(tech, region)]
-                    )
-                except KeyError:
-                    pass
-            for region_to in ['region{}'.format(i+1) for i in range(6)]:
-                tech = 'transmission'
-                idx = ('links.{},{}.techs.{}_{}_{}.constraints.energy_cap_equals'.
-                       format(region, region_to, tech, region, region_to))
-                try:
-                    o_dict[idx] = fixed_caps['cap_transmission_{}_{}'.
-                                             format(region, region_to)]
-                except KeyError:
-                    pass
-
-    if len(o_dict.keys()) == 0:
-        raise AttributeError('Override dict is empty. Check if something '
-                             'has gone wrong.')
-
-    return o_dict
+# TODO: Sort this out
+EMISSION_INTENSITIES = {'baseload': 200, 'peaking': 400, 'wind': 0, 'solar': 0, 'unmet': 0}
 
 
 def calculate_carbon_emissions(generation_levels):
@@ -204,22 +66,19 @@ class ModelBase(calliope.Model):
         run_id (int) : can be changed if multiple models are run in parallel
         """
 
-        print(__name__)
-
         if model_name not in ['1_region', '6_region']:
-            raise ValueError('Invalid model name '
-                             '(choose 1_region or 6_region)')
+            raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
 
         self.model_name = model_name
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
 
         # Create scenarios and overrides
-        scenario = get_scenario(run_mode, baseload_integer,
+        scenario = utils.get_scenario(run_mode, baseload_integer,
                                 baseload_ramping, allow_unmet)
         if extra_override is not None:
             scenario = ','.join((scenario, extra_override))
-        override_dict = (get_cap_override_dict(model_name, fixed_caps)
+        override_dict = (utils.get_cap_override_dict(model_name, fixed_caps)
                          if fixed_caps is not None else None)
 
         # Calliope requires a CSV file of the time series data to be present
@@ -240,17 +99,16 @@ class ModelBase(calliope.Model):
 
         # Adjust weights if these are included in ts_data
         if 'weight' in ts_data.columns:
-            self.inputs.timestep_weights.values = \
-                ts_data.loc[:, 'weight'].values
+            self.inputs.timestep_weights.values = ts_data.loc[:, 'weight'].values
 
-        logging.info('Time series inputs:\n%s', ts_data)
-        logging.info('Override dict:\n%s', override_dict)
+        logger.debug('Time series inputs:\n%s', ts_data)
+        logger.debug('Override dict:\n%s', override_dict)
 
         # Some checks when running in operate mode
         if run_mode == 'operate':
             # Throw warning if fixed capacities are not provided here
             if fixed_caps is None:
-                logging.info(
+                logger.info(
                     f'No fixed capacities passed into model call. '
                     f'Reading fixed capacities from {model_name}/model.yaml'
                 )
@@ -280,8 +138,8 @@ class ModelBase(calliope.Model):
             )
 
         # Detect missing leap days -- reset index if so
-        if detect_missing_leap_days(ts_data_used):
-            logging.warning('Missing leap days detected in input time series.'
+        if utils.has_missing_leap_days(ts_data_used):
+            logger.warning('Missing leap days detected in input time series.'
                             'Time series index reset to start in 2020.')
             ts_data_used.index = pd.date_range(start='2020-01-01',
                                                periods=self.num_timesteps,
@@ -314,8 +172,13 @@ class OneRegionModel(ModelBase):
             run_id=run_id
         )
 
-    def get_summary_outputs(self):
-        """Create pandas DataFrame of subset of model outputs."""
+    def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
+        """Return selection of key model outputs.
+        
+        Parameters:
+        -----------
+        as_dict: return dictionary instead of DataFrame
+        """
 
         assert hasattr(self, 'results'), \
             'Model outputs have not been calculated: call self.run() first.'
@@ -369,6 +232,9 @@ class OneRegionModel(ModelBase):
             }
         )
 
+        if as_dict:
+            outputs = outputs['output'].to_dict()
+
         return outputs
 
 
@@ -391,8 +257,13 @@ class SixRegionModel(ModelBase):
             run_id=run_id
         )
 
-    def get_summary_outputs(self):
-        """Create pandas DataFrame of subset of relevant model outputs."""
+    def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
+        """Return selection of key model outputs.
+        
+        Parameters:
+        -----------
+        as_dict: return dictionary instead of DataFrame
+        """
 
         assert hasattr(self, 'results'), \
             'Model outputs have not been calculated: call self.run() first.'
@@ -520,6 +391,9 @@ class SixRegionModel(ModelBase):
                 'unmet': outputs.loc['gen_unmet_total']
             }
         )
+
+        if as_dict:
+            outputs = outputs['output'].to_dict()
 
         return outputs
 

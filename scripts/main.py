@@ -1,60 +1,43 @@
 import os
 import warnings
 import logging
+import json
 import psm
 
 
-def get_logger(run_config: dict):
-    """Get a logger to use throughout the codebase.
-    
-    Parameters:
-    -----------
-        config: dictionary with model, run and save properties
-    """
-
-    output_save_dir = run_config['output_save_dir']
-
-    # Create the master logger and formatter
-    logger = logging.getLogger(name='model_run')
-    logger.setLevel(level=getattr(logging, run_config['logging_level']))
-    formatter = logging.Formatter(
-        fmt='%(asctime)s - %(levelname)-8s - %(name)s - %(filename)s - %(message)s',
-        datefmt='%Y-%m-%d,%H:%M:%S'
-    )
-
-    # Create two handlers: one writes to a log file, the other to stdout
-    logger_file = logging.FileHandler(f'{output_save_dir}/model_run.log')
-    logger_file.setFormatter(fmt=formatter)
-    logger.addHandler(hdlr=logger_file)
-    logger_stdout = logging.StreamHandler()
-    logger_stdout.setFormatter(fmt=formatter)
-    logger.addHandler(hdlr=logger_stdout)
-
-    return logger
-
-
-def run_model(config: dict):
+def run_model(config: dict, logger: logging.Logger = None):
     '''Create and solve a power system model across a time period.
     
     Parameters:
     -----------
-        config: dictionary with model, run and save properties
+    config: dictionary with model, run and save properties
+    logger: the logger to use in creating the model. If named 'psm', then it logs internal messages
+        from the 'psm' package
     '''
 
+    # If no logger is specified, include log messages from 'psm' package
+    if logger is None:
+        logger = logging.getLogger(name='psm')
+
+    logger.info(f'Conducting psm simulation. Run config:\n{json.dumps(config, indent=4)}.')
+
     # Load time series data and slice to desired time period
-    ts_data = psm.load_time_series_data(model_name=config['model_name'])
+    ts_data = psm.utils.load_time_series_data(model_name=config['model_name'])
     ts_data = ts_data.loc[config['ts_first_period']:config['ts_last_period']]
+    logger.info(f'Loaded time series data, shape {ts_data.shape}.')
+    logger.debug(f'Time series data:\n\n{ts_data}\n')
 
     # Get correct model class
     model_name = config['model_name']
     if model_name == '1_region':
-        Model = psm.OneRegionModel
+        Model = psm.models.OneRegionModel
     elif model_name == '6_region':
-        Model = psm.SixRegionModel
+        Model = psm.models.SixRegionModel
     else:
         raise ValueError(f'Invalid model name {model_name}. Options: `1_region`, `6_region`.')
 
     # Create and run the model
+    logger.info('Creating model.')
     model = Model(
         ts_data=ts_data,
         run_mode=config['run_mode'],
@@ -64,13 +47,20 @@ def run_model(config: dict):
         fixed_caps=config['fixed_caps'],
         extra_override=config['extra_override']
     )
-    # model.run()
+    logger.info('Done creating model.')
 
-    # # Save outputs to file
-    # output_save_dir = config['output_save_dir']
-    # model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
-    # if config['save_full_model']:
-    #     model.to_csv(f'{output_save_dir}/full_model_results')
+    logger.info('Running model to determine optimal solution.')
+    model.run()
+    logger.info('Done running model.')
+
+    # Save outputs to file
+    output_save_dir = config['output_save_dir']
+    model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
+    logger.info(f'Saved summary model results to `{output_save_dir}`.')
+    if config['save_full_model']:
+        full_model_results_save_dir = f'{output_save_dir}/full_model_results'
+        model.to_csv(full_model_results_save_dir)
+        logger.info(f'Saved full model results to `{full_model_results_save_dir}`.')
 
 
 def main():
@@ -105,34 +95,25 @@ def main():
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,
-        'logging_level': 'INFO'
+        'logging_level': 'DEBUG'
     }
 
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
     os.mkdir(output_save_dir)
 
-    logger = get_logger(run_config=run_config)
-
-    logger.debug('debug')
-    logger.info('info')
-    logger.warning('warning')
-    logger.error('error')
-    logger.critical('critical')
-    
-
-    
-
-    # Ignore warnings of the form `setting depreciation rate as 1/lifetime.`
+    # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
+    logger = psm.utils.get_logger(name='psm', run_config=run_config)
     warnings.filterwarnings(action='ignore', message='.*\n.*setting depreciation rate.*')
 
-    # run_model(config=run_config)
+    run_model(config=run_config, logger=logger)
 
 
 if __name__ == '__main__':
 
     # TODO: Delete!!
     if os.path.exists('outputs'):
-        os.rmdir('outputs')
+        import shutil
+        shutil.rmtree('outputs')
 
     main()
