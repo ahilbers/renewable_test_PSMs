@@ -52,6 +52,7 @@ def run_model(config: dict, logger: logging.Logger = None):
     logger.info('Running model to determine optimal solution.')
     model.run()
     logger.info('Done running model.')
+    logger.info(f'Summary model outputs:\n\n{model.get_summary_outputs()}\n')
 
     # Save outputs to file
     output_save_dir = config['output_save_dir']
@@ -84,7 +85,7 @@ def main():
     '''
 
     run_config = {
-        'model_name': '1_region',
+        'model_name': '6_region',
         'ts_first_period': '2017-06-08',
         'ts_last_period': '2017-06-15',
         'run_mode': 'plan',

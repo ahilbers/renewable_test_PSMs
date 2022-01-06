@@ -87,7 +87,7 @@ class ModelBase(calliope.Model):
         if fixed_caps is not None:
             override_dict = utils.get_cap_override_dict(model_name, fixed_caps)
         else:
-            None
+            override_dict = None
 
         # Calliope requires a CSV file of the time series data to be present
         # at time of initialisation. This creates a new directory with the
@@ -207,7 +207,7 @@ class OneRegionModel(ModelBase):
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
-        outputs = pd.DataFrame(columns=['output'])  # Output DataFrame
+        outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
         corrfac = 8760 / self.num_timesteps  # For annualisation of extensive outputs
 
         # Insert installed capacities
@@ -290,10 +290,11 @@ class SixRegionModel(ModelBase):
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
-        outputs = pd.DataFrame(columns=['output'])  # Output DataFrame
+        outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
         corrfac = 8760 / self.num_timesteps  # For annualisation of extensive outputs
 
-        # Insert model outputs at regional level
+        # Insert model outputs at regional level. Loop over all techs and regions -- if a tech
+        # doesn't appear in a region, then ignore it -- done by the 'pass' in case of KeyError
         for region in [f'region{i+1}' for i in range(6)]:
 
             # Baseload and peaking capacity
@@ -303,7 +304,7 @@ class SixRegionModel(ModelBase):
                         self.results.energy_cap.loc[f'{region}::{tech}_{region}']
                     )
                 except KeyError:
-                    pass
+                    pass  # If this tech doesn't appear in this region, ignore it
 
             # Wind and solar capacity
             for tech in ['wind', 'solar']:
@@ -312,7 +313,7 @@ class SixRegionModel(ModelBase):
                         self.results.resource_area.loc[f'{region}::{tech}_{region}']
                     )
                 except KeyError:
-                    pass
+                    pass  # If this tech doesn't appear in this region, ignore it
 
             # Peak unmet demand
             for tech in ['unmet']:
@@ -321,7 +322,7 @@ class SixRegionModel(ModelBase):
                         self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'].max()
                     )
                 except KeyError:
-                    pass
+                    pass  # If this tech doesn't appear in this region, ignore it
 
             # Transmission capacity
             for tech in ['transmission']:
@@ -334,7 +335,7 @@ class SixRegionModel(ModelBase):
                                 .loc[f'{region}::{tech}_{region}_{region_to}:{region_to}']
                             )
                         except KeyError:
-                            pass
+                            pass  # If this tech doesn't appear in this region, ignore it
 
             # Baseload, peaking, wind, solar and unmet generation levels
             for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
@@ -346,7 +347,7 @@ class SixRegionModel(ModelBase):
                         ).sum()
                     )
                 except KeyError:
-                    pass
+                    pass  # If this tech doesn't appear in this region, ignore it
 
             # Demand levels
             try:
@@ -357,7 +358,7 @@ class SixRegionModel(ModelBase):
                     ).sum()
                 )
             except KeyError:
-                pass
+                pass  # If this tech doesn't appear in this region, ignore it
 
         # Insert total capacities
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'transmission']:
@@ -380,7 +381,7 @@ class SixRegionModel(ModelBase):
 
         # Insert total annualised generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-            outputs.loc['gen_{}_total'.format(tech)] = (
+            outputs.loc[f'gen_{tech}_total'] = (
                 outputs.loc[outputs.index.str.contains(f'gen_{tech}')].sum()
             )
 
