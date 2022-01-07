@@ -25,8 +25,6 @@ The models may be customised further by editing the model-defining files:
 - Costs associted with each generation & transmission technologies: `models/{MODEL_NAME}/techs.yaml`.
 - Fixed generation and transmission capacities used in `operate` mode: `models/{MODEL_NAME}/model.yaml`.
 
-**Important note**: Any model outputs that are extensive (becoming larger with increasing simulation length, e.g. costs, generation levels, but not capacities) are annualised when called from `get_summary_outputs`. This means that for a run of 1 year vs 2 years, the costs and generation levels do not double. To return to extensive values, multiply by the simulation length in years.
-
 
 
 
@@ -54,7 +52,6 @@ Transmission is permitted between regions 1-2, 1-5, 1-6, 2-3, 3-4, 4-5 and 5-6.
 
 
 
-
 ## Generation & transmission technologies
 
 | Type | Technology | Installation cost <br> (£m/GWyr) | Generation cost <br> (£m/GWh) | Carbon Emissions <br> (t CO2/GWh) |
@@ -74,14 +71,9 @@ In the `6_region` model, the costs of the same technologies in different regions
 
 
 
-
-
-
-
-
-
-
-
 ## Additional information
 
 Additional information, such as the precise mathematical optimisation problem solved by each model, are available in `documentation.pdf`.
+
+
+TODO: Adjust documentation for annualisation.

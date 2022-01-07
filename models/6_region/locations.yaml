@@ -8,11 +8,11 @@ locations:
         coordinates: {lat: 3, lon: 1}
         techs:
             wind_region2:
-                constraints.resource: file=demand_wind_solar.csv:wind_region2
+                constraints.resource: df=ts_data:wind_region2
             solar_region2:
-                constraints.resource: file=demand_wind_solar.csv:solar_region2
+                constraints.resource: df=ts_data:solar_region2
             demand_power:
-                constraints.resource: file=demand_wind_solar.csv:demand_region2
+                constraints.resource: df=ts_data:demand_region2
             unmet_region2:
     region3:
         coordinates: {lat: 2, lon: 0}
@@ -23,17 +23,17 @@ locations:
         coordinates: {lat: 1, lon: 0}
         techs:
             demand_power:
-                constraints.resource: file=demand_wind_solar.csv:demand_region4
+                constraints.resource: df=ts_data:demand_region4
             unmet_region4:
     region5:
         coordinates: {lat: 0, lon: 1}
         techs:
             wind_region5:
-                constraints.resource: file=demand_wind_solar.csv:wind_region5
+                constraints.resource: df=ts_data:wind_region5
             solar_region5:
-                constraints.resource: file=demand_wind_solar.csv:solar_region5
+                constraints.resource: df=ts_data:solar_region5
             demand_power:
-                constraints.resource: file=demand_wind_solar.csv:demand_region5
+                constraints.resource: df=ts_data:demand_region5
             unmet_region5:
     region6:
         coordinates: {lat: 0, lon: 2}
@@ -41,9 +41,9 @@ locations:
             baseload_region6:
             peaking_region6:
             wind_region6:
-                constraints.resource: file=demand_wind_solar.csv:wind_region6
+                constraints.resource: df=ts_data:wind_region6
             solar_region6:
-                constraints.resource: file=demand_wind_solar.csv:solar_region6
+                constraints.resource: df=ts_data:solar_region6
 
 links:
     region1,region2:

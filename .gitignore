@@ -70,3 +70,6 @@ target/
 
 # Model outputs
 outputs*
+
+# Old data files
+*old.csv

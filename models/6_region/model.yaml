@@ -8,9 +8,10 @@ model:
     timeseries_data_path: ''
 
 run:
+    # minimise sum of monetary install and generation costs -- no emissions in objective function
     objective_options.cost_class.monetary: 1
     solver: cbc  # `gurobi` is faster but requires a license
-    zero_threshold: 1e-10  # Round any value smaller to 0
+    zero_threshold: 1e-10  # round any value smaller to 0
 
 overrides:
     plan:

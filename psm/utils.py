@@ -45,6 +45,7 @@ def load_time_series_data(model_name: str) -> pd.DataFrame:
     """
 
     ts_data = pd.read_csv('data/demand_wind_solar.csv', index_col=0)
+    ts_data = ts_data.clip(lower=0.)  # Trim negative values, can come from floating point error
     ts_data.index = pd.to_datetime(ts_data.index)
     
     # If 1_region model, take demand, wind and solar from region 5

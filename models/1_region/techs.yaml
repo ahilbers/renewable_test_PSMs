@@ -11,7 +11,9 @@ techs:
             monetary:
                 energy_cap: 300  # GBP per KW
                 om_con: 0.005  # GBP per KWh
-                interest_rate: 0               
+                interest_rate: 0
+            emissions:
+                om_prod: 200  # gCO2 per KWh
     peaking:
         essentials:
             carrier_out: power
@@ -24,6 +26,8 @@ techs:
                 energy_cap: 100  # GBP per KW
                 om_con: 0.035  # GBP per KWh
                 interest_rate: 0
+            emissions:
+                om_prod: 400  # gCO2 per KWh
     wind:
         essentials:
             carrier_out: power
@@ -37,6 +41,8 @@ techs:
                 resource_area: 100  # GBP per KW
                 om_con: 0  # GBP per KWh
                 interest_rate: 0
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     solar:
         essentials:
             carrier_out: power
@@ -50,6 +56,8 @@ techs:
                 resource_area: 30  # GBP per KW
                 om_con: 0  # GBP per KWh
                 interest_rate: 0
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     unmet:
         essentials:
             carrier_out: power
@@ -62,6 +70,8 @@ techs:
                 energy_cap: 1e10  # GBP per KW
                 om_con: 6  # GBP per KWh
                 interest_rate: 0
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     demand_power:
         essentials:
             carrier: power

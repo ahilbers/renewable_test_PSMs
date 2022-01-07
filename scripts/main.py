@@ -86,8 +86,8 @@ def main():
 
     run_config = {
         'model_name': '6_region',
-        'ts_first_period': '2017-06-08',
-        'ts_last_period': '2017-06-15',
+        'ts_first_period': '2017-06-01',
+        'ts_last_period': '2017-06-30',
         'run_mode': 'plan',
         'baseload_integer': False,
         'baseload_ramping': False,
@@ -96,7 +96,7 @@ def main():
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,
-        'logging_level': 'DEBUG'
+        'logging_level': 'INFO'
     }
 
     # Create directory where the logs and outputs are saved

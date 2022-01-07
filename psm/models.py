@@ -5,41 +5,12 @@ import os
 import logging
 import typing
 import json
-import shutil
 import pandas as pd
 import calliope
 from psm import utils
 
 
 logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be customised elsewhere
-
-
-# TODO: Remove annualisation
-
-
-# Emission intensities of technologies, in ton CO2 equivalent per GWh
-# TODO: Sort this out
-EMISSION_INTENSITIES = {'baseload': 200, 'peaking': 400, 'wind': 0, 'solar': 0, 'unmet': 0}
-
-
-def calculate_carbon_emissions(
-    generation_levels: typing.Union[pd.DataFrame, dict]) -> pd.DataFrame:
-    """Calculate total carbon emissions.
-
-    Parameters:
-    -----------
-    generation_levels: generation levels for the generation technologies.
-    """
-
-    emissions_tot = (
-        EMISSION_INTENSITIES['baseload'] * generation_levels['baseload']
-        + EMISSION_INTENSITIES['peaking'] * generation_levels['peaking']
-        + EMISSION_INTENSITIES['wind'] * generation_levels['wind']
-        + EMISSION_INTENSITIES['solar'] * generation_levels['solar']
-        + EMISSION_INTENSITIES['unmet'] * generation_levels['unmet']
-    )
-
-    return emissions_tot
 
 
 class ModelBase(calliope.Model):
@@ -77,6 +48,7 @@ class ModelBase(calliope.Model):
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
 
         self.model_name = model_name
+        self.run_id = run_id
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
 
@@ -89,23 +61,13 @@ class ModelBase(calliope.Model):
         else:
             override_dict = None
 
-        # Calliope requires a CSV file of the time series data to be present
-        # at time of initialisation. This creates a new directory with the
-        # model files and data for the model, then deletes it once the model
-        # exists in Python
-        # TODO: Fix this
-        self._base_dir_iter = self.base_dir + '_' + str(run_id)
-        if os.path.exists(self._base_dir_iter):
-            shutil.rmtree(self._base_dir_iter)
-        shutil.copytree(self.base_dir, self._base_dir_iter)
         ts_data = self._create_init_time_series(ts_data)
-        ts_data.to_csv(os.path.join(self._base_dir_iter, 'demand_wind_solar.csv'))
         super(ModelBase, self).__init__(
-            os.path.join(self._base_dir_iter, 'model.yaml'),
+            config=os.path.join(self.base_dir, 'model.yaml'),
+            timeseries_dataframes={'ts_data': ts_data},
             scenario=scenario,
             override_dict=override_dict
         )
-        shutil.rmtree(self._base_dir_iter)
 
         # Adjust time step weights
         if 'weight' in ts_data.columns:
@@ -208,7 +170,6 @@ class OneRegionModel(ModelBase):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
         outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
-        corrfac = 8760 / self.num_timesteps  # For annualisation of extensive outputs
 
         # Insert installed capacities
         outputs.loc['cap_baseload_total'] = float(self.results.energy_cap.loc['region1::baseload'])
@@ -221,30 +182,24 @@ class OneRegionModel(ModelBase):
 
         # Insert generation levels
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-            outputs.loc['gen_{}_total'.format(tech)] = corrfac * float(
-                * (self.results.carrier_prod.loc[f'region1::{tech}::power']
-                * self.inputs.timestep_weights).sum()
+            outputs.loc[f'gen_{tech}_total'] = float(
+                (
+                    self.results.carrier_prod.loc[f'region1::{tech}::power']
+                    * self.inputs.timestep_weights
+                ).sum()
             )
 
-        # Insert annualised demand levels
-        outputs.loc['demand_total'] = -corrfac * float(
-            * (self.results.carrier_con.loc['region1::demand_power::power']
-            * self.inputs.timestep_weights).sum()
+        # Insert demand levels
+        outputs.loc['demand_total'] = -float(
+            (
+                self.results.carrier_con.loc['region1::demand_power::power']
+                * self.inputs.timestep_weights
+            ).sum()
         )
 
-        # Insert annualised total system cost
-        outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
-
-        # Insert annualised carbon emissions
-        outputs.loc['emissions_total'] = calculate_carbon_emissions(
-            generation_levels={
-                'baseload': outputs.loc['gen_baseload_total'],
-                'peaking': outputs.loc['gen_peaking_total'],
-                'wind': outputs.loc['gen_wind_total'],
-                'solar': outputs.loc['gen_solar_total'],
-                'unmet': outputs.loc['gen_unmet_total']
-            }
-        )
+        # Insert total system cost and carbon emissions
+        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
@@ -291,7 +246,6 @@ class SixRegionModel(ModelBase):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
         outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
-        corrfac = 8760 / self.num_timesteps  # For annualisation of extensive outputs
 
         # Insert model outputs at regional level. Loop over all techs and regions -- if a tech
         # doesn't appear in a region, then ignore it -- done by the 'pass' in case of KeyError
@@ -340,7 +294,7 @@ class SixRegionModel(ModelBase):
             # Baseload, peaking, wind, solar and unmet generation levels
             for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
                 try:
-                    outputs.loc[f'gen_{tech}_{region}'] = corrfac * float(
+                    outputs.loc[f'gen_{tech}_{region}'] = float(
                         (
                             self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'] 
                             * self.inputs.timestep_weights
@@ -351,7 +305,7 @@ class SixRegionModel(ModelBase):
 
             # Demand levels
             try:
-                outputs.loc['demand_{}'.format(region)] = -corrfac * float(
+                outputs.loc['demand_{}'.format(region)] = -float(
                     (
                         self.results.carrier_con.loc[f'{region}::demand_power::power']
                         * self.inputs.timestep_weights
@@ -379,28 +333,18 @@ class SixRegionModel(ModelBase):
             .max()
         )
 
-        # Insert total annualised generation and unmet demand levels
+        # Insert total generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             outputs.loc[f'gen_{tech}_total'] = (
                 outputs.loc[outputs.index.str.contains(f'gen_{tech}')].sum()
             )
 
-        # Insert total annualised demand levels
+        # Insert total demand levels
         outputs.loc['demand_total'] = (outputs.loc[outputs.index.str.contains('demand')].sum())
 
-        # Insert annualised total system cost
-        outputs.loc['cost_total'] = corrfac * float(self.results.cost.sum())
-
-        # Insert annualised carbon emissions
-        outputs.loc['emissions_total'] = calculate_carbon_emissions(
-            generation_levels={
-                'baseload': outputs.loc['gen_baseload_total'],
-                'peaking': outputs.loc['gen_peaking_total'],
-                'wind': outputs.loc['gen_wind_total'],
-                'solar': outputs.loc['gen_solar_total'],
-                'unmet': outputs.loc['gen_unmet_total']
-            }
-        )
+        # Insert total system cost and carbon emissions
+        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
