@@ -74,6 +74,3 @@ In the `6_region` model, the costs of the same technologies in different regions
 ## Additional information
 
 Additional information, such as the precise mathematical optimisation problem solved by each model, are available in `documentation.pdf`.
-
-
-TODO: Adjust documentation for annualisation.
