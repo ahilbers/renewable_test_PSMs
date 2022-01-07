@@ -1,2 +1,2 @@
 pandas
-calliope
+calliope==0.6.7

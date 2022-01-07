@@ -23,7 +23,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 300.1  # GBP per KW
-                om_con: 0.005001  # GBP per KWh
+                om_prod: 0.005001  # GBP per KWh
+            emissions:
+                om_prod: 200  # gCO2 per KWh
     baseload_region3:
         essentials:
             carrier_out: power
@@ -35,7 +37,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 300.3  # GBP per KW
-                om_con: 0.005003  # GBP per KWh
+                om_prod: 0.005003  # GBP per KWh
+            emissions:
+                om_prod: 200  # gCO2 per KWh
     baseload_region6:
         essentials:
             carrier_out: power
@@ -47,7 +51,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 300.6  # GBP per KW
-                om_con: 0.005006  # GBP per KWh
+                om_prod: 0.005006  # GBP per KWh
+            emissions:
+                om_prod: 200  # gCO2 per KWh
     peaking_region1:
         essentials:
             carrier_out: power
@@ -60,7 +66,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 100.1  # GBP per KW
-                om_con: 0.035001  # GBP per KWh
+                om_prod: 0.035001  # GBP per KWh
+            emissions:
+                om_prod: 400  # gCO2 per KWh
     peaking_region3:
         essentials:
             carrier_out: power
@@ -73,7 +81,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 100.3  # GBP per KW
-                om_con: 0.035003  # GBP per KWh
+                om_prod: 0.035003  # GBP per KWh
+            emissions:
+                om_prod: 400  # gCO2 per KWh
     peaking_region6:
         essentials:
             carrier_out: power
@@ -86,7 +96,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 100.6  # GBP per KW
-                om_con: 0.035006  # GBP per KWh
+                om_prod: 0.035006  # GBP per KWh
+            emissions:
+                om_prod: 400  # gCO2 per KWh
     wind_region2:
         essentials:
             carrier_out: power
@@ -101,7 +113,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 100.2  # GBP per KW
-                om_con: 0.000002  # GBP per KWh
+                om_prod: 0.000002  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     wind_region5:
         essentials:
             carrier_out: power
@@ -116,7 +130,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 100.5  # GBP per KW
-                om_con: 0.000005  # GBP per KWh
+                om_prod: 0.000005  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     wind_region6:
         essentials:
             carrier_out: power
@@ -131,7 +147,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 100.6  # GBP per KW
-                om_con: 0.000006  # GBP per KWh
+                om_prod: 0.000006  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     solar_region2:
         essentials:
             carrier_out: power
@@ -144,7 +162,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 30.2  # GBP per KW
-                om_con: 0.000002  # GBP per KWh
+                om_prod: 0.000002  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     solar_region5:
         essentials:
             carrier_out: power
@@ -157,7 +177,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 30.5  # GBP per KW
-                om_con: 0.000005  # GBP per KWh
+                om_prod: 0.000005  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     solar_region6:
         essentials:
             carrier_out: power
@@ -170,7 +192,9 @@ techs:
             monetary:
                 interest_rate: 0
                 resource_area: 30.6  # GBP per KW
-                om_con: 0.000006  # GBP per KWh
+                om_prod: 0.000006  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     unmet_region2:
         essentials:
             carrier_out: power
@@ -183,7 +207,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 10000000002  # GBP per KW
-                om_con: 6.000002  # GBP per KWh
+                om_prod: 6.000002  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     unmet_region4:
         essentials:
             carrier_out: power
@@ -196,7 +222,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 10000000004  # GBP per KW
-                om_con: 6.000004  # GBP per KWh
+                om_prod: 6.000004  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
     unmet_region5:
         essentials:
             carrier_out: power
@@ -209,7 +237,9 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 10000000005  # GBP per KW
-                om_con: 6.000005  # GBP per KWh
+                om_prod: 6.000005  # GBP per KWh
+            emissions:
+                om_prod: 0  # gCO2 per KWh
 
 
     # Transmission
