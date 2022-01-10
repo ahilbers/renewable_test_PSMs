@@ -48,6 +48,7 @@ class ModelBase(calliope.Model):
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
 
         self.model_name = model_name
+        self.run_mode = run_mode
         self.run_id = run_id
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
