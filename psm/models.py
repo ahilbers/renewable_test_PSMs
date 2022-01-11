@@ -7,7 +7,7 @@ import typing
 import json
 import pandas as pd
 import calliope
-from psm import utils
+import psm.utils
 
 
 logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be customised elsewhere
@@ -54,11 +54,11 @@ class ModelBase(calliope.Model):
         self.num_timesteps = ts_data.shape[0]
 
         # Create scenarios and overrides
-        scenario = utils.get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet)
+        scenario = psm.utils.get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet)
         if extra_override is not None:
             scenario = f'{scenario},{extra_override}'
         if fixed_caps is not None:
-            override_dict = utils.get_cap_override_dict(model_name, fixed_caps)
+            override_dict = psm.utils.get_cap_override_dict(model_name, fixed_caps)
         else:
             override_dict = None
 
@@ -119,7 +119,7 @@ class ModelBase(calliope.Model):
             )
 
         # Detect missing leap days -- reset index if so
-        if utils.has_missing_leap_days(ts_data_used):
+        if psm.utils.has_missing_leap_days(ts_data_used):
             logger.warning('Missing leap days detected. Time series index reset to start in 2020.')
             ts_data_used.index = pd.date_range(
                 start='2020-01-01', periods=self.num_timesteps, freq='h'
@@ -130,6 +130,15 @@ class ModelBase(calliope.Model):
         ts_data_used.loc[:, demand_columns] = -ts_data_used.loc[:, demand_columns]
 
         return ts_data_used
+
+    def run(self):
+        """Run model to determine optimal solution."""
+        logger.info('Running model to determine optimal solution.')
+        super(ModelBase, self).run()
+        if not psm.utils.has_consistent_outputs(model=self):
+            logger.critical('Model has inconsistent outputs. Check log files for details.')
+        logger.info('Done running model.')
+
 
 
 class OneRegionModel(ModelBase):
