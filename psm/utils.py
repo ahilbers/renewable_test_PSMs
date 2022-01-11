@@ -273,7 +273,7 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:
         cost_total_v1 += cost_v1
 
     # Test if supply matches demand
-    generation_total = float(out.filter(f'gen_.*_total', axis=0).sum())
+    generation_total = float(out.filter(regex='gen_.*_total', axis=0).sum())
     demand_total = float(out.loc['demand_total'])
     if abs(generation_total - demand_total) > 0.1:
         logger.error(

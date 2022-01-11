@@ -208,8 +208,8 @@ class OneRegionModel(ModelBase):
         )
 
         # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
+        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
@@ -353,14 +353,10 @@ class SixRegionModel(ModelBase):
         outputs.loc['demand_total'] = (outputs.loc[outputs.index.str.contains('demand')].sum())
 
         # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
+        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
 
         return outputs
-
-
-if __name__ == '__main__':
-    raise NotImplementedError()
