@@ -85,7 +85,7 @@ def main():
     '''
 
     run_config = {
-        'model_name': '6_region',
+        'model_name': '1_region',
         'ts_first_period': '2017-06-01',
         'ts_last_period': '2017-06-07',
         'run_mode': 'plan',
@@ -112,7 +112,4 @@ def main():
 
 
 if __name__ == '__main__':
-    if os.path.exists('outputs'):
-        import shutil
-        shutil.rmtree('outputs')  # TODO: Delete!!
     main()

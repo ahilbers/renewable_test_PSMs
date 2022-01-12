@@ -46,6 +46,16 @@ class ModelBase(calliope.Model):
 
         if model_name not in ['1_region', '6_region']:
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
+        
+        # Some checks when running in operate mode
+        if run_mode == 'operate':
+            if fixed_caps is None:
+                logger.info(
+                    f'No fixed capacities passed into model call. '
+                    f'Reading fixed capacities from {model_name}/model.yaml'
+                )
+            if not allow_unmet:
+                raise ValueError('Must allow unmet demand when running in operate mode.')
 
         self.model_name = model_name
         self.run_mode = run_mode
@@ -78,17 +88,6 @@ class ModelBase(calliope.Model):
         logger.debug(f'Override dict:\n{json.dumps(override_dict, indent=4)}')
         logger.debug(f'Time series inputs:\n{ts_data}\n')
 
-        # Some checks when running in operate mode
-        if run_mode == 'operate':
-            if fixed_caps is None:
-                logger.info(
-                    f'No fixed capacities passed into model call. '
-                    f'Reading fixed capacities from {model_name}/model.yaml'
-                )
-            if not allow_unmet:
-                raise ValueError('Must allow unmet demand when running in operate mode.')
-
-
     def _create_init_time_series(self, ts_data: pd.DataFrame) -> pd.DataFrame:
         """Create time series data for model initialisation.
         
@@ -119,7 +118,7 @@ class ModelBase(calliope.Model):
             )
 
         # Detect missing leap days -- reset index if so
-        if psm.utils.has_missing_leap_days(ts_data_used):
+        if psm.utils.has_missing_leap_days(ts_data_used):  # pragma: no cover
             logger.warning('Missing leap days detected. Time series index reset to start in 2020.')
             ts_data_used.index = pd.date_range(
                 start='2020-01-01', periods=self.num_timesteps, freq='h'
@@ -135,10 +134,9 @@ class ModelBase(calliope.Model):
         """Run model to determine optimal solution."""
         logger.info('Running model to determine optimal solution.')
         super(ModelBase, self).run()
-        if not psm.utils.has_consistent_outputs(model=self):
+        if not psm.utils.has_consistent_outputs(model=self):  # pragma: no cover
             logger.critical('Model has inconsistent outputs. Check log files for details.')
         logger.info('Done running model.')
-
 
 
 class OneRegionModel(ModelBase):
