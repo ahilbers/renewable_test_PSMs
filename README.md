@@ -105,6 +105,11 @@ If not, see install instructions for your system on the [project website](https:
 [Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
+#### Running the tests
+This repo contains some unit tests, located in the `test` directory. You can run all unit tests by
+calling `pytest` from a command line. To do this, you'll need to have [pytest-cov](https://pypi.org/project/pytest-cov/) installed.
+
+
 
 
 ## Use in papers

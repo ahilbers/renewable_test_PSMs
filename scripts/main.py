@@ -86,8 +86,8 @@ def main():
 
     run_config = {
         'model_name': '1_region',
-        'ts_first_period': '2017-01-01',
-        'ts_last_period': '2017-12-31',
+        'ts_first_period': '2017-06-01',
+        'ts_last_period': '2017-06-07',
         'run_mode': 'plan',
         'baseload_integer': False,
         'baseload_ramping': False,
@@ -105,7 +105,8 @@ def main():
 
     # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
     logger = psm.utils.get_logger(name='psm', run_config=run_config)
-    warnings.filterwarnings(action='ignore', message='.*\n.*setting depreciation rate.*')
+    warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
+    warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
 
     run_model(config=run_config, logger=logger)
 

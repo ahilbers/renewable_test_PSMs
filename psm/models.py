@@ -7,7 +7,7 @@ import typing
 import json
 import pandas as pd
 import calliope
-from psm import utils
+import psm.utils
 
 
 logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be customised elsewhere
@@ -46,18 +46,29 @@ class ModelBase(calliope.Model):
 
         if model_name not in ['1_region', '6_region']:
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
+        
+        # Some checks when running in operate mode
+        if run_mode == 'operate':
+            if fixed_caps is None:
+                logger.info(
+                    f'No fixed capacities passed into model call. '
+                    f'Reading fixed capacities from {model_name}/model.yaml'
+                )
+            if not allow_unmet:
+                raise ValueError('Must allow unmet demand when running in operate mode.')
 
         self.model_name = model_name
+        self.run_mode = run_mode
         self.run_id = run_id
         self.base_dir = os.path.join('models', model_name)
         self.num_timesteps = ts_data.shape[0]
 
         # Create scenarios and overrides
-        scenario = utils.get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet)
+        scenario = psm.utils.get_scenario(run_mode, baseload_integer, baseload_ramping, allow_unmet)
         if extra_override is not None:
             scenario = f'{scenario},{extra_override}'
         if fixed_caps is not None:
-            override_dict = utils.get_cap_override_dict(model_name, fixed_caps)
+            override_dict = psm.utils.get_cap_override_dict(model_name, fixed_caps)
         else:
             override_dict = None
 
@@ -76,17 +87,6 @@ class ModelBase(calliope.Model):
         logger.debug(f'Model name: {self.model_name}, base directory: {self.base_dir}.')
         logger.debug(f'Override dict:\n{json.dumps(override_dict, indent=4)}')
         logger.debug(f'Time series inputs:\n{ts_data}\n')
-
-        # Some checks when running in operate mode
-        if run_mode == 'operate':
-            if fixed_caps is None:
-                logger.info(
-                    f'No fixed capacities passed into model call. '
-                    f'Reading fixed capacities from {model_name}/model.yaml'
-                )
-            if not allow_unmet:
-                raise ValueError('Must allow unmet demand when running in operate mode.')
-
 
     def _create_init_time_series(self, ts_data: pd.DataFrame) -> pd.DataFrame:
         """Create time series data for model initialisation.
@@ -118,7 +118,7 @@ class ModelBase(calliope.Model):
             )
 
         # Detect missing leap days -- reset index if so
-        if utils.has_missing_leap_days(ts_data_used):
+        if psm.utils.has_missing_leap_days(ts_data_used):  # pragma: no cover
             logger.warning('Missing leap days detected. Time series index reset to start in 2020.')
             ts_data_used.index = pd.date_range(
                 start='2020-01-01', periods=self.num_timesteps, freq='h'
@@ -129,6 +129,14 @@ class ModelBase(calliope.Model):
         ts_data_used.loc[:, demand_columns] = -ts_data_used.loc[:, demand_columns]
 
         return ts_data_used
+
+    def run(self):
+        """Run model to determine optimal solution."""
+        logger.info('Running model to determine optimal solution.')
+        super(ModelBase, self).run()
+        if not psm.utils.has_consistent_outputs(model=self):  # pragma: no cover
+            logger.critical('Model has inconsistent outputs. Check log files for details.')
+        logger.info('Done running model.')
 
 
 class OneRegionModel(ModelBase):
@@ -198,8 +206,8 @@ class OneRegionModel(ModelBase):
         )
 
         # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
+        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
@@ -343,14 +351,10 @@ class SixRegionModel(ModelBase):
         outputs.loc['demand_total'] = (outputs.loc[outputs.index.str.contains('demand')].sum())
 
         # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc['monetary'].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc['emissions'].sum())
+        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
 
         if as_dict:
             outputs = outputs['output'].to_dict()
 
         return outputs
-
-
-if __name__ == '__main__':
-    raise NotImplementedError()
