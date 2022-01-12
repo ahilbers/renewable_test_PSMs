@@ -7,11 +7,13 @@
 
 #### Summary
 
-This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
+<a href="https://www.youtube.com/watch?v=-dk3CVzaGew"> <img align="left" width="300" src="documentation/youtube_link.png"/> </a> 
 
-If you're looking for the tutorial given at the [workshop on climate forecasting for energy](https://s2s4e.eu/newsroom/climate-forecasting-for-energy-event), see [tutorial without installing](#tutorial-without-installing).
+This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models. 
 
-**Note**: This is a beta version that includes solar power. The original models (which contain only wind power but no solar), including tests, are available under the branch `2020_papers`. If you're coming here after reading a paper, that branch probably contains the code you're looking for.
+For a video introduction to energy system models, as well as a (slightly outdated) tutorial on this repo, see the video link on the left. For a very quick start, see [tutorial without installing](#tutorial-without-installing).
+
+**Note**: This is a relatively new version that includes solar power. The version of the models [used in papers](#use-in-papers) do not contain solar power and are available under the branch `2020_papers`.
 
 #### Rationale
 
