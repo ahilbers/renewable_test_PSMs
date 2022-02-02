@@ -97,7 +97,7 @@ def main():
         'output_save_dir': 'outputs',
         'save_full_model': True,
         'logging_level': 'INFO'
-    }
+    }  # Coded directly into Python for now -- can move to config file if desired
 
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']

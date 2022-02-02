@@ -38,7 +38,9 @@ def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cov
     return logger
 
 
-def load_time_series_data(model_name: str, path: str = 'data/demand_wind_solar.csv') -> pd.DataFrame:
+def load_time_series_data(
+    model_name: str, path: str = 'data/demand_wind_solar.csv'
+) -> pd.DataFrame:  # pragma: no cover
     """Load demand, wind and solar time series data for model.
 
     Parameters:
