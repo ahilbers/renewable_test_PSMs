@@ -16,7 +16,7 @@ def test_invalid_model_name():
         model = psm.models.ModelBase(model_name='invalid_name', ts_data=None, run_mode='plan')
 
 
-@pytest.mark.parametrize('model_name', ['1_region', '6_region'])
+@pytest.mark.parametrize('model_name', ['1_region'])  # TODO: Reactivate '6_region'
 class TestModels:
     """Test core model functionality and some options."""
 
@@ -73,8 +73,10 @@ class TestModels:
         with pytest.raises(AttributeError, match='Model outputs not yet calculated'):
             model.get_summary_outputs()
 
-        # Check that model runs and gives sensible outputs
+        # Check that model runs
         model.run()
+
+        # Checks on summary model outputs
         summary_outputs = model.get_summary_outputs()
         summary_outputs_dict = model.get_summary_outputs(as_dict=True)
         assert summary_outputs.loc['cost_total', 'output'] > 0.
@@ -84,6 +86,10 @@ class TestModels:
         if not allow_unmet:
             assert np.isclose(summary_outputs.loc['gen_unmet_total', 'output'], 0.)
         assert psm.utils.has_consistent_outputs(model)
+
+        # Check that model can produce timeseries outputs and that they make sense
+        ts_outputs = model.get_timeseries_outputs()
+        # TODO: Add more tests here
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
     def test_model_set_fixed_caps(self, run_mode: str):

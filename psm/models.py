@@ -5,6 +5,7 @@ import os
 import logging
 import typing
 import json
+import numpy as np
 import pandas as pd
 import calliope
 import psm.utils
@@ -167,7 +168,8 @@ class OneRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs.
+        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        system cost and carbon emissions.
         
         Parameters:
         -----------
@@ -214,6 +216,27 @@ class OneRegionModel(ModelBase):
 
         return outputs
 
+    def get_timeseries_outputs(self) -> pd.DataFrame:
+        """Get generation and transmission levels for each time step."""
+
+        ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+            ts_outputs[f'gen_{tech}'] = (
+                self.results.carrier_prod.loc[f'region1::{tech}::power'].values
+            )
+        ts_outputs['demand'] = - self.results.carrier_con.loc['region1::demand_power::power'].values
+
+        # Check that generation meets demand
+        assert np.allclose(
+            ts_outputs.filter(like='gen', axis=1).sum(axis=1), ts_outputs.loc[:, 'demand']
+        )
+
+        # TODO: Implement same method for 6 region model
+        # TODO: Add tests
+        # TODO: Add to scripts/main.py, jupyter notebook and documentation
+
+        return ts_outputs
+
 
 class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
@@ -243,7 +266,8 @@ class SixRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs.
+        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        system cost and carbon emissions.
         
         Parameters:
         -----------
