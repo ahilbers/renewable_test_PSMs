@@ -16,7 +16,7 @@ def test_invalid_model_name():
         model = psm.models.ModelBase(model_name='invalid_name', ts_data=None, run_mode='plan')
 
 
-@pytest.mark.parametrize('model_name', ['1_region'])  # TODO: Reactivate '6_region'
+@pytest.mark.parametrize('model_name', ['1_region', '6_region'])
 class TestModels:
     """Test core model functionality and some options."""
 
@@ -89,7 +89,12 @@ class TestModels:
 
         # Check that model can produce timeseries outputs and that they make sense
         ts_outputs = model.get_timeseries_outputs()
-        # TODO: Add more tests here
+        assert isinstance(ts_outputs, pd.DataFrame)
+        assert (ts_outputs.index == model.inputs.timesteps.values).all()
+        assert np.allclose(
+            ts_outputs.filter(like='gen', axis=1).sum(axis=1), 
+            ts_outputs.filter(like='demand', axis=1).sum(axis=1)
+        )  # Check generation matches demand in each time step
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
     def test_model_set_fixed_caps(self, run_mode: str):

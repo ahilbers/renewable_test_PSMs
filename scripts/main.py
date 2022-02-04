@@ -52,12 +52,13 @@ def run_model(config: dict, logger: logging.Logger = None):
     logger.info('Running model to determine optimal solution.')
     model.run()
     logger.info('Done running model.')
-    logger.info(f'Summary model outputs:\n\n{model.get_summary_outputs()}\n')
 
     # Save outputs to file
     output_save_dir = config['output_save_dir']
     model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
     logger.info(f'Saved summary model results to `{output_save_dir}`.')
+    model.get_timeseries_outputs().to_csv(f'{output_save_dir}/timeseries_outputs.csv')
+    logger.info(f'Saved time series model results to `{output_save_dir}`.')
     if config['save_full_model']:
         full_model_results_save_dir = f'{output_save_dir}/full_model_results'
         model.to_csv(full_model_results_save_dir)
@@ -85,7 +86,7 @@ def main():
     '''
 
     run_config = {
-        'model_name': '1_region',
+        'model_name': '6_region',
         'ts_first_period': '2017-06-01',
         'ts_last_period': '2017-06-07',
         'run_mode': 'plan',
@@ -96,11 +97,14 @@ def main():
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,
-        'logging_level': 'INFO'
-    }  # Coded directly into Python for now -- can move to config file if desired
+        'log_level_file': 'DEBUG',  # logging level for log file
+        'log_level_stdout': 'INFO',  # logging level for terminal
+    }  # Coded directly in Python for now -- can move to config file if desired
 
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
+    if os.path.exists(output_save_dir):
+        raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
     os.mkdir(output_save_dir)
 
     # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
