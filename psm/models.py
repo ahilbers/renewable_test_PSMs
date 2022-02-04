@@ -228,12 +228,6 @@ class OneRegionModel(ModelBase):
             )
         ts_outputs['demand'] = - self.results.carrier_con.loc['region1::demand_power::power'].values
 
-        # TODO: Add to scripts/main.py
-        # TODO: Add to jupyter notebook
-        # TODO: Add to documentation
-
-        # TODO: Add to scripts/main.py, jupyter notebook and documentation
-
         return ts_outputs
 
 
