@@ -1,6 +1,7 @@
+import sys
 import logging
-import re
 import json
+import numpy as np
 import pandas as pd
 import calliope
 
@@ -21,7 +22,7 @@ def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cov
 
     # Create the master logger and formatter
     logger = logging.getLogger(name=name)
-    logger.setLevel(level=getattr(logging, run_config['logging_level']))
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         fmt='%(asctime)s - %(levelname)-8s - %(name)s - %(filename)s - %(message)s',
         datefmt='%Y-%m-%d,%H:%M:%S'
@@ -30,15 +31,19 @@ def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cov
     # Create two handlers: one writes to a log file, the other to stdout
     logger_file = logging.FileHandler(f'{output_save_dir}/model_run.log')
     logger_file.setFormatter(fmt=formatter)
+    logger_file.setLevel(level=getattr(logging, run_config['log_level_file']))
     logger.addHandler(hdlr=logger_file)
-    logger_stdout = logging.StreamHandler()
+    logger_stdout = logging.StreamHandler(sys.stdout)
     logger_stdout.setFormatter(fmt=formatter)
+    logger_stdout.setLevel(level=getattr(logging, run_config['log_level_stdout']))
     logger.addHandler(hdlr=logger_stdout)
 
     return logger
 
 
-def load_time_series_data(model_name: str, path: str = 'data/demand_wind_solar.csv') -> pd.DataFrame:
+def load_time_series_data(
+    model_name: str, path: str = 'data/demand_wind_solar.csv'
+) -> pd.DataFrame:  # pragma: no cover
     """Load demand, wind and solar time series data for model.
 
     Parameters:
@@ -225,7 +230,8 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
     costs = _get_technology_info(model=model)
     techs = list(costs.index)
 
-    out = model.get_summary_outputs()
+    sum_out = model.get_summary_outputs()
+    ts_out = model.get_timeseries_outputs()
     res = model.results
 
     # Normalise install costs to same temporal scale as generation costs
@@ -236,9 +242,9 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
         for tech in techs:
             if tech == 'unmet':
                 continue  # Unmet demand doesn't have meaningful install cost
-            cost_v1 = corrfac * float(costs.loc[tech, 'install'] * out.loc[f'cap_{tech}_total'])
+            cost_v1 = corrfac * float(costs.loc[tech, 'install'] * sum_out.loc[f'cap_{tech}_total'])
             cost_v2 = float(res.cost_investment.loc['monetary', f'region1::{tech}'])
-            if abs(cost_v1 - cost_v2) > 0.1:
+            if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
                 logger.error(
                     f'Cannot recreate {tech} install costs -- manual: {cost_v1}, model: {cost_v2}.'
                 )
@@ -247,9 +253,9 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
 
     # Test if generation costs are consistent
     for tech in techs:
-        cost_v1 = float(costs.loc[tech, 'generation'] * out.loc[f'gen_{tech}_total'])
+        cost_v1 = float(costs.loc[tech, 'generation'] * sum_out.loc[f'gen_{tech}_total'])
         cost_v2 = float(res.cost_var.loc['monetary', f'region1::{tech}'].sum())
-        if abs(cost_v1 - cost_v2) > 0.1:
+        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate {tech} generation costs -- manual: {cost_v1}, model: {cost_v2}.'
             )
@@ -259,7 +265,7 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
     # Test if total costs are consistent
     if model.run_mode == 'plan':
         cost_total_v2 = float(res.cost.loc['monetary'].sum())
-        if abs(cost_total_v1 - cost_total_v2) > 0.1:
+        if not np.isclose(cost_total_v1, cost_total_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate system cost -- manual: {cost_total_v1}, model: {cost_total_v2}.'
             )
@@ -267,9 +273,9 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
 
     # Test if emissions are consistent
     for tech in techs:
-        emission_v1 = float(costs.loc[tech, 'emissions'] * out.loc[f'gen_{tech}_total'])
+        emission_v1 = float(costs.loc[tech, 'emissions'] * sum_out.loc[f'gen_{tech}_total'])
         emission_v2 = float(res.cost_var.loc['emissions', f'region1::{tech}'].sum())
-        if abs(cost_v1 - cost_v2) > 0.1:
+        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate {tech} emissions -- manual: {emission_v1}, model: {emission_v2}.'
             )
@@ -277,12 +283,25 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
         cost_total_v1 += cost_v1
 
     # Test if supply matches demand
-    generation_total = float(out.filter(regex='gen_.*_total', axis=0).sum())
-    demand_total = float(out.loc['demand_total'])
-    if abs(generation_total - demand_total) > 0.1:
+    generation_total = float(sum_out.filter(regex='gen_.*_total', axis=0).sum())
+    demand_total = float(sum_out.loc['demand_total'])
+    if not np.isclose(generation_total, demand_total, rtol=0., atol=0.1):
         logger.error(
             f'Supply-demand mismatch -- generation: {generation_total}, demand: {demand_total}.'
         )
+        passing = False
+
+    # Test that generation levels are all nonnegative and add up to the demand
+    if not (ts_out.filter(like='gen', axis=1) >= 0).all().all():
+        logger.error(f'Some generation/demand levels are negative:\n\n{ts_out}\n.')
+        passing = False
+    if not np.allclose(
+        ts_out.filter(like='gen', axis=1).sum(axis=1),
+        ts_out.filter(like='demand', axis=1).sum(axis=1),
+        rtol=0.,
+        atol=0.1
+    ):
+        logger.error(f'Generation does not add up to demand:\n\n{ts_out}\n.')
         passing = False
 
     return passing
@@ -302,13 +321,15 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
 
     costs = _get_technology_info(model=model)
 
-    out = model.get_summary_outputs()
+    sum_out = model.get_summary_outputs()
+    ts_out = model.get_timeseries_outputs()
     res = model.results
 
     # Normalise install costs to same temporal scale as generation costs
     corrfac = model.num_timesteps / 8760
 
     # Get list of tech-location pairs
+    regions = list(model._model_run['locations'].keys())
     tech_locations = [i.split('_') for i in costs.index]
     generation_tech_locations = [i for i in tech_locations if i[0] != 'transmission']
     transmission_tech_locations = [i for i in tech_locations if i[0] == 'transmission']
@@ -319,10 +340,10 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
             if tech == 'unmet':
                 continue  # Unmet demand doesn't have meaningful install cost
             cost_v1 = corrfac * float(
-                costs.loc[f'{tech}_{region}', 'install'] * out.loc[f'cap_{tech}_{region}']
+                costs.loc[f'{tech}_{region}', 'install'] * sum_out.loc[f'cap_{tech}_{region}']
             )
             cost_v2 = float(res.cost_investment.loc['monetary', f'{region}::{tech}_{region}'])
-            if abs(cost_v1 - cost_v2) > 0.1:
+            if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
                 logger.error(
                     f'Cannot recreate {tech} install costs in {region} -- '
                     f'manual: {cost_v1}, model: {cost_v2}.'
@@ -335,14 +356,14 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
         for tech, region, region_to in transmission_tech_locations:
             cost_v1 = corrfac * float(
                 costs.loc[f'{tech}_{region}_{region_to}', 'install'] 
-                * out.loc[f'cap_transmission_{region}_{region_to}']
+                * sum_out.loc[f'cap_transmission_{region}_{region_to}']
             )
             cost_v2 = 2 * float(
                 res.cost_investment.loc[
                     'monetary', f'{region}::{tech}_{region}_{region_to}:{region_to}'
                 ]
             )
-            if abs(cost_v1 - cost_v2) > 0.1:
+            if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
                 logger.error(
                     f'Cannot recreate {tech} install costs from {region} to {region_to} -- '
                     f'manual: {cost_v1}, model: {cost_v2}.'
@@ -353,10 +374,10 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
     # Test if generation costs are consistent
     for tech, region in generation_tech_locations:
         cost_v1 = float(
-            costs.loc[f'{tech}_{region}', 'generation'] * out.loc[f'gen_{tech}_{region}']
+            costs.loc[f'{tech}_{region}', 'generation'] * sum_out.loc[f'gen_{tech}_{region}']
         )
         cost_v2 = float(res.cost_var.loc['monetary', f'{region}::{tech}_{region}'].sum())
-        if abs(cost_v1 - cost_v2) > 0.1:
+        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate {tech} generation costs in {region} -- '
                 f'manual: {cost_v1}, model: {cost_v2}.'
@@ -367,7 +388,7 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
     # Test if total costs are consistent
     if model.run_mode == 'plan':
         cost_total_v2 = float(res.cost.loc['monetary'].sum())
-        if abs(cost_total_v1 - cost_total_v2) > 0.1:
+        if not np.isclose(cost_total_v1, cost_total_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate system cost -- manual: {cost_total_v1}, model: {cost_total_v2}.'
             )
@@ -376,10 +397,10 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
     # Test if emissions are consistent
     for tech, region in generation_tech_locations:
         emission_v1 = float(
-            costs.loc[f'{tech}_{region}', 'emissions'] * out.loc[f'gen_{tech}_{region}']
+            costs.loc[f'{tech}_{region}', 'emissions'] * sum_out.loc[f'gen_{tech}_{region}']
         )
         emission_v2 = float(res.cost_var.loc['emissions', f'{region}::{tech}_{region}'].sum())
-        if abs(cost_v1 - cost_v2) > 0.1:
+        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
             logger.error(
                 f'Cannot recreate {tech} emissions in {region} -- '
                 f'manual: {emission_v1}, model: {emission_v2}.'
@@ -388,13 +409,47 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
         cost_total_v1 += cost_v1
 
     # Test if supply matches demand
-    generation_total = float(out.filter(regex='gen_.*_region.*', axis=0).sum())
-    demand_total = float(out.loc['demand_total'])
-    if abs(generation_total - demand_total) > 0.1:
+    generation_total = float(sum_out.filter(regex='gen_.*_region.*', axis=0).sum())
+    demand_total = float(sum_out.loc['demand_total'])
+    if not np.isclose(generation_total, demand_total, rtol=0., atol=0.1):
         logger.error(
             f'Supply-demand mismatch -- generation: {generation_total}, demand: {demand_total}.'
         )
         passing = False
+
+    # Test that generation levels are all nonnegative and add up to the demand
+    if not (ts_out.filter(like='gen', axis=1) >= 0).all().all():
+        logger.error(f'Some generation/demand levels are negative:\n\n{ts_out}\n.')
+        passing = False
+    if not np.allclose(
+        ts_out.filter(like='gen', axis=1).sum(axis=1),
+        ts_out.filter(like='demand', axis=1).sum(axis=1),
+        rtol=0.,
+        atol=0.1
+    ):
+        logger.error(f'Generation does not add up to demand:\n\n{ts_out}\n.')
+        passing = False
+
+    # Test regional power balance: generation equals demand + transmission out of region
+    for region in regions:
+        generation_total_region = ts_out.filter(regex=f'gen_.*_{region}', axis=1).sum(axis=1)
+        demand_total_region = ts_out.filter(regex=f'demand_{region}', axis=1).sum(axis=1)
+        transmission_total_from_region = (
+            ts_out.filter(regex=f'transmission_{region}_region.*', axis=1).sum(axis=1)
+            - ts_out.filter(regex=f'transmission_region.*_{region}', axis=1).sum(axis=1)
+        )
+        if not np.allclose(
+            generation_total_region, 
+            demand_total_region + transmission_total_from_region, 
+            rtol=0., 
+            atol=0.1
+        ):
+            balance_info = pd.DataFrame()
+            balance_info['generation'] = generation_total_region
+            balance_info['demand'] = demand_total_region
+            balance_info['transmission_out'] = transmission_total_from_region
+            logger.error(f'Power balance not satisfied in {region}:\n\n{balance_info}\n.')
+            passing = False
 
     return passing
 
@@ -407,6 +462,7 @@ def has_consistent_outputs(model: calliope.Model) -> bool:  # pragma: no cover
     -----------
     model: instance of OneRegionModel or SixRegionModel
     """
+
     if model.model_name == '1_region':
         return _has_consistent_outputs_1_region(model=model)
     elif model.model_name == '6_region':

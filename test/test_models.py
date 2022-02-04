@@ -73,8 +73,10 @@ class TestModels:
         with pytest.raises(AttributeError, match='Model outputs not yet calculated'):
             model.get_summary_outputs()
 
-        # Check that model runs and gives sensible outputs
+        # Check that model runs
         model.run()
+
+        # Checks on summary model outputs
         summary_outputs = model.get_summary_outputs()
         summary_outputs_dict = model.get_summary_outputs(as_dict=True)
         assert summary_outputs.loc['cost_total', 'output'] > 0.
@@ -84,6 +86,15 @@ class TestModels:
         if not allow_unmet:
             assert np.isclose(summary_outputs.loc['gen_unmet_total', 'output'], 0.)
         assert psm.utils.has_consistent_outputs(model)
+
+        # Check that model can produce timeseries outputs and that they make sense
+        ts_outputs = model.get_timeseries_outputs()
+        assert isinstance(ts_outputs, pd.DataFrame)
+        assert (ts_outputs.index == model.inputs.timesteps.values).all()
+        assert np.allclose(
+            ts_outputs.filter(like='gen', axis=1).sum(axis=1), 
+            ts_outputs.filter(like='demand', axis=1).sum(axis=1)
+        )  # Check generation matches demand in each time step
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
     def test_model_set_fixed_caps(self, run_mode: str):

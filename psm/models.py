@@ -5,6 +5,7 @@ import os
 import logging
 import typing
 import json
+import numpy as np
 import pandas as pd
 import calliope
 import psm.utils
@@ -134,6 +135,8 @@ class ModelBase(calliope.Model):
         """Run model to determine optimal solution."""
         logger.info('Running model to determine optimal solution.')
         super(ModelBase, self).run()
+        logger.debug(f'Model summary outputs:\n\n{self.get_summary_outputs()}\n')
+        logger.debug(f'Model time series outputs:\n\n{self.get_timeseries_outputs()}\n')
         if not psm.utils.has_consistent_outputs(model=self):  # pragma: no cover
             logger.critical('Model has inconsistent outputs. Check log files for details.')
         logger.info('Done running model.')
@@ -167,7 +170,8 @@ class OneRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs.
+        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        system cost and carbon emissions.
         
         Parameters:
         -----------
@@ -214,6 +218,18 @@ class OneRegionModel(ModelBase):
 
         return outputs
 
+    def get_timeseries_outputs(self) -> pd.DataFrame:
+        """Get generation and transmission levels for each time step."""
+
+        ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+            ts_outputs[f'gen_{tech}'] = (
+                self.results.carrier_prod.loc[f'region1::{tech}::power'].values
+            )
+        ts_outputs['demand'] = - self.results.carrier_con.loc['region1::demand_power::power'].values
+
+        return ts_outputs
+
 
 class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
@@ -243,7 +259,8 @@ class SixRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs.
+        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        system cost and carbon emissions.
         
         Parameters:
         -----------
@@ -358,3 +375,51 @@ class SixRegionModel(ModelBase):
             outputs = outputs['output'].to_dict()
 
         return outputs
+
+    def get_timeseries_outputs(self) -> pd.DataFrame:
+        """Get generation and transmission levels for each time step."""
+
+        ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
+
+        # Insert time series outputs at regional level. Loop over all techs and regions -- if a tech
+        # doesn't appear in a region, then ignore it -- done by the 'pass' in case of KeyError
+        for region in [f'region{i+1}' for i in range(6)]:
+
+            # Generation levels
+            for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+                try:
+                    ts_outputs[f'gen_{tech}_{region}'] = (
+                        self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'].values
+                    )
+                except KeyError:
+                    pass  # If this tech doesn't appear in this region, ignore it
+
+            # Transmission levels
+            for tech in ['transmission']:
+                for region_to in [f'region{i+1}' for i in range(6)]:
+                    # No double counting of links -- one way only
+                    if int(region[-1]) < int(region_to[-1]):
+                        try:
+                            results_key_forward = (
+                                f'{region}::transmission_{region}_{region_to}:{region_to}::power'
+                            )
+                            results_key_reverse = (
+                                f'{region_to}::transmission_{region}_{region_to}:{region}::power'
+                            )
+                            net_transmission = (
+                                - self.results.carrier_prod.loc[results_key_forward].values
+                                + self.results.carrier_prod.loc[results_key_reverse].values
+                            )  # Net transmission levels into this node
+                            ts_outputs[f'transmission_{region}_{region_to}'] = net_transmission
+                        except KeyError:
+                            pass  # If no transmission link between these regions, ignore it
+
+            # Demand levels
+            try:
+                ts_outputs[f'demand_{region}'] = (
+                    - self.results.carrier_con.loc[f'{region}::demand_power::power'].values
+                )
+            except KeyError:
+                pass  # If no demand in this region, ignore it
+
+        return ts_outputs
