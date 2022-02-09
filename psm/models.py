@@ -213,6 +213,8 @@ class OneRegionModel(ModelBase):
         outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
         outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
 
+        outputs.loc['solution_time'] = float(self.results.solution_time)
+
         if as_dict:
             outputs = outputs['output'].to_dict()
 
@@ -370,6 +372,8 @@ class SixRegionModel(ModelBase):
         # Insert total system cost and carbon emissions
         outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
         outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
+
+        outputs.loc['solution_time'] = float(self.results.solution_time)
 
         if as_dict:
             outputs = outputs['output'].to_dict()
