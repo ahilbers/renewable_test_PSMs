@@ -22,7 +22,7 @@ def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cov
 
     # Create the master logger and formatter
     logger = logging.getLogger(name=name)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)  # Set master to lowest level -- gets overwritten by handlers
     formatter = logging.Formatter(
         fmt='%(asctime)s - %(levelname)-8s - %(name)s - %(filename)s - %(message)s',
         datefmt='%Y-%m-%d,%H:%M:%S'
