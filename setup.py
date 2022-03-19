@@ -3,7 +3,7 @@ import distutils.core
 
 
 distutils.core.setup(
-    name='Renewable Test PSMs',
+    name='psm',
     version='0.1.0',
     author='Adriaan Hilbers',
     author_email='a.hilbers@icloud.com',
