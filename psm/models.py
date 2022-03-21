@@ -223,6 +223,9 @@ class OneRegionModel(ModelBase):
     def get_timeseries_outputs(self) -> pd.DataFrame:
         """Get generation and transmission levels for each time step."""
 
+        if not hasattr(self, 'results'):
+            raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
+
         ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             ts_outputs[f'gen_{tech}'] = (
@@ -382,6 +385,9 @@ class SixRegionModel(ModelBase):
 
     def get_timeseries_outputs(self) -> pd.DataFrame:
         """Get generation and transmission levels for each time step."""
+
+        if not hasattr(self, 'results'):
+            raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
         ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
 
