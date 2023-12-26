@@ -41,7 +41,7 @@ overrides:
         techs:
             # cyclic storage doesn't work in operate mode since we solve problems in horizons and
             # windows -- so start with 0 storage and finish with 0 storage for energy conservation
-            storage.constraints.storage_initial: 0
+            storage_.constraints.storage_initial: 0
         locations:
             # these values can be overwritten by `fixed_caps` when initialising model in python
             region1:

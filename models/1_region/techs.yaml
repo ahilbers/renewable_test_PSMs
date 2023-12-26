@@ -1,3 +1,4 @@
+
 techs:
 # plant lifetimes used only calculating cost - plants do not close after 1 yr
     baseload:
@@ -58,6 +59,17 @@ techs:
                 interest_rate: 0
             emissions:
                 om_prod: 0  # gCO2 per KWh
+    storage_:
+        essentials:
+            carrier: power
+            name: storage_
+            parent: storage
+        constraints:
+            lifetime: 1  # yr
+            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_eff: 0.95  # Square this number for round trip efficiency
+            storage_loss: 0.00001  # Fraction of energy charge lost per hour
+            storage_initial: 0.  # Initial storage level, fraction of energy capacity            
     unmet:
         essentials:
             carrier_out: power
