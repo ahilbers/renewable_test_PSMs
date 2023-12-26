@@ -87,29 +87,43 @@ Hence, to run a simulation, you'll have to install this package (the python file
 
 #### Installing this package
 
-A key package used in this repo is [Calliope](https://www.callio.pe/), an open-source energy modelling framework. At the time of writing, the newest version of Calliope is `0.6.7`, which experiences bugs when installed with python `3.9` or higher. Hence, we recommend installing this package into python `3.8`. As usual, doing this via a virtual environment is recommended. From there, run
+A key package used in this repo is [Calliope](https://www.callio.pe/), an open-source energy modelling framework. At the time of writing, the newest version of Calliope is `0.6.10`, which works with python `3.11` and may also work with other versions.
+
+With python `3.11` as the default, you can install this package via:
 
 ```
 pip install -e .
 ```
 
+If there are issues, you can also install Calliope via the instructions in the official [project website](https://callio.pe).
+
 
 #### Installing a solver
 
-We recommend using [CBC](https://projects.coin-or.org/Cbc), which is open source and free-to-use. If you have `conda`, you can install it via
+We recommend using [CBC](https://projects.coin-or.org/Cbc), which is open source and free-to-use. If you have `homebrew` on mac, you can install it via
 
 ```
-conda install -c conda-forge coincbc
+brew install coin-or-tools/coinor/cbc
 ```
 
-If not, see install instructions for your system on the [project website](https://projects.coin-or.org/Cbc). 
+If not, see install instructions for your system on the [project website](https://projects.coin-or.org/Cbc).
 
 [Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
 #### Running the tests
-This repo contains some unit tests, located in the `test` directory. You can run all unit tests by
-calling `pytest` from a command line. To do this, you'll need to have [pytest-cov](https://pypi.org/project/pytest-cov/) installed.
+This repo contains some unit tests, located in the `test` directory. You can run all unit tests by calling `pytest` from a command line.
+
+
+#### Troubleshooting
+- If you get errors like "no executable named `cbc`", the solver `cbc` isn't found. You need to add it to the path of searched executables. If you installed it via `brew` on a mac, the following might help:
+
+```
+PATH="/usr/local/opt/cbc/bin:$PATH"
+export PATH
+```
+
+where you should change the `/usr/local/opt/cbc` to the location that `cbc` was installed in (this is shown in the terminal when installing it). You can add this snippet of text to e.g. your `.zshrc` file, or the equivalent file for your virtual environment (e.g. `.venv/bin/activate`).
 
 
 

@@ -1,3 +1,6 @@
+numpy
 pandas
 jupyterlab
-calliope==0.6.7
+pytest-cov
+calliope==0.6.10
+
