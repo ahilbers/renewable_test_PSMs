@@ -243,7 +243,6 @@ techs:
 
 
     # Transmission
-
     transmission_region1_region2:
         essentials:
             carrier: power
@@ -328,3 +327,50 @@ techs:
             monetary:
                 interest_rate: 0
                 energy_cap: 100.56  # GBP per KW
+
+    # Storage
+    storage_region2:
+        essentials:
+            carrier: power
+            name: storage_region2
+            parent: storage
+        constraints:
+            lifetime: 1
+            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_eff: 0.95002  # Square this number for round trip efficiency
+            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_initial: 0.  # Initial storage level, fraction of energy capacity
+        costs:
+            monetary:
+                storage_cap: 1.002  # GBP per KWh
+                interest_rate: 0
+    storage_region5:
+        essentials:
+            carrier: power
+            name: storage_region5
+            parent: storage
+        constraints:
+            lifetime: 1
+            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_eff: 0.95005  # Square this number for round trip efficiency
+            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_initial: 0.  # Initial storage level, fraction of energy capacity
+        costs:
+            monetary:
+                storage_cap: 1.005  # GBP per KWh
+                interest_rate: 0
+    storage_region6:
+        essentials:
+            carrier: power
+            name: storage_region6
+            parent: storage
+        constraints:
+            lifetime: 1
+            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_eff: 0.95006  # Square this number for round trip efficiency
+            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_initial: 0.  # Initial storage level, fraction of energy capacity
+        costs:
+            monetary:
+                storage_cap: 1.006  # GBP per KWh
+                interest_rate: 0
