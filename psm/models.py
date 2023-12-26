@@ -5,7 +5,6 @@ import os
 import logging
 import typing
 import json
-import numpy as np
 import pandas as pd
 import calliope
 import psm.utils
@@ -18,14 +17,14 @@ class ModelBase(calliope.Model):
     """Base power system model class."""
 
     def __init__(
-        self, 
-        model_name: str, 
-        ts_data: pd.DataFrame, 
+        self,
+        model_name: str,
+        ts_data: pd.DataFrame,
         run_mode: str,
-        baseload_integer: bool = False, 
+        baseload_integer: bool = False,
         baseload_ramping: bool = False,
-        allow_unmet: bool = False, 
-        fixed_caps: dict = None, 
+        allow_unmet: bool = False,
+        fixed_caps: dict = None,
         extra_override: str = None,
         run_id=0
     ):
@@ -47,7 +46,7 @@ class ModelBase(calliope.Model):
 
         if model_name not in ['1_region', '6_region']:
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
-        
+
         # Some checks when running in operate mode
         if run_mode == 'operate':
             if fixed_caps is None:
@@ -91,7 +90,7 @@ class ModelBase(calliope.Model):
 
     def _create_init_time_series(self, ts_data: pd.DataFrame) -> pd.DataFrame:
         """Create time series data for model initialisation.
-        
+
         Parameters:
         -----------
         ts_data: time series data loaded from CSV
@@ -108,7 +107,7 @@ class ModelBase(calliope.Model):
             expected_columns = ['demand', 'wind', 'solar']
         elif self.model_name == '6_region':
             expected_columns = [
-                'demand_region2', 'demand_region4', 'demand_region5', 
+                'demand_region2', 'demand_region4', 'demand_region5',
                 'wind_region2', 'wind_region5', 'wind_region6',
                 'solar_region2', 'solar_region5', 'solar_region6'
             ]
@@ -147,12 +146,12 @@ class OneRegionModel(ModelBase):
 
     def __init__(
         self,
-        ts_data: pd.DataFrame, 
+        ts_data: pd.DataFrame,
         run_mode: str,
-        baseload_integer: bool = False, 
+        baseload_integer: bool = False,
         baseload_ramping: bool = False,
-        allow_unmet: bool = False, 
-        fixed_caps: dict = None, 
+        allow_unmet: bool = False,
+        fixed_caps: dict = None,
         extra_override: str = None,
         run_id=0
     ):
@@ -172,7 +171,7 @@ class OneRegionModel(ModelBase):
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
         """Return selection of key model outputs: capacities, total generation levels, total demand,
         system cost and carbon emissions.
-        
+
         Parameters:
         -----------
         as_dict: return dictionary instead of DataFrame
@@ -240,13 +239,13 @@ class SixRegionModel(ModelBase):
     """Instance of 6-region power system model."""
 
     def __init__(
-        self, 
-        ts_data: pd.DataFrame, 
+        self,
+        ts_data: pd.DataFrame,
         run_mode: str,
-        baseload_integer: bool = False, 
+        baseload_integer: bool = False,
         baseload_ramping: bool = False,
-        allow_unmet: bool = False, 
-        fixed_caps: dict = None, 
+        allow_unmet: bool = False,
+        fixed_caps: dict = None,
         extra_override: str = None,
         run_id=0
     ):
@@ -266,7 +265,7 @@ class SixRegionModel(ModelBase):
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
         """Return selection of key model outputs: capacities, total generation levels, total demand,
         system cost and carbon emissions.
-        
+
         Parameters:
         -----------
         as_dict: return dictionary instead of DataFrame
@@ -326,7 +325,7 @@ class SixRegionModel(ModelBase):
                 try:
                     outputs.loc[f'gen_{tech}_{region}'] = float(
                         (
-                            self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'] 
+                            self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power']
                             * self.inputs.timestep_weights
                         ).sum()
                     )
@@ -354,7 +353,7 @@ class SixRegionModel(ModelBase):
             outputs.loc[outputs.index.str.contains('peak_unmet')].sum()
         )
 
-        # Insert total peak unmet demand -- not necessarily equal to peak_unmet_total. Total unmet 
+        # Insert total peak unmet demand -- not necessarily equal to peak_unmet_total. Total unmet
         # capacity sums peak unmet demand across regions, this is systemwide peak unmet demand
         outputs.loc['peak_unmet_systemwide'] = float(
             self.results.carrier_prod

@@ -11,7 +11,7 @@ logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be c
 
 def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cover
     """Get a logger to use throughout the codebase.
-    
+
     Parameters:
     -----------
     name: logger name
@@ -55,7 +55,7 @@ def load_time_series_data(
     ts_data = pd.read_csv(path, index_col=0)
     ts_data = ts_data.clip(lower=0.)  # Trim negative values, can come from floating point error
     ts_data.index = pd.to_datetime(ts_data.index)
-    
+
     # If 1_region model, take demand, wind and solar from region 5
     if model_name == '1_region':
         ts_data = ts_data.loc[:, ['demand_region5', 'wind_region5', 'solar_region5']]
@@ -177,7 +177,7 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
 
 def _get_technology_info(model: calliope.Model) -> pd.DataFrame:
     """Get technology install & generation costs and emissions from model config."""
-    
+
     model_dict = model._model_run
     costs = pd.DataFrame(columns=['install', 'generation', 'emissions'], dtype='float')
     regions = list(model_dict['locations'].keys())
@@ -355,7 +355,7 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
     if model.run_mode == 'plan':
         for tech, region, region_to in transmission_tech_locations:
             cost_v1 = corrfac * float(
-                costs.loc[f'{tech}_{region}_{region_to}', 'install'] 
+                costs.loc[f'{tech}_{region}_{region_to}', 'install']
                 * sum_out.loc[f'cap_transmission_{region}_{region_to}']
             )
             cost_v2 = 2 * float(
@@ -439,9 +439,9 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
             - ts_out.filter(regex=f'transmission_region.*_{region}', axis=1).sum(axis=1)
         )
         if not np.allclose(
-            generation_total_region, 
-            demand_total_region + transmission_total_from_region, 
-            rtol=0., 
+            generation_total_region,
+            demand_total_region + transmission_total_from_region,
+            rtol=0.,
             atol=0.1
         ):
             balance_info = pd.DataFrame()
