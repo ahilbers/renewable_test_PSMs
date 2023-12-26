@@ -1,3 +1,5 @@
+numpy
 pandas
 jupyterlab
-calliope==0.6.7
+calliope==0.6.10
+
