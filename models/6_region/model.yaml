@@ -1,5 +1,5 @@
 import:
-    - 'techs.yaml' 
+    - 'techs.yaml'
     - 'locations.yaml'
 
 model:
@@ -17,6 +17,8 @@ overrides:
     plan:
     # planning mode -- determine capacities
         run.mode: plan
+        # finish time series with same storage as at beginning
+        run.cyclic_storage: False
     continuous:
     # continuous baseload capacity
         techs.baseload_region1.constraints.energy_cap_max: inf
@@ -44,6 +46,12 @@ overrides:
             # maximise scheduling horizon
                 horizon: 332880  # hours
                 window: 332880  # hours
+        techs:
+            # cyclic storage doesn't work in operate mode since we solve problems in horizons and
+            # windows -- so start with 0 storage and finish with 0 storage for energy conservation
+            storage_region2.constraints.storage_initial: 0
+            storage_region5.constraints.storage_initial: 0
+            storage_region6.constraints.storage_initial: 0
         locations:
             region1:
                 techs.baseload_region1.constraints.energy_cap_equals: 21
@@ -51,6 +59,8 @@ overrides:
             region2:
                 techs.wind_region2.constraints.resource_area_equals: 32
                 techs.solar_region2.constraints.resource_area_equals: 32
+                techs.storage_region2.constraints.storage_cap_equals: 52
+                techs.storage_region2.constraints.energy_cap_equals: 100
                 techs.unmet_region2.constraints.energy_cap_equals: 1e10
             region3:
                 techs.baseload_region3.constraints.energy_cap_equals: 23
@@ -60,12 +70,16 @@ overrides:
             region5:
                 techs.wind_region5.constraints.resource_area_equals: 35
                 techs.solar_region5.constraints.resource_area_equals: 35
+                techs.storage_region5.constraints.storage_cap_equals: 55
+                techs.storage_region5.constraints.energy_cap_equals: 100
                 techs.unmet_region5.constraints.energy_cap_equals: 1e10
             region6:
                 techs.baseload_region6.constraints.energy_cap_equals: 26
                 techs.peaking_region6.constraints.energy_cap_equals: 36
                 techs.wind_region6.constraints.resource_area_equals: 36
                 techs.solar_region6.constraints.resource_area_equals: 36
+                techs.storage_region6.constraints.storage_cap_equals: 55
+                techs.storage_region6.constraints.energy_cap_equals: 100
         links:
             region1,region2:
                 techs.transmission_region1_region2.constraints.energy_cap_equals: 12
