@@ -112,8 +112,7 @@ If not, see install instructions for your system on the [project website](https:
 
 
 #### Running the tests
-This repo contains some unit tests, located in the `test` directory. You can run all unit tests by
-calling `pytest` from a command line. To do this, you'll need to have [pytest-cov](https://pypi.org/project/pytest-cov/) installed.
+This repo contains some unit tests, located in the `test` directory. You can run all unit tests by calling `pytest` from a command line.
 
 
 #### Troubleshooting
