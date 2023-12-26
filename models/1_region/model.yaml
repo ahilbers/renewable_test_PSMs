@@ -1,5 +1,5 @@
 import:
-    - 'techs.yaml' 
+    - 'techs.yaml'
     - 'locations.yaml'
 
 model:
@@ -17,6 +17,8 @@ overrides:
     plan:
     # planning mode -- determine capacities
         run.mode: plan
+        # finish time series with same storage as at beginning
+        run.cyclic_storage: False
     continuous:
     # continuous baseload capacity
         techs.baseload.constraints.energy_cap_max: inf
@@ -36,6 +38,10 @@ overrides:
                 # maximise scheduling horizon
                 horizon: 332880  # hours
                 window: 332880  # hours
+        techs:
+            # cyclic storage doesn't work in operate mode since we solve problems in horizons and
+            # windows -- so start with 0 storage and finish with 0 storage for energy conservation
+            storage.constraints.storage_initial: 0
         locations:
             # these values can be overwritten by `fixed_caps` when initialising model in python
             region1:
@@ -43,6 +49,8 @@ overrides:
                 techs.peaking.constraints.energy_cap_equals: 20
                 techs.wind.constraints.resource_area_equals: 30
                 techs.solar.constraints.resource_area_equals: 10
+                techs.storage.constraints.storage_cap_equals: 50
+                techs.storage.constraints.energy_cap_equals: 100
                 techs.unmet.constraints.energy_cap_equals: 1e10
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr
