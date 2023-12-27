@@ -5,6 +5,7 @@ import os
 import logging
 import typing
 import json
+import numpy as np
 import pandas as pd
 import calliope
 import psm.utils
@@ -40,8 +41,8 @@ class ModelBase(calliope.Model):
         baseload_ramping: enforce baseload ramping constraint
         allow_unmet: allow unmet demand in 'plan' mode (should always be allowed in 'operate' mode)
         fixed_caps: fixed capacities as override
-        extra_override (str) : name of additional override, should be defined in  `.../model.yaml`
-        run_id (int) : unique model ID, useful if multiple models are run in parallel
+        extra_override: name of additional override, should be defined in  `.../model.yaml`
+        run_id: unique model ID, useful if multiple models are run in parallel
         """
 
         if model_name not in ['1_region', '6_region']:
@@ -60,7 +61,7 @@ class ModelBase(calliope.Model):
         self.model_name = model_name
         self.run_mode = run_mode
         self.run_id = run_id
-        self.base_dir = os.path.join('models', model_name)
+        self.base_dir = f'{os.path.dirname(__file__)}/../models/{model_name}'
         self.num_timesteps = ts_data.shape[0]
 
         # Create scenarios and overrides
@@ -72,6 +73,7 @@ class ModelBase(calliope.Model):
         else:
             override_dict = None
 
+        # Create the time series inputs and the model
         ts_data = self._create_init_time_series(ts_data)
         super(ModelBase, self).__init__(
             config=os.path.join(self.base_dir, 'model.yaml'),
@@ -180,57 +182,153 @@ class OneRegionModel(ModelBase):
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
+        inp = self.inputs  # Calliope model inputs
+        res = self.results  # Calliope model results
         outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
 
         # Insert installed capacities
-        outputs.loc['cap_baseload_total'] = float(self.results.energy_cap.loc['region1::baseload'])
-        outputs.loc['cap_peaking_total'] = float(self.results.energy_cap.loc['region1::peaking'])
-        outputs.loc['cap_wind_total'] = float(self.results.resource_area.loc['region1::wind'])
-        outputs.loc['cap_solar_total'] = float(self.results.resource_area.loc['region1::solar'])
-        outputs.loc['peak_unmet_total'] = (
-            float(self.results.carrier_prod.loc['region1::unmet::power'].max())
-        )  # Equal to peak unmet demand
+        outputs.loc['cap_baseload_total'] = float(res.energy_cap.loc['region1::baseload'])
+        outputs.loc['cap_peaking_total'] = float(res.energy_cap.loc['region1::peaking'])
+        outputs.loc['cap_wind_total'] = float(res.resource_area.loc['region1::wind'])
+        outputs.loc['cap_solar_total'] = float(res.resource_area.loc['region1::solar'])
+        outputs.loc['cap_storage_energy_total'] = float(res.storage_cap.loc['region1::storage_'])
+        outputs.loc['cap_storage_power_total'] = float(res.energy_cap.loc['region1::storage_'])
+        outputs.loc['peak_unmet_total'] = float(res.carrier_prod.loc['region1::unmet::power'].max())
 
         # Insert generation levels
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             outputs.loc[f'gen_{tech}_total'] = float(
-                (
-                    self.results.carrier_prod.loc[f'region1::{tech}::power']
-                    * self.inputs.timestep_weights
-                ).sum()
+                (res.carrier_prod.loc[f'region1::{tech}::power'] * inp.timestep_weights).sum()
             )
 
         # Insert demand levels
         outputs.loc['demand_total'] = -float(
-            (
-                self.results.carrier_con.loc['region1::demand_power::power']
-                * self.inputs.timestep_weights
-            ).sum()
+            (res.carrier_con.loc['region1::demand_power::power'] * inp.timestep_weights).sum()
         )
 
         # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
+        outputs.loc['cost_total'] = float(res.cost.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['emissions_total'] = float(res.cost.loc[{'costs': 'emissions'}].sum())
 
-        outputs.loc['solution_time'] = float(self.results.solution_time)
+        outputs.loc['solution_time'] = float(res.solution_time)
 
         if as_dict:
             outputs = outputs['output'].to_dict()
 
         return outputs
 
-    def get_timeseries_outputs(self) -> pd.DataFrame:
-        """Get generation and transmission levels for each time step."""
+
+    def get_timeseries_outputs(self, include_final_storage_level: bool = False) -> pd.DataFrame:
+        """Get generation and storage levels for each time step.
+
+        Parameters:
+        -----------
+        include_final_storage_level: add extra row with the storage levels at the end of the time
+            series. Leave all generation columns (with units like MW, not MWh) blank -- fill NaNs
+        """
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
-        ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
-        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-            ts_outputs[f'gen_{tech}'] = (
-                self.results.carrier_prod.loc[f'region1::{tech}::power'].values
-            )
+        inp = self.inputs  # Calliope model inputs
+        res = self.results  # Calliope model results
+        ts_outputs = pd.DataFrame(index=pd.to_datetime(inp.timesteps.values))  # To be populated
+
+        # Add demand levels
         ts_outputs['demand'] = - self.results.carrier_con.loc['region1::demand_power::power'].values
+
+        # Add generation levels
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+            ts_outputs[f'gen_{tech}'] = res.carrier_prod.loc[f'region1::{tech}::power'].values
+
+        # Do same for storage technologies. Without clustering, storage levels are 'intraday'
+        # values. With clustering, they are sum of 'intraday' and 'interday', which is added below
+        if 'region1::storage_::power' in res.carrier_prod.loc_tech_carriers_prod:
+            ts_outputs['gen_storage'] = (
+                res.carrier_prod.loc['region1::storage_::power'].values
+                + res.carrier_con.loc['region1::storage_::power'].values
+            )
+            # Storage levels should reflect those at beginning of time step -- so offset by 1
+            ts_outputs['level_storage_intraday'] = np.concatenate((
+                np.array([
+                    inp.storage_initial.loc['region1::storage_']
+                    * res.storage_cap.loc['region1::storage_']
+                ]),
+                res.storage.loc['region1::storage_'].values[:-1]
+            ))  # Last storage level is not included in ts_outputs
+        else:
+            # If no storage technologies, set values to 0
+            ts_outputs['gen_storage'] = 0.
+            ts_outputs['level_storage_intraday'] = 0.
+
+        # If storage splits into intraday and interday levels, deal with interday here
+        # If clustered, expand shortened time series (with each representative day occuring once)
+        # to repeating the representative days in the right place
+        if hasattr(inp, 'lookup_datestep_cluster'):
+            cluster_sequence = inp.lookup_datestep_cluster.values
+            num_days = cluster_sequence.shape[0]
+            ts_days = []  # Populate with full time series by repeating clusters
+            for cluster_num in cluster_sequence:
+                cluster_day = ts_outputs.iloc[inp.timestep_cluster.values == cluster_num].copy()
+                cluster_day['cluster'] = cluster_num
+                cluster_day['ts_weight'] = 1.  # Reset time step weight since we repeat days
+                ts_days.append(cluster_day)
+            ts_outputs = pd.concat(ts_days)
+            # Move 'cluster' column to front of DataFrame, and reset index
+            ts_outputs = ts_outputs[['cluster', *ts_outputs.drop(columns='cluster').columns]]
+            ts_outputs.index = (
+                np.repeat(inp.lookup_datestep_cluster.datesteps.values, 24)
+                + np.tile(pd.timedelta_range(start=0, periods=24, freq='h'), num_days)
+            )
+
+        # If clustering, deal with the inter-day storage levels here -- they are not repeated
+        # across clusters so have to come after the repeating done above
+        try:
+            storage_inter_cluster_daily = res.storage_inter_cluster.loc['region1::storage_'].values
+            ts_outputs['level_storage_interday'] = (
+                np.repeat(storage_inter_cluster_daily, 24)  # Upsampled to hourly
+                * np.tile(
+                    np.power(1 - float(inp.storage_loss), np.arange(24)),
+                    storage_inter_cluster_daily.shape[0]
+                )  # Hourly storage remaining, from self loss
+            )
+            # Reset intraday storage level at beginning of day to 0 -- covered by interday level
+            ts_outputs.loc[ts_outputs.index.hour == 0, 'level_storage_intraday'] = 0.
+        except AttributeError:
+            # If no inter-cluster storage (i.e. no decomposition into days), set values to 0
+            ts_outputs['level_storage_interday'] = 0.
+
+        # Add storage levels at end of final time step
+        if include_final_storage_level:
+            t = ts_outputs.index[-1] + pd.Timedelta(1, unit='h')  # Time step at end of time series
+            final_storage_interday = (
+                (1 - float(inp.storage_loss)) * ts_outputs.iloc[-1]['level_storage_interday']
+            )
+            cluster_num_last_timestep = inp.lookup_datestep_cluster.values[-1]
+            idx_last_timestep = 24 * (cluster_num_last_timestep + 1) - 1
+            final_storage_intraday = res.storage.loc['region1::storage_'].values[idx_last_timestep]
+            ts_outputs.loc[t, 'level_storage_interday'] = final_storage_interday
+            ts_outputs.loc[t, 'level_storage_intraday'] = final_storage_intraday
+
+        ts_outputs['level_storage'] = (
+            ts_outputs['level_storage_interday'] + ts_outputs['level_storage_intraday']
+        )
+
+        # Add generation costs
+        gen_costs_per_unit = inp.cost_om_prod.loc['monetary']
+        ts_outputs['generation_cost'] = 0.
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+            ts_outputs['generation_cost'] += (
+                float(gen_costs_per_unit.loc[f'region1::{tech}']) * ts_outputs[f'gen_{tech}']
+            )
+
+        # Add carbon emissions
+        emissions_per_unit = inp.cost_om_prod.loc['emissions']
+        ts_outputs['emissions'] = 0.
+        for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+            ts_outputs['emissions'] += (
+                float(emissions_per_unit.loc[f'region1::{tech}']) * ts_outputs[f'gen_{tech}']
+            )
 
         return ts_outputs
 

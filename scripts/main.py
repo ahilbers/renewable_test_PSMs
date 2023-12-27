@@ -7,7 +7,7 @@ import psm
 
 def run_model(config: dict, logger: logging.Logger = None):
     '''Create and solve a power system model across a time period.
-    
+
     Parameters:
     -----------
     config: dictionary with model, run and save properties
@@ -104,7 +104,10 @@ def main():
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
     if os.path.exists(output_save_dir):
-        raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
+        print('Delete this!!')
+        import shutil
+        shutil.rmtree(output_save_dir)
+        # raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
     os.mkdir(output_save_dir)
 
     # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
