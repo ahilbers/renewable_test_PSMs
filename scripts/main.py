@@ -104,10 +104,7 @@ def main():
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
     if os.path.exists(output_save_dir):
-        print('Delete this!!')
-        import shutil
-        shutil.rmtree(output_save_dir)
-        # raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
+        raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
     os.mkdir(output_save_dir)
 
     # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'

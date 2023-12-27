@@ -318,89 +318,71 @@ class SixRegionModel(ModelBase):
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
+        inp = self.inputs  # Calliope model inputs
+        res = self.results  # Calliope model results
+        tech_regions = psm.utils.get_tech_regions(model=self)  # List of tech-region pairs
+
         outputs = pd.DataFrame(columns=['output'])  # Output DataFrame to be populated
 
-        # Insert model outputs at regional level. Loop over all techs and regions -- if a tech
-        # doesn't appear in a region, then ignore it -- done by the 'pass' in case of KeyError
-        for region in [f'region{i+1}' for i in range(6)]:
+        # Add regional summary outputs to outputs DataFrame
+        for tech_region in tech_regions:
+            tech, region = tech_region[:2]
 
-            # Baseload and peaking capacity
-            for tech in ['baseload', 'peaking']:
-                try:
-                    outputs.loc[f'cap_{tech}_{region}'] = float(
-                        self.results.energy_cap.loc[f'{region}::{tech}_{region}']
-                    )
-                except KeyError:
-                    pass  # If this tech doesn't appear in this region, ignore it
+            # Add capacities
+            if tech in ['baseload', 'peaking']:
+                key = f'{region}::{tech}_{region}'
+                outputs.loc[f'cap_{tech}_{region}'] = float(res.energy_cap.loc[key])
+                outputs.loc[f'gen_{tech}_{region}'] = float()
+            elif tech in ['wind', 'solar']:
+                key = f'{region}::{tech}_{region}'
+                outputs.loc[f'cap_{tech}_{region}'] = float(res.resource_area.loc[key])
+            elif tech in ['transmission']:
+                region_to = tech_region[2]
+                key = f'{region}::{tech}_{region}_{region_to}:{region_to}'
+                assert int(region_to[-1]) > int(region[-1])  # One direction, no double counting
+                outputs.loc[f'cap_{tech}_{region}_{region_to}'] = float(res.energy_cap.loc[key])
+            elif tech in ['storage']:
+                key = f'{region}::{tech}_{region}'
+                outputs.loc[f'cap_{tech}_energy_{region}'] = float(res.storage_cap.loc[key])
+                outputs.loc[f'cap_{tech}_power_{region}'] = float(res.energy_cap.loc[key])
+            elif tech in ['unmet']:
+                key = f'{region}::{tech}_{region}::power'
+                outputs.loc[f'peak_{tech}_{region}'] = float(res.carrier_prod.loc[key].max())
+            else:
+                raise ValueError(f'Cannot add capacity for {tech}.')
 
-            # Wind and solar capacity
-            for tech in ['wind', 'solar']:
-                try:
-                    outputs.loc[f'cap_{tech}_{region}'] = float(
-                        self.results.resource_area.loc[f'{region}::{tech}_{region}']
-                    )
-                except KeyError:
-                    pass  # If this tech doesn't appear in this region, ignore it
-
-            # Peak unmet demand
-            for tech in ['unmet']:
-                try:
-                    outputs.loc[f'peak_unmet_{region}'] = float(
-                        self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'].max()
-                    )
-                except KeyError:
-                    pass  # If this tech doesn't appear in this region, ignore it
-
-            # Transmission capacity
-            for tech in ['transmission']:
-                for region_to in [f'region{i+1}' for i in range(6)]:
-                    # No double counting of links -- one way only
-                    if int(region[-1]) < int(region_to[-1]):
-                        try:
-                            outputs.loc[f'cap_transmission_{region}_{region_to}'] = float(
-                                self.results.energy_cap
-                                .loc[f'{region}::{tech}_{region}_{region_to}:{region_to}']
-                            )
-                        except KeyError:
-                            pass  # If this tech doesn't appear in this region, ignore it
-
-            # Baseload, peaking, wind, solar and unmet generation levels
-            for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-                try:
-                    outputs.loc[f'gen_{tech}_{region}'] = float(
-                        (
-                            self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power']
-                            * self.inputs.timestep_weights
-                        ).sum()
-                    )
-                except KeyError:
-                    pass  # If this tech doesn't appear in this region, ignore it
-
-            # Demand levels
-            try:
-                outputs.loc['demand_{}'.format(region)] = -float(
-                    (
-                        self.results.carrier_con.loc[f'{region}::demand_power::power']
-                        * self.inputs.timestep_weights
-                    ).sum()
+            # Add generation levels
+            if tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+                key = f'{region}::{tech}_{region}::power'
+                outputs.loc[f'gen_{tech}_{region}'] = (
+                    float((res.carrier_prod.loc[key] * inp.timestep_weights).sum())
                 )
-            except KeyError:
-                pass  # If this tech doesn't appear in this region, ignore it
 
-        # Insert total capacities
-        for tech in ['baseload', 'peaking', 'wind', 'solar', 'transmission']:
-            outputs.loc[f'cap_{tech}_total'] = (
-                outputs.loc[outputs.index.str.contains(f'cap_{tech}')].sum()
-            )
+            # Add demand, which is in same regions as 'unmet' tech
+            if tech in ['unmet']:
+                key = f'{region}::demand_power::power'
+                outputs.loc['demand_{}'.format(region)] = (
+                    -float((res.carrier_con.loc[key] * inp.timestep_weights).sum())
+                )
 
-        outputs.loc['peak_unmet_total'] = (
-            outputs.loc[outputs.index.str.contains('peak_unmet')].sum()
-        )
+        # Add total capacities and peak unmet demand
+        for tech in [
+            'baseload',
+            'peaking',
+            'wind',
+            'solar',
+            'storage_energy',
+            'storage_power',
+            'transmission'
+        ]:
+            filter_regex = f'^cap_{tech}_.*$'
+            outputs.loc[f'cap_{tech}_total'] = outputs.filter(regex=filter_regex, axis=0).sum()
+        outputs.loc['peak_unmet_total'] = outputs.filter(regex='^peak_unmet_.*$', axis=0).sum()
 
-        # Insert total peak unmet demand -- not necessarily equal to peak_unmet_total. Total unmet
-        # capacity sums peak unmet demand across regions, this is systemwide peak unmet demand
+        # Add systemwide peak unmet demand -- not necessarily equal to peak_unmet_total. Total unmet
+        # capacity sums peak unmet demand across regions, this is peak at same time
         outputs.loc['peak_unmet_systemwide'] = float(
-            self.results.carrier_prod
+            res.carrier_prod
             .loc[self.results.carrier_prod.loc_tech_carriers_prod.str.contains('unmet')]
             .sum(axis=0)
             .max()
@@ -408,71 +390,132 @@ class SixRegionModel(ModelBase):
 
         # Insert total generation and unmet demand levels
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-            outputs.loc[f'gen_{tech}_total'] = (
-                outputs.loc[outputs.index.str.contains(f'gen_{tech}')].sum()
-            )
+            filter_regex = f'^gen_{tech}_.*$'
+            outputs.loc[f'gen_{tech}_total'] = outputs.filter(regex=filter_regex, axis=0).sum()
 
-        # Insert total demand levels
-        outputs.loc['demand_total'] = (outputs.loc[outputs.index.str.contains('demand')].sum())
+        # Insert total demand levels, emissions, system cost
+        num_ts = len(self.inputs.timesteps)
+        sum_ts_weights = float(sum(self.inputs.timestep_weights))
+        outputs.loc['demand_total'] = outputs.filter(regex='^demand.*', axis=0).sum()
+        if self.run_mode == 'plan':
+            outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
+            outputs.loc['cost_install'] = float(res.cost_investment.loc[{'costs': 'monetary'}].sum())
+            outputs.loc['cost_operate'] = float(res.cost_var.loc[{'costs': 'monetary'}].sum())
+        elif self.run_mode == 'operate':
+            # outputs.loc['emissions_total'] = (
+            #     float(self.results.cost.loc[{'costs': 'emissions'}].sum()) / sum_ts_weights
+            # )  # TODO: Sort out what's happening here
+            outputs.loc['cost_install'] = 0.
+            outputs.loc['cost_operate'] = float(res.cost_var.loc[{'costs': 'monetary'}].sum())
+        outputs.loc['cost_total'] = outputs.loc['cost_install'] + outputs.loc['cost_operate']
 
-        # Insert total system cost and carbon emissions
-        outputs.loc['cost_total'] = float(self.results.cost.loc[{'costs': 'monetary'}].sum())
-        outputs.loc['emissions_total'] = float(self.results.cost.loc[{'costs': 'emissions'}].sum())
-
+        # Insert metadata about optimisation problem
+        outputs.loc['num_ts'] = num_ts
+        outputs.loc['sum_ts_weights'] = sum_ts_weights
         outputs.loc['solution_time'] = float(self.results.solution_time)
+
+        # Deal with floating point errors around zero
+        cap_threshold, gen_threshold, emit_threshold = 1e-3, 1e1, 1e3
+        # Check for negative values with magnitude over the threshold
+        has_negative_caps = not (outputs['output'].filter(regex='^cap_.*$') > -cap_threshold).all()
+        has_negative_gens = not (outputs['output'].filter(regex='^gen_.*$') > -gen_threshold).all()
+        if has_negative_caps or has_negative_gens:
+            # In this case, return original with negative values, for diagnosis
+            logger.error('Some negative capacities or generation levels. Check output file.')
+        else:
+            # Map values with absolute value less than threshold to 0
+            outputs.loc[
+                (outputs.index.str.contains('cap_')) & (outputs['output'] < cap_threshold)
+            ] = 0.
+            outputs.loc[
+                (outputs.index.str.contains('gen_')) & (outputs['output'] < gen_threshold)
+            ] = 0.
+            outputs.loc[
+                (outputs.index.str.contains('emissions_')) & (outputs['output'] < emit_threshold)
+            ] = 0.
+            outputs = outputs.clip(lower=0.)  # Clip small negative values
 
         if as_dict:
             outputs = outputs['output'].to_dict()
 
         return outputs
 
-    def get_timeseries_outputs(self) -> pd.DataFrame:
-        """Get generation and transmission levels for each time step."""
+    def get_timeseries_outputs(self, include_final_storage_level: bool = False) -> pd.DataFrame:
+        """Get generation, transmission and storage levels for each time step.
+
+        Parameters:
+        -----------
+        include_final_storage_level: add extra row with the storage levels at the end of the time
+            series. Leave all generation columns (with units like MW, not MWh) blank -- fill NaNs
+        """
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
 
-        ts_outputs = pd.DataFrame(index=pd.to_datetime(self.inputs.timesteps.values))
+        inp = self.inputs  # Calliope model inputs
+        res = self.results  # Calliope model results
+        gen_costs_per_unit = inp.cost_om_prod.loc['monetary']
+        emissions_per_unit = inp.cost_om_prod.loc['emissions']
+        tech_regions = psm.utils.get_tech_regions(model=self)  # List of tech-region pairs
 
-        # Insert time series outputs at regional level. Loop over all techs and regions -- if a tech
-        # doesn't appear in a region, then ignore it -- done by the 'pass' in case of KeyError
-        for region in [f'region{i+1}' for i in range(6)]:
+        ts_outputs = pd.DataFrame(index=pd.to_datetime(inp.timesteps.values))  # To be populated
+        # Add time step weight and initialise generation cost and emissions, which we build up
+        ts_outputs['ts_weight'] = inp.timestep_weights.values
+        ts_outputs['generation_cost'] = 0.
+        ts_outputs['emissions'] = 0.
 
-            # Generation levels
-            for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-                try:
-                    ts_outputs[f'gen_{tech}_{region}'] = (
-                        self.results.carrier_prod.loc[f'{region}::{tech}_{region}::power'].values
-                    )
-                except KeyError:
-                    pass  # If this tech doesn't appear in this region, ignore it
+        # Add regional summary outputs to outputs DataFrame
+        for tech_region in tech_regions:
+            tech, region = tech_region[:2]
 
-            # Transmission levels
-            for tech in ['transmission']:
-                for region_to in [f'region{i+1}' for i in range(6)]:
-                    # No double counting of links -- one way only
-                    if int(region[-1]) < int(region_to[-1]):
-                        try:
-                            results_key_forward = (
-                                f'{region}::transmission_{region}_{region_to}:{region_to}::power'
-                            )
-                            results_key_reverse = (
-                                f'{region_to}::transmission_{region}_{region_to}:{region}::power'
-                            )
-                            net_transmission = (
-                                - self.results.carrier_prod.loc[results_key_forward].values
-                                + self.results.carrier_prod.loc[results_key_reverse].values
-                            )  # Net transmission levels into this node
-                            ts_outputs[f'transmission_{region}_{region_to}'] = net_transmission
-                        except KeyError:
-                            pass  # If no transmission link between these regions, ignore it
+            # Add demand, which is in same regions as 'unmet' tech
+            if tech in ['unmet']:
+                key = f'{region}::demand_power'
+                ts_outputs[f'demand_{region}'] = - res.carrier_con.loc[f'{key}::power'].values
 
-            # Demand levels
-            try:
-                ts_outputs[f'demand_{region}'] = (
-                    - self.results.carrier_con.loc[f'{region}::demand_power::power'].values
+            # Generation, transmission and storage levels
+            if tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
+                key = f'{region}::{tech}_{region}'
+                ts_outputs[f'gen_{tech}_{region}'] = res.carrier_prod.loc[f'{key}::power'].values
+                ts_outputs['generation_cost'] += (
+                    float(gen_costs_per_unit.loc[key]) * ts_outputs[f'gen_{tech}_{region}']
                 )
-            except KeyError:
-                pass  # If no demand in this region, ignore it
+                ts_outputs['emissions'] += (
+                    float(emissions_per_unit.loc[key]) * ts_outputs[f'gen_{tech}_{region}']
+                )
+            elif tech in ['transmission']:
+                region_to = tech_region[2]
+                assert int(region_to[-1]) > int(region[-1])  # One direction, no double counting
+                key_forward = f'{region}::transmission_{region}_{region_to}:{region_to}::power'
+                key_reverse = f'{region_to}::transmission_{region}_{region_to}:{region}::power'
+                net_transmission = (
+                    - res.carrier_prod.loc[key_forward].values
+                    + res.carrier_prod.loc[key_reverse].values
+                )  # Net transmission levels into this node
+                ts_outputs[f'transmission_{region}_{region_to}'] = net_transmission
+            elif tech in ['storage']:
+                key = f'{region}::storage_{region}'
+                key_power = f'{key}::power'
+                ts_outputs[f'gen_storage_{region}'] = (
+                    res.carrier_prod.loc[key_power].values + res.carrier_con.loc[key_power].values
+                )
+                # Storage levels should reflect those at beginning of time step -- so offset by 1
+                ts_outputs[f'level_storage_{region}'] = np.concatenate((
+                    np.array([inp.storage_initial.loc[key] * res.storage_cap.loc[key]]),
+                    res.storage.loc[key].values[:-1]
+                ))  # Last storage level is not included in ts_outputs
+
+            else:
+                raise ValueError(f'Cannot add time series values for {tech}.')
+
+        # Add storage levels at end of final time step
+        storage_regions = [i[1] for i in tech_regions if i[0] == 'storage']
+        include_final_storage_level = True
+        if include_final_storage_level:
+            t = ts_outputs.index[-1] + pd.Timedelta(1, unit='h')  # Time step at end of time series
+            for region in storage_regions:
+                ts_outputs.loc[t, f'level_storage_{region}'] = (
+                    res.storage.loc[f'{region}::storage_{region}'].values[-1]
+                )
 
         return ts_outputs
