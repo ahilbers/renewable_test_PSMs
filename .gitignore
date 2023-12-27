@@ -22,3 +22,6 @@ outputs*
 
 # Old data files
 *old.csv
+
+# Mac OS
+*.DS_Store

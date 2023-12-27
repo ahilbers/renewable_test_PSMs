@@ -241,78 +241,24 @@ class OneRegionModel(ModelBase):
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
             ts_outputs[f'gen_{tech}'] = res.carrier_prod.loc[f'region1::{tech}::power'].values
 
-        # Do same for storage technologies. Without clustering, storage levels are 'intraday'
-        # values. With clustering, they are sum of 'intraday' and 'interday', which is added below
-        if 'region1::storage_::power' in res.carrier_prod.loc_tech_carriers_prod:
-            ts_outputs['gen_storage'] = (
-                res.carrier_prod.loc['region1::storage_::power'].values
-                + res.carrier_con.loc['region1::storage_::power'].values
-            )
-            # Storage levels should reflect those at beginning of time step -- so offset by 1
-            ts_outputs['level_storage_intraday'] = np.concatenate((
-                np.array([
-                    inp.storage_initial.loc['region1::storage_']
-                    * res.storage_cap.loc['region1::storage_']
-                ]),
-                res.storage.loc['region1::storage_'].values[:-1]
-            ))  # Last storage level is not included in ts_outputs
-        else:
-            # If no storage technologies, set values to 0
-            ts_outputs['gen_storage'] = 0.
-            ts_outputs['level_storage_intraday'] = 0.
-
-        # If storage splits into intraday and interday levels, deal with interday here
-        # If clustered, expand shortened time series (with each representative day occuring once)
-        # to repeating the representative days in the right place
-        if hasattr(inp, 'lookup_datestep_cluster'):
-            cluster_sequence = inp.lookup_datestep_cluster.values
-            num_days = cluster_sequence.shape[0]
-            ts_days = []  # Populate with full time series by repeating clusters
-            for cluster_num in cluster_sequence:
-                cluster_day = ts_outputs.iloc[inp.timestep_cluster.values == cluster_num].copy()
-                cluster_day['cluster'] = cluster_num
-                cluster_day['ts_weight'] = 1.  # Reset time step weight since we repeat days
-                ts_days.append(cluster_day)
-            ts_outputs = pd.concat(ts_days)
-            # Move 'cluster' column to front of DataFrame, and reset index
-            ts_outputs = ts_outputs[['cluster', *ts_outputs.drop(columns='cluster').columns]]
-            ts_outputs.index = (
-                np.repeat(inp.lookup_datestep_cluster.datesteps.values, 24)
-                + np.tile(pd.timedelta_range(start=0, periods=24, freq='h'), num_days)
-            )
-
-        # If clustering, deal with the inter-day storage levels here -- they are not repeated
-        # across clusters so have to come after the repeating done above
-        try:
-            storage_inter_cluster_daily = res.storage_inter_cluster.loc['region1::storage_'].values
-            ts_outputs['level_storage_interday'] = (
-                np.repeat(storage_inter_cluster_daily, 24)  # Upsampled to hourly
-                * np.tile(
-                    np.power(1 - float(inp.storage_loss), np.arange(24)),
-                    storage_inter_cluster_daily.shape[0]
-                )  # Hourly storage remaining, from self loss
-            )
-            # Reset intraday storage level at beginning of day to 0 -- covered by interday level
-            ts_outputs.loc[ts_outputs.index.hour == 0, 'level_storage_intraday'] = 0.
-        except AttributeError:
-            # If no inter-cluster storage (i.e. no decomposition into days), set values to 0
-            ts_outputs['level_storage_interday'] = 0.
+        # Add storage power (generation) and energy levels
+        ts_outputs['gen_storage'] = (
+            res.carrier_prod.loc['region1::storage_::power'].values
+            + res.carrier_con.loc['region1::storage_::power'].values
+        )
+        # Storage levels should reflect those at beginning of time step -- so offset by 1
+        ts_outputs['level_storage'] = np.concatenate((
+            np.array([
+                inp.storage_initial.loc['region1::storage_']
+                * res.storage_cap.loc['region1::storage_']
+            ]),
+            res.storage.loc['region1::storage_'].values[:-1]
+        ))  # Last storage level not currenly included, can be added later
 
         # Add storage levels at end of final time step
         if include_final_storage_level:
             t = ts_outputs.index[-1] + pd.Timedelta(1, unit='h')  # Time step at end of time series
-            final_storage_interday = (
-                (1 - float(inp.storage_loss)) * ts_outputs.iloc[-1]['level_storage_interday']
-            )
-            cluster_num_last_timestep = inp.lookup_datestep_cluster.values[-1]
-            idx_last_timestep = 24 * (cluster_num_last_timestep + 1) - 1
-            final_storage_intraday = res.storage.loc['region1::storage_'].values[idx_last_timestep]
-            ts_outputs.loc[t, 'level_storage_interday'] = final_storage_interday
-            ts_outputs.loc[t, 'level_storage_intraday'] = final_storage_intraday
-
-        ts_outputs['level_storage'] = (
-            ts_outputs['level_storage_interday'] + ts_outputs['level_storage_intraday']
-        )
+            ts_outputs.loc[t, 'level_storage'] = res.storage.loc['region1::storage_'].values[-1]
 
         # Add generation costs
         gen_costs_per_unit = inp.cost_om_prod.loc['monetary']
