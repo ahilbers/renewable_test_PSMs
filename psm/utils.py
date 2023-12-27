@@ -407,7 +407,7 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
             logger.error(f'Generation levels for {tech} sometimes negative:\n\n{ts_out}\n.')
             passing = False
     if not np.allclose(
-        ts_out.filter(regex=f'gen_({"|".join([*techs, "storage"])}).*', axis=1).sum(axis=1),
+        ts_out.filter(regex=f'gen_({'|'.join([*techs, 'storage'])}).*', axis=1).sum(axis=1),
         ts_out.filter(regex='demand.*', axis=1).sum(axis=1),
         rtol=1e-6,
         atol=1e-1

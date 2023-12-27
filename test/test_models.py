@@ -32,7 +32,7 @@ class TestModels:
         '''Should get AttributeError when using timeseries with wrong column names.'''
         with pytest.raises(AttributeError, match='Incorrect columns in input time series.'):
             ts_data_wrong_columns = self.ts_data.rename(
-                columns={"demand": "wrong_name", "demand_region2": "wrong_name"}
+                columns={'demand': 'wrong_name', 'demand_region2': 'wrong_name'}
             )
             _ = self.Model(ts_data=ts_data_wrong_columns, run_mode='plan')
 
