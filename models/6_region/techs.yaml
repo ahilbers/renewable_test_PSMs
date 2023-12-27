@@ -336,9 +336,9 @@ techs:
             parent: storage
         constraints:
             lifetime: 1
-            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_cap_equals: 100  # Fixed generation capacity (KW), vary storage (KWh) capacity
             energy_eff: 0.95002  # Square this number for round trip efficiency
-            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_loss: 0.00001  # Fraction of energy charge lost per hour
             storage_initial: 0.  # Initial storage level, fraction of energy capacity
         costs:
             monetary:
@@ -351,9 +351,9 @@ techs:
             parent: storage
         constraints:
             lifetime: 1
-            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_cap_equals: 100  # Fixed generation capacity (KW), vary storage (KWh) capacity
             energy_eff: 0.95005  # Square this number for round trip efficiency
-            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_loss: 0.00001  # Fraction of energy charge lost per hour
             storage_initial: 0.  # Initial storage level, fraction of energy capacity
         costs:
             monetary:
@@ -366,9 +366,9 @@ techs:
             parent: storage
         constraints:
             lifetime: 1
-            energy_cap_equals: 100  # Vary storage energy cap, keep power cap the same
+            energy_cap_equals: 100  # Fixed generation capacity (KW), vary storage (KWh) capacity
             energy_eff: 0.95006  # Square this number for round trip efficiency
-            storage_loss: 0.00001  # Fraction of energy charge lossed per hour
+            storage_loss: 0.00001  # Fraction of energy charge lost per hour
             storage_initial: 0.  # Initial storage level, fraction of energy capacity
         costs:
             monetary:
