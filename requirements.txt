@@ -1,6 +1,5 @@
 numpy
 pandas
 jupyterlab
-pytest-cov
+pytest
 calliope==0.6.10
-
