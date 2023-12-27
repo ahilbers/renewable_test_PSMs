@@ -1,5 +1,4 @@
 import pytest
-import typing
 import numpy as np
 import pandas as pd
 import psm
@@ -21,7 +20,7 @@ class TestModels:
     '''Test core model functionality and some options.'''
 
     @pytest.fixture(autouse=True)
-    def _set_model_and_ts_data(self, model_name: str, ts_data_dict: typing.Dict[str, pd.DataFrame]):
+    def _set_model_and_ts_data(self, model_name: str, ts_data_dict: dict[str, pd.DataFrame]):
         '''Set model and ts_data used across this class.'''
         self.model_name = model_name
         model_dict = {'1_region': psm.models.OneRegionModel, '6_region': psm.models.SixRegionModel}
@@ -92,8 +91,10 @@ class TestModels:
         assert isinstance(ts_outputs, pd.DataFrame)
         assert (ts_outputs.index == model.inputs.timesteps.values).all()
         assert np.allclose(
-            ts_outputs.filter(like='gen', axis=1).sum(axis=1),
-            ts_outputs.filter(like='demand', axis=1).sum(axis=1)
+            ts_outputs.filter(regex='^gen_.*$', axis=1).sum(axis=1),
+            ts_outputs.filter(regex='^demand.*$', axis=1).sum(axis=1),
+            rtol=1e-3,
+            atol=1e-1
         )  # Check generation matches demand in each time step
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])

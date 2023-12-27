@@ -262,9 +262,9 @@ class OneRegionModel(ModelBase):
 
         # Add generation costs
         gen_costs_per_unit = inp.cost_om_prod.loc['monetary']
-        ts_outputs['generation_cost'] = 0.
+        ts_outputs['cost_gen'] = 0.
         for tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
-            ts_outputs['generation_cost'] += (
+            ts_outputs['cost_gen'] += (
                 float(gen_costs_per_unit.loc[f'region1::{tech}']) * ts_outputs[f'gen_{tech}']
             )
 
@@ -461,7 +461,7 @@ class SixRegionModel(ModelBase):
         ts_outputs = pd.DataFrame(index=pd.to_datetime(inp.timesteps.values))  # To be populated
         # Add time step weight and initialise generation cost and emissions, which we build up
         ts_outputs['ts_weight'] = inp.timestep_weights.values
-        ts_outputs['generation_cost'] = 0.
+        ts_outputs['cost_gen'] = 0.
         ts_outputs['emissions'] = 0.
 
         # Add regional summary outputs to outputs DataFrame
@@ -477,7 +477,7 @@ class SixRegionModel(ModelBase):
             if tech in ['baseload', 'peaking', 'wind', 'solar', 'unmet']:
                 key = f'{region}::{tech}_{region}'
                 ts_outputs[f'gen_{tech}_{region}'] = res.carrier_prod.loc[f'{key}::power'].values
-                ts_outputs['generation_cost'] += (
+                ts_outputs['cost_gen'] += (
                     float(gen_costs_per_unit.loc[key]) * ts_outputs[f'gen_{tech}_{region}']
                 )
                 ts_outputs['emissions'] += (
@@ -510,7 +510,6 @@ class SixRegionModel(ModelBase):
 
         # Add storage levels at end of final time step
         storage_regions = [i[1] for i in tech_regions if i[0] == 'storage']
-        include_final_storage_level = True
         if include_final_storage_level:
             t = ts_outputs.index[-1] + pd.Timedelta(1, unit='h')  # Time step at end of time series
             for region in storage_regions:

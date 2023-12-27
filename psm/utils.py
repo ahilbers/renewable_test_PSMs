@@ -67,7 +67,7 @@ def load_time_series_data(
     return ts_data
 
 
-def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:
+def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:  # pragma: no cover
     '''Detect if a time series has missing leap days.
 
     Parameters:
@@ -126,7 +126,7 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
     '''
 
     if not isinstance(fixed_caps, dict):
-        raise ValueError('Incorrect input format for fixed_caps')
+        raise ValueError('Incorrect input format for fixed_caps')  # pragma: no cover
 
     o_dict = {}  # Populate this override dict
 
@@ -202,46 +202,6 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
 
     logger.debug(f'Created override dict:\n{json.dumps(o_dict, indent=4)}')
     return o_dict
-
-
-def _get_technology_info(model: calliope.Model) -> pd.DataFrame:
-    '''Get technology install & generation costs and emissions from model config.'''
-
-    model_dict = model._model_run
-    costs = pd.DataFrame(columns=['install', 'generation', 'emissions'], dtype='float')
-    regions = list(model_dict['locations'].keys())
-
-    # Add the technologies in each region
-    for region in regions:
-        region_dict = model_dict['locations'][region]
-
-        # Add generation technologies
-        techs = [i for i in region_dict['techs'].keys() if 'demand' not in i]
-        for tech in techs:
-            tech_costs_dict = region_dict['techs'][tech]['costs']
-            is_variable_renewable = ('wind' in tech) or ('solar' in tech)
-            install_cost_name = 'resource_area' if is_variable_renewable else 'energy_cap'
-            costs.loc[tech, 'install'] = (
-                0. if 'unmet' in tech else float(tech_costs_dict['monetary'][install_cost_name])
-            )
-            costs.loc[tech, 'generation'] = float(tech_costs_dict['monetary']['om_prod'])
-            costs.loc[tech, 'emissions'] = float(tech_costs_dict['emissions']['om_prod'])
-
-        # Add transmission technologies
-        regions_to = region_dict.get('links', [])
-        for region_to in regions_to:
-            tech = f'transmission_{region}_{region_to}'
-            tech_reversed = f'transmission_{region_to}_{region}'
-            if tech_reversed in costs.index:
-                continue  # Only count links in one direction
-            tech_costs_dict = region_dict['links'][region_to]['techs'][tech]['costs']
-            costs.loc[tech, 'install'] = float(tech_costs_dict['monetary']['energy_cap'])
-            costs.loc[tech, 'generation'] = 0.
-            costs.loc[tech, 'emissions'] = 0.
-
-    logger.debug(f'Costs read from model config:\n\n{costs}\n')
-
-    return costs
 
 
 def get_technology_info(model: calliope.Model) -> pd.DataFrame:
@@ -407,7 +367,7 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
             logger.error(f'Generation levels for {tech} sometimes negative:\n\n{ts_out}\n.')
             passing = False
     if not np.allclose(
-        ts_out.filter(regex=f'gen_({'|'.join([*techs, 'storage'])}).*', axis=1).sum(axis=1),
+        ts_out.filter(regex=f'gen_({"|".join([*techs, "storage"])}).*', axis=1).sum(axis=1),
         ts_out.filter(regex='demand.*', axis=1).sum(axis=1),
         rtol=1e-6,
         atol=1e-1

@@ -49,8 +49,8 @@ overrides:
                 techs.peaking.constraints.energy_cap_equals: 20
                 techs.wind.constraints.resource_area_equals: 30
                 techs.solar.constraints.resource_area_equals: 10
-                techs.storage.constraints.storage_cap_equals: 50
-                techs.storage.constraints.energy_cap_equals: 100
+                techs.storage_.constraints.storage_cap_equals: 50
+                techs.storage_.constraints.energy_cap_equals: 100
                 techs.unmet.constraints.energy_cap_equals: 1e10
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr
