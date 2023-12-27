@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def _get_ts_data_1_region():
-    """Create sample time series data for '1_region' model."""
+    '''Create sample time series data for '1_region' model.'''
     ts_data_6_region = _get_ts_data_6_region()
     ts_data = ts_data_6_region.loc[:, ['demand_region5', 'wind_region5', 'solar_region5']]
     ts_data.columns = ['demand', 'wind', 'solar']
@@ -12,7 +12,7 @@ def _get_ts_data_1_region():
 
 
 def _get_ts_data_6_region():
-    """Create sample time series data for '6_region' model."""
+    '''Create sample time series data for '6_region' model.'''
     ts_data = pd.DataFrame(
         data = [
             [44.68, 40.78, 28.38, 0.5412, 0.3456, 0.1399, 0.0000, 0.0000, 0.0000],
@@ -42,7 +42,7 @@ def _get_ts_data_6_region():
         ],
         index=pd.date_range(start='2020-06-01', periods=24, freq='h'),
         columns=[
-            'demand_region2', 'demand_region4', 'demand_region5', 
+            'demand_region2', 'demand_region4', 'demand_region5',
             'wind_region2', 'wind_region5', 'wind_region6',
             'solar_region2', 'solar_region5', 'solar_region6'
         ]
@@ -52,6 +52,6 @@ def _get_ts_data_6_region():
 
 @pytest.fixture()
 def ts_data_dict() -> typing.Dict[str, pd.DataFrame]:
-    """Sample time series data for both '1_region' and '6_region' models."""
+    '''Sample time series data for both '1_region' and '6_region' models.'''
     out_dict = {'1_region': _get_ts_data_1_region(), '6_region': _get_ts_data_6_region()}
     return out_dict

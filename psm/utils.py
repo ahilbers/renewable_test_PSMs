@@ -11,13 +11,13 @@ logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be c
 
 
 def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cover
-    """Get a logger to use throughout the codebase.
+    '''Get a logger to use throughout the codebase.
 
     Parameters:
     -----------
     name: logger name
     config: dictionary with model, run and save properties
-    """
+    '''
 
     output_save_dir = run_config['output_save_dir']
 
@@ -46,13 +46,13 @@ def load_time_series_data(
     model_name: str,
     path: str = os.path.join(os.path.dirname(__file__), '..', 'data/demand_wind_solar.csv')
 ) -> pd.DataFrame:  # pragma: no cover
-    """Load demand, wind and solar time series data for model.
+    '''Load demand, wind and solar time series data for model.
 
     Parameters:
     -----------
     model_name: '1_region' or '6_region'
     path: path to CSV file
-    """
+    '''
 
     ts_data = pd.read_csv(path, index_col=0)
     ts_data = ts_data.clip(lower=0.)  # Trim negative values, can come from floating point error
@@ -68,12 +68,12 @@ def load_time_series_data(
 
 
 def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:
-    """Detect if a time series has missing leap days.
+    '''Detect if a time series has missing leap days.
 
     Parameters:
     -----------
     ts_data : time series to check for missing leap days
-    """
+    '''
     index = ts_data.index
     feb28_index = ts_data.index[(index.year % 4 == 0) & (index.month == 2) & (index.day == 28)]
     feb29_index = ts_data.index[(index.year % 4 == 0) & (index.month == 2) & (index.day == 29)]
@@ -86,7 +86,7 @@ def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:
 def get_scenario(
     run_mode: str, baseload_integer: bool, baseload_ramping: bool, allow_unmet: bool
 ) -> str:
-    """Get scenario name, a comma-separated list of overrides in `model.yaml` for Calliope model
+    '''Get scenario name, a comma-separated list of overrides in `model.yaml` for Calliope model
 
     Parameters:
     -----------
@@ -94,7 +94,7 @@ def get_scenario(
     baseload_integer: activate baseload discrete capacity constraint
     baseload_ramping: enforce baseload ramping constraint
     allow_unmet: allow unmet demand in 'plan' mode (should always be allowed in 'operate' mode)
-    """
+    '''
 
     scenario = run_mode
     if run_mode == 'plan':
@@ -113,7 +113,7 @@ def get_scenario(
 
 
 def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
-    """Create override dictionary used to set fixed fixed capacities in Calliope model.
+    '''Create override dictionary used to set fixed fixed capacities in Calliope model.
 
     Parameters:
     -----------
@@ -123,7 +123,7 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
     Returns:
     --------
     o_dict: Dict that can be fed as 'override_dict' into Calliope model in 'operate' mode
-    """
+    '''
 
     if not isinstance(fixed_caps, dict):
         raise ValueError('Incorrect input format for fixed_caps')
@@ -205,7 +205,7 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
 
 
 def _get_technology_info(model: calliope.Model) -> pd.DataFrame:
-    """Get technology install & generation costs and emissions from model config."""
+    '''Get technology install & generation costs and emissions from model config.'''
 
     model_dict = model._model_run
     costs = pd.DataFrame(columns=['install', 'generation', 'emissions'], dtype='float')
@@ -318,13 +318,13 @@ def get_tech_regions(model: calliope.Model) -> list[tuple[str]]:
 
 
 def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: no cover
-    """Check if model outputs (costs, generation levels, emissions) are internally consistent.
+    '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
     Parameters:
     -----------
     model: instance of OneRegionModel
-    """
+    '''
 
     passing = True  # Changes to False if any outputs are found to be inconsistent
     cost_total_v1 = 0
@@ -454,13 +454,13 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
 
 
 def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: no cover
-    """Check if model outputs (costs, generation levels, emissions) are internally consistent.
+    '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
     Parameters:
     -----------
     model: instance of SixRegionModel
-    """
+    '''
 
     passing = True  # Changes to False if any outputs are found to be inconsistent
     cost_total_v1 = 0.
@@ -682,13 +682,13 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
 
 
 def has_consistent_outputs(model: calliope.Model) -> bool:  # pragma: no cover
-    """Check if model outputs (costs, generation levels, emissions) are internally consistent.
+    '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
     Parameters:
     -----------
     model: instance of OneRegionModel or SixRegionModel
-    """
+    '''
 
     if model.model_name == '1_region':
         return _has_consistent_outputs_1_region(model=model)

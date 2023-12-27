@@ -1,4 +1,4 @@
-"""The test case power system models."""
+'''The test case power system models.'''
 
 
 import os
@@ -15,7 +15,7 @@ logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be c
 
 
 class ModelBase(calliope.Model):
-    """Base power system model class."""
+    '''Base power system model class.'''
 
     def __init__(
         self,
@@ -29,7 +29,7 @@ class ModelBase(calliope.Model):
         extra_override: str = None,
         run_id=0
     ):
-        """
+        '''
         Create base power system model instance.
 
         Parameters:
@@ -43,7 +43,7 @@ class ModelBase(calliope.Model):
         fixed_caps: fixed capacities as override
         extra_override: name of additional override, should be defined in  `.../model.yaml`
         run_id: unique model ID, useful if multiple models are run in parallel
-        """
+        '''
 
         if model_name not in ['1_region', '6_region']:
             raise ValueError(f'Invalid model name {model_name} (choose `1_region` or `6_region`).')
@@ -91,7 +91,7 @@ class ModelBase(calliope.Model):
         logger.debug(f'Time series inputs:\n{ts_data}\n')
 
     def _create_init_time_series(self, ts_data: pd.DataFrame) -> pd.DataFrame:
-        """Create time series data for model initialisation.
+        '''Create time series data for model initialisation.
 
         Parameters:
         -----------
@@ -100,7 +100,7 @@ class ModelBase(calliope.Model):
         Returns:
         --------
         ts_data_used: same data, but data engineered for a Calliope model
-        """
+        '''
 
         # Avoid changing ts_data outside function
         ts_data_used = ts_data.copy()
@@ -133,7 +133,7 @@ class ModelBase(calliope.Model):
         return ts_data_used
 
     def run(self):
-        """Run model to determine optimal solution."""
+        '''Run model to determine optimal solution.'''
         logger.info('Running model to determine optimal solution.')
         super(ModelBase, self).run()
         logger.debug(f'Model summary outputs:\n\n{self.get_summary_outputs()}\n')
@@ -144,7 +144,7 @@ class ModelBase(calliope.Model):
 
 
 class OneRegionModel(ModelBase):
-    """Instance of 1-region power system model."""
+    '''Instance of 1-region power system model.'''
 
     def __init__(
         self,
@@ -157,7 +157,7 @@ class OneRegionModel(ModelBase):
         extra_override: str = None,
         run_id=0
     ):
-        """Initialize model from ModelBase parent. See parent class for detailed docstring."""
+        '''Initialize model from ModelBase parent. See parent class for detailed docstring.'''
         super(OneRegionModel, self).__init__(
             model_name='1_region',
             ts_data=ts_data,
@@ -171,13 +171,13 @@ class OneRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        '''Return selection of key model outputs: capacities, total generation levels, total demand,
         system cost and carbon emissions.
 
         Parameters:
         -----------
         as_dict: return dictionary instead of DataFrame
-        """
+        '''
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
@@ -219,13 +219,13 @@ class OneRegionModel(ModelBase):
 
 
     def get_timeseries_outputs(self, include_final_storage_level: bool = False) -> pd.DataFrame:
-        """Get generation and storage levels for each time step.
+        '''Get generation and storage levels for each time step.
 
         Parameters:
         -----------
         include_final_storage_level: add extra row with the storage levels at the end of the time
             series. Leave all generation columns (with units like MW, not MWh) blank -- fill NaNs
-        """
+        '''
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
@@ -280,7 +280,7 @@ class OneRegionModel(ModelBase):
 
 
 class SixRegionModel(ModelBase):
-    """Instance of 6-region power system model."""
+    '''Instance of 6-region power system model.'''
 
     def __init__(
         self,
@@ -293,7 +293,7 @@ class SixRegionModel(ModelBase):
         extra_override: str = None,
         run_id=0
     ):
-        """Initialize model from ModelBase parent. See parent class for detailed docstring."""
+        '''Initialize model from ModelBase parent. See parent class for detailed docstring.'''
         super(SixRegionModel, self).__init__(
             model_name='6_region',
             ts_data=ts_data,
@@ -307,13 +307,13 @@ class SixRegionModel(ModelBase):
         )
 
     def get_summary_outputs(self, as_dict: bool = False) -> typing.Union[pd.DataFrame, dict]:
-        """Return selection of key model outputs: capacities, total generation levels, total demand,
+        '''Return selection of key model outputs: capacities, total generation levels, total demand,
         system cost and carbon emissions.
 
         Parameters:
         -----------
         as_dict: return dictionary instead of DataFrame
-        """
+        '''
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
@@ -441,13 +441,13 @@ class SixRegionModel(ModelBase):
         return outputs
 
     def get_timeseries_outputs(self, include_final_storage_level: bool = False) -> pd.DataFrame:
-        """Get generation, transmission and storage levels for each time step.
+        '''Get generation, transmission and storage levels for each time step.
 
         Parameters:
         -----------
         include_final_storage_level: add extra row with the storage levels at the end of the time
             series. Leave all generation columns (with units like MW, not MWh) blank -- fill NaNs
-        """
+        '''
 
         if not hasattr(self, 'results'):
             raise AttributeError('Model outputs not yet calculated: call `.run()` first.')
