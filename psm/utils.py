@@ -244,6 +244,66 @@ def _get_technology_info(model: calliope.Model) -> pd.DataFrame:
     return costs
 
 
+def get_technology_info(model: calliope.Model) -> pd.DataFrame:
+    '''Get technology install & generation costs and emissions from model config.'''
+
+    model_dict = model._model_run
+    costs = pd.DataFrame(columns=['install', 'generation', 'emissions'], dtype='float')
+    regions = list(model_dict['locations'].keys())
+
+    # Add the technologies in each region
+    for region in regions:
+        region_dict = model_dict['locations'][region]
+
+        # Add generation technologies
+        techs = list(region_dict['techs'].keys())
+        for tech in techs:
+            if ('demand' in tech) or ('storage' in tech):
+                continue  # Generation technologies only here -- not demand or storage
+            tech_costs_dict = region_dict['techs'][tech]['costs']
+            is_variable_renewable = ('wind' in tech) or ('solar' in tech)
+            install_cost_name = 'resource_area' if is_variable_renewable else 'energy_cap'
+            costs.loc[tech, 'install'] = (
+                0. if 'unmet' in tech else float(tech_costs_dict['monetary'][install_cost_name])
+            )
+            costs.loc[tech, 'generation'] = float(tech_costs_dict['monetary']['om_prod'])
+            costs.loc[tech, 'emissions'] = float(tech_costs_dict['emissions']['om_prod'])
+
+        # Add storage technologies
+        for tech in techs:
+            if 'storage' in tech:
+                if model.model_name == '1_region':
+                    tech_costs_dict = region_dict['techs']['storage_']['costs']
+                    index_energy = 'storage_energy'
+                    index_power = 'storage_power'
+                elif model.model_name == '6_region':
+                    tech_costs_dict = region_dict['techs'][f'storage_{region}']['costs']
+                    index_energy = f'storage_energy_{region}'
+                    index_power = f'storage_power_{region}'
+                costs.loc[index_energy, ['install', 'generation', 'emissions']] = (
+                    [float(tech_costs_dict['monetary'].get('storage_cap', 0.)), 0., 0.]
+                )
+                costs.loc[index_power, ['install', 'generation', 'emissions']] = (
+                    [float(tech_costs_dict['monetary'].get('energy_cap', 0.)), 0., 0.]
+                )
+
+        # Add transmission technologies
+        regions_to = region_dict.get('links', [])
+        for region_to in regions_to:
+            tech = f'transmission_{region}_{region_to}'
+            tech_reversed = f'transmission_{region_to}_{region}'
+            if tech_reversed in costs.index:
+                continue  # Only count links in one direction
+            tech_costs_dict = region_dict['links'][region_to]['techs'][tech]['costs']
+            costs.loc[tech, 'install'] = float(tech_costs_dict['monetary']['energy_cap'])
+            costs.loc[tech, 'generation'] = 0.
+            costs.loc[tech, 'emissions'] = 0.
+
+    logger.debug(f'Costs read from model config:\n\n{costs}\n')
+
+    return costs
+
+
 def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: no cover
     """Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
@@ -256,35 +316,52 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
     passing = True  # Changes to False if any outputs are found to be inconsistent
     cost_total_v1 = 0
 
-    costs = _get_technology_info(model=model)
+    costs = get_technology_info(model=model)
     techs = list(costs.index)
+    gen_techs = [i for i in techs if (('storage' not in i) and ('unmet' not in i))]
+    storage_techs = [i for i in techs if 'storage' in i]
+    unmet_techs = [i for i in techs if 'unmet' in i]
 
     sum_out = model.get_summary_outputs()
     ts_out = model.get_timeseries_outputs()
+    inp = model.inputs
     res = model.results
 
     # Normalise install costs to same temporal scale as generation costs
     corrfac = model.num_timesteps / 8760
 
-    # Test if generation technology installation costs are consistent
     if model.run_mode == 'plan':
-        for tech in techs:
-            if tech == 'unmet':
-                continue  # Unmet demand doesn't have meaningful install cost
+
+        # Test if generation technology installation costs are consistent
+        for tech in gen_techs:
             cost_v1 = corrfac * float(costs.loc[tech, 'install'] * sum_out.loc[f'cap_{tech}_total'])
             cost_v2 = float(res.cost_investment.loc['monetary', f'region1::{tech}'])
-            if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
+            if not np.isclose(cost_v1, cost_v2, rtol=1e-6, atol=1e-1):
                 logger.error(
                     f'Cannot recreate {tech} install costs -- manual: {cost_v1}, model: {cost_v2}.'
                 )
                 passing = False
             cost_total_v1 += cost_v1
 
+        # Test if storage technology installation costs are consistent
+        if len(storage_techs) > 1:
+            cost_v1 = corrfac * (
+                float(costs.loc['storage_energy', 'install'] * sum_out.loc['cap_storage_energy_total'])
+                + float(costs.loc['storage_power', 'install'] * sum_out.loc['cap_storage_power_total'])
+            )
+            cost_v2 = float(res.cost_investment.loc['monetary', 'region1::storage_'])
+            if not np.isclose(cost_v1, cost_v2, rtol=1e-6, atol=1e-1):
+                logger.error(
+                    f'Cannot recreate storage install costs -- manual: {cost_v1}, model: {cost_v2}.'
+                )
+                passing = False
+            cost_total_v1 += cost_v1
+
     # Test if generation costs are consistent
-    for tech in techs:
+    for tech in gen_techs + unmet_techs:
         cost_v1 = float(costs.loc[tech, 'generation'] * sum_out.loc[f'gen_{tech}_total'])
         cost_v2 = float(res.cost_var.loc['monetary', f'region1::{tech}'].sum())
-        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
+        if not np.isclose(cost_v1, cost_v2, rtol=1e-6, atol=1e-1):
             logger.error(
                 f'Cannot recreate {tech} generation costs -- manual: {cost_v1}, model: {cost_v2}.'
             )
@@ -294,44 +371,71 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
     # Test if total costs are consistent
     if model.run_mode == 'plan':
         cost_total_v2 = float(res.cost.loc['monetary'].sum())
-        if not np.isclose(cost_total_v1, cost_total_v2, rtol=0., atol=0.1):
+        if not np.isclose(cost_total_v1, cost_total_v2, rtol=1e-6, atol=1e-1):
             logger.error(
                 f'Cannot recreate system cost -- manual: {cost_total_v1}, model: {cost_total_v2}.'
             )
             passing = False
 
     # Test if emissions are consistent
-    for tech in techs:
+    for tech in gen_techs:
         emission_v1 = float(costs.loc[tech, 'emissions'] * sum_out.loc[f'gen_{tech}_total'])
         emission_v2 = float(res.cost_var.loc['emissions', f'region1::{tech}'].sum())
-        if not np.isclose(cost_v1, cost_v2, rtol=0., atol=0.1):
+        if not np.isclose(cost_v1, cost_v2, rtol=1e-6, atol=1e5):
             logger.error(
                 f'Cannot recreate {tech} emissions -- manual: {emission_v1}, model: {emission_v2}.'
             )
             passing = False
         cost_total_v1 += cost_v1
 
-    # Test if supply matches demand
-    generation_total = float(sum_out.filter(regex='gen_.*_total', axis=0).sum())
-    demand_total = float(sum_out.loc['demand_total'])
-    if not np.isclose(generation_total, demand_total, rtol=0., atol=0.1):
-        logger.error(
-            f'Supply-demand mismatch -- generation: {generation_total}, demand: {demand_total}.'
-        )
+    # Test that generation levels in each time step are nonnegative and add up to demand
+    for tech in gen_techs:
+        if not (ts_out.loc[:, f'gen_{tech}'] >= -0.0001).all():
+            logger.error(f'Generation levels for {tech} sometimes negative:\n\n{ts_out}\n.')
+            passing = False
+    if not np.allclose(
+        ts_out.filter(regex=f'gen_({"|".join([*techs, "storage"])}).*', axis=1).sum(axis=1),
+        ts_out.filter(regex='demand.*', axis=1).sum(axis=1),
+        rtol=1e-6,
+        atol=1e-1
+    ):
+        logger.error('Generation does not add up to demand in some time steps.')
         passing = False
 
-    # Test that generation levels are all nonnegative and add up to the demand
-    if not (ts_out.filter(like='gen', axis=1) >= 0).all().all():
-        logger.error(f'Some generation/demand levels are negative:\n\n{ts_out}\n.')
+    # Test if storage levels are consistent
+    gen_storage_np = ts_out['gen_storage'].to_numpy()
+    level_storage_np = ts_out['level_storage'].to_numpy()
+    initial_storage_calliope = float(
+        inp.storage_initial.loc['region1::storage_'] * res.storage_cap.loc['region1::storage_']
+    )
+    if not np.isclose(level_storage_np[0], initial_storage_calliope, rtol=1e-6, atol=1e-1):
+        logger.error(
+            f'Cannot recreate initial storage level -- '
+            f'manual: {level_storage_np[0]}, model: {float(inp.storage_initial)}.'
+        )
         passing = False
-    if not np.allclose(
-        ts_out.filter(like='gen', axis=1).sum(axis=1),
-        ts_out.filter(like='demand', axis=1).sum(axis=1),
-        rtol=0.,
-        atol=0.1
-    ):
-        logger.error(f'Generation does not add up to demand:\n\n{ts_out}\n.')
+    self_loss = float(inp.storage_loss)
+    efficiency = float(inp.energy_eff.loc['region1::storage_'])
+    storage_levels_v1 = level_storage_np[1:]
+    storage_levels_v2 = (
+        (1 - self_loss) * level_storage_np[:-1]  # Self charge loss
+        - efficiency * np.clip(gen_storage_np[:-1], a_min=None, a_max=0.)  # Storage charge
+        - (1 / efficiency) * np.clip(gen_storage_np[:-1], a_min=0., a_max=None)  # Storage discharge
+    )
+    if not np.allclose(storage_levels_v1, storage_levels_v2, rtol=1e-6, atol=1e-1):
+        logger.error('Cannot recreate storage levels in some time steps.')
         passing = False
+
+    # Check consistency between summary and time series outputs
+    for col_name in ['gen_baseload', 'gen_peaking', 'gen_wind', 'gen_solar', 'demand']:
+        total_sum = sum_out.loc[f'{col_name}_total', 'output']
+        total_ts = ts_out[col_name].sum()
+        if not np.isclose(total_sum, total_ts, rtol=1e-6, atol=1e-1):
+            logger.error(
+                f'Summary and time series output total do not match for {col_name} -- '
+                f'summary outputs: {total_sum}, time series outputs: {total_ts}.'
+            )
+            passing = False
 
     return passing
 
