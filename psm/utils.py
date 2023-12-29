@@ -1,6 +1,7 @@
 import sys
 import os
 import logging
+import re
 import json
 import numpy as np
 import pandas as pd
@@ -112,12 +113,13 @@ def get_scenario(
     return scenario
 
 
-def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
-    '''Create override dictionary used to set fixed fixed capacities in Calliope model.
+def get_cap_override_dict(model_name: str, run_mode: str, fixed_caps: dict) -> dict:
+    '''Create override dictionary used to set fixed capacities in Calliope model.
 
     Parameters:
     -----------
     model_name: '1_region' or '6_region'
+    run_mode: 'plan' or 'operate'
     fixed_caps: fixed capacities -- `model.get_summary_outputs(as_dict=True)` has correct format
 
     Returns:
@@ -131,28 +133,23 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
     o_dict = {}  # Populate this override dict
 
     if model_name == '1_region':
-        # Add generation capacities
+        # Add capacities
         for tech, attribute in [
             ('baseload', 'energy_cap_equals'),
             ('peaking', 'energy_cap_equals'),
             ('wind', 'resource_area_equals'),
-            ('solar', 'resource_area_equals')
-        ]:
-            # If this technology is specified, add it to o_dict
-            fixed_caps_key = f'cap_{tech}_total'
-            if fixed_caps_key in fixed_caps:
-                idx = f'locations.region1.techs.{tech}.constraints.{attribute}'
-                o_dict[idx] = fixed_caps[fixed_caps_key]
-
-        # Add storage energy (MWh) and power (MW) capacities
-        for tech, attribute in [
+            ('solar', 'resource_area_equals'),
             ('storage_energy', 'storage_cap_equals'),
             ('storage_power', 'energy_cap_equals')
         ]:
+            # If this technology is specified, add it to o_dict
             fixed_caps_key = f'cap_{tech}_total'
+            tech_name_in_model = re.sub(r'storage_.*', 'storage_', tech)
             if fixed_caps_key in fixed_caps:
-                idx = f'locations.region1.techs.storage_.constraints.{attribute}'
+                idx = f'locations.region1.techs.{tech_name_in_model}.constraints.{attribute}'
                 o_dict[idx] = fixed_caps[fixed_caps_key]
+            elif run_mode == 'operate':
+                raise ValueError(f'In operate mode, must set fixed {tech} capacity.')
 
         # If storage capacity is 0, make initial storage level 0
         if fixed_caps.get('cap_storage_energy_total') == 0.:
@@ -161,15 +158,18 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
     elif model_name == '6_region':
         for region in [f'region{i+1}' for i in range(6)]:
 
-            # Add generation capacities
+            # Add generation and storage capacities
             for tech, attribute in [
                 ('baseload', 'energy_cap_equals'),
                 ('peaking', 'energy_cap_equals'),
                 ('wind', 'resource_area_equals'),
-                ('solar', 'resource_area_equals')
+                ('solar', 'resource_area_equals'),
+                ('storage_energy', 'storage_cap_equals'),
+                ('storage_power', 'energy_cap_equals')
             ]:
                 # If this technology is specified in this region, add it to o_dict
                 fixed_caps_key = f'cap_{tech}_{region}'
+                tech_name_in_model = re.sub(r'storage_.*', 'storage', tech)
                 if fixed_caps_key in fixed_caps:
                     idx = f'locations.{region}.techs.{tech}_{region}.constraints.{attribute}'
                     o_dict[idx] = fixed_caps[fixed_caps_key]
@@ -183,22 +183,20 @@ def get_cap_override_dict(model_name: str, fixed_caps: dict) -> dict:
                     idx = f'links.{idx_regions}.constraints.energy_cap_equals'
                     o_dict[idx] = fixed_caps[fixed_caps_key]
 
-            # Add storage energy (MWh) and power (MW) capacities
-            for tech, attribute in [
-                ('storage_energy', 'storage_cap_equals'),
-                ('storage_power', 'energy_cap_equals')
-            ]:
-                fixed_caps_key = f'cap_{tech}_{region}'
-                if fixed_caps_key in fixed_caps:
-                    idx = f'locations.{region}.techs.storage_{region}.constraints.{attribute}'
-                    o_dict[idx] = fixed_caps[fixed_caps_key]
-
             # If storage capacity is 0, make initial storage level 0
             if fixed_caps.get('cap_storage_energy_total') == 0.:
                 o_dict['techs.storage_.constraints.storage_initial'] = 0.
 
-    if len(o_dict) == 0:
-        raise AttributeError('Override dict is empty. Check if something has gone wrong.')
+            # Do some checks that catch if not enough capacities are not specified in operate mode
+            for tech in ['baseload', 'peaking', 'wind', 'solar', 'storage']:
+                fixed_caps = [i for i in o_dict.keys() if tech in i]
+                if len(fixed_caps) < 3 and run_mode == 'operate':
+                    raise ValueError(f'Expected 3 fixed {tech} capacities, but got {fixed_caps}.')
+            fixed_transmission_caps = [i for i in o_dict.keys() if 'transmission' in i]
+            if len(fixed_transmission_caps) < 7 and run_mode == 'operate':
+                raise ValueError(
+                    f'Expected 7 fixed transmission capacities, but got {fixed_transmission_caps}.'
+                )
 
     logger.debug(f'Created override dict:\n{json.dumps(o_dict, indent=4)}')
     return o_dict

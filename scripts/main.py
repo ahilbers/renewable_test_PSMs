@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 import logging
 import json
@@ -86,14 +87,14 @@ def main():
     '''
 
     run_config = {
-        'model_name': '1_region',
+        'model_name': '6_region',
         'ts_first_period': '2017-06-01',
         'ts_last_period': '2017-06-07',
-        'run_mode': 'plan',
+        'run_mode': 'operate',
         'baseload_integer': False,
         'baseload_ramping': False,
-        'allow_unmet': False,
-        'fixed_caps': None,
+        'allow_unmet': True,
+        'fixed_caps': {},
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,
@@ -101,16 +102,19 @@ def main():
         'log_level_stdout': 'INFO',  # logging level for terminal
     }  # Coded directly in Python for now -- can move to config file if desired
 
-    # Create directory where the logs and outputs are saved
-    output_save_dir = run_config['output_save_dir']
-    if os.path.exists(output_save_dir):
-        raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
-    os.mkdir(output_save_dir)
-
     # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
     logger = psm.utils.get_logger(name='psm', run_config=run_config)
     warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
     warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
+
+    # Create directory where the logs and outputs are saved
+    output_save_dir = run_config['output_save_dir']
+    if os.path.exists(output_save_dir):
+        logger.warning(f'Output directory `{output_save_dir}` already exists. Overwriting results.')
+        shutil.rmtree(output_save_dir)
+        os.mkdir(output_save_dir)
+    else:
+        os.mkdir(output_save_dir)
 
     run_model(config=run_config, logger=logger)
 

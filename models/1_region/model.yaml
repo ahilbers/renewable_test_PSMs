@@ -35,23 +35,13 @@ overrides:
             mode: operate
             cyclic_storage: False
             operation:
-                # maximise scheduling horizon
-                horizon: 332880  # hours
-                window: 332880  # hours
+                # operate model can solve problems in sequential planning horizons and windows
+                horizon: 332880  # hours, solve full problem in one window for now
+                window: 332880  # hours, solve full problem in one window for now
         techs:
             # cyclic storage doesn't work in operate mode since we solve problems in horizons and
             # windows -- so start with 0 storage and finish with 0 storage for energy conservation
             storage_.constraints.storage_initial: 0
-        locations:
-            # these values can be overwritten by `fixed_caps` when initialising model in python
-            region1:
-                techs.baseload.constraints.energy_cap_equals: 50
-                techs.peaking.constraints.energy_cap_equals: 20
-                techs.wind.constraints.resource_area_equals: 30
-                techs.solar.constraints.resource_area_equals: 10
-                techs.storage_.constraints.storage_cap_equals: 50
-                techs.storage_.constraints.energy_cap_equals: 100
-                techs.unmet.constraints.energy_cap_equals: 1e10
     ramping:
         techs.baseload.constraints.energy_ramping: 0.2  # frac/hr
     gurobi:

@@ -51,10 +51,7 @@ class ModelBase(calliope.Model):
         # Some checks when running in operate mode
         if run_mode == 'operate':
             if fixed_caps is None:
-                logger.info(
-                    f'No fixed capacities passed into model call. '
-                    f'Reading fixed capacities from {model_name}/model.yaml'
-                )
+                raise ValueError(f'No fixed capacities passed into model in `operate` mode.')
             if not allow_unmet:
                 raise ValueError('Must allow unmet demand when running in operate mode.')
 
@@ -69,7 +66,9 @@ class ModelBase(calliope.Model):
         if extra_override is not None:
             scenario = f'{scenario},{extra_override}'
         if fixed_caps is not None:
-            override_dict = psm.utils.get_cap_override_dict(model_name, fixed_caps)
+            override_dict = psm.utils.get_cap_override_dict(
+                model_name=model_name, run_mode=run_mode, fixed_caps=fixed_caps
+            )
         else:
             override_dict = None
 
