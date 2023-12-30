@@ -207,8 +207,8 @@ def get_cap_override_dict(model_name: str, run_mode: str, fixed_caps: dict) -> d
                     o_dict[idx] = fixed_caps[fixed_caps_key]
 
             # If storage capacity is 0, make initial storage level 0
-            if fixed_caps.get('cap_storage_energy_total') == 0.:
-                o_dict['techs.storage_.constraints.storage_initial'] = 0.
+            if fixed_caps.get(f'cap_storage_energy_{region}') == 0.:
+                o_dict[f'techs.storage_{region}.constraints.storage_initial'] = 0.
 
     logger.debug(f'Created override dict:\n{json.dumps(o_dict, indent=4)}')
     return o_dict
@@ -389,7 +389,8 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:
     gen_storage_np = ts_out['gen_storage'].to_numpy()
     level_storage_np = ts_out['level_storage'].to_numpy()
     initial_storage_calliope = float(
-        inp.storage_initial.loc['region1::storage_'] * res.storage_cap.loc['region1::storage_']
+        inp.storage_initial.loc['region1::storage_'].fillna(0.)
+        * res.storage_cap.loc['region1::storage_']
     )
     if not np.isclose(level_storage_np[0], initial_storage_calliope, rtol=1e-6, atol=1e-1):
         logger.error(
@@ -616,7 +617,9 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:
         gen_storage_np = ts_out[f'gen_storage_{region}'].to_numpy()
         level_storage_np = ts_out[f'level_storage_{region}'].to_numpy()
         key = f'{region}::storage_{region}'
-        initial_storage_calliope = float(inp.storage_initial.loc[key] * res.storage_cap.loc[key])
+        initial_storage_calliope = float(
+            inp.storage_initial.loc[key].fillna(0.) * res.storage_cap.loc[key]
+        )
         if not np.isclose(level_storage_np[0], initial_storage_calliope, rtol=1e-6, atol=1e-1):
             logger.error(
                 f'Cannot recreate initial storage level in {region} -- '

@@ -91,15 +91,25 @@ def main():
     output_save_dir (str) : name of directory where outputs are saved
     save_full_model (bool) : save all model properies and results in addition to summary outputs
     '''
+
+    fixed_caps = {
+        'cap_baseload_total': 0.,
+        'cap_peaking_total': 0.,
+        'cap_wind_total': 0.,
+        'cap_solar_total': 0.,
+        'cap_storage_power_total': 0.,
+        'cap_storage_energy_total': 0.
+    }
+
     run_config = {
         'model_name': '1_region',
         'ts_first_period': '2017-06-01',
         'ts_last_period': '2017-06-07',
-        'run_mode': 'plan',
+        'run_mode': 'operate',
         'baseload_integer': False,
         'baseload_ramping': False,
-        'allow_unmet': False,
-        'fixed_caps': None,
+        'allow_unmet': True,
+        'fixed_caps': fixed_caps,
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,

@@ -269,7 +269,7 @@ class OneRegionModel(ModelBase):
         # Storage levels should reflect those at beginning of time step -- so offset by 1
         ts_outputs['level_storage'] = np.concatenate((
             np.array([
-                inp.storage_initial.loc['region1::storage_']
+                inp.storage_initial.loc['region1::storage_'].fillna(0.)  # Fill 0/0 case with 0
                 * res.storage_cap.loc['region1::storage_']
             ]),
             res.storage.loc['region1::storage_'].values[:-1]
@@ -520,8 +520,9 @@ class SixRegionModel(ModelBase):
                     res.carrier_prod.loc[key_power].values + res.carrier_con.loc[key_power].values
                 )
                 # Storage levels should reflect those at beginning of time step -- so offset by 1
+                # Fill NaNs coming from 0/0 with 0
                 ts_outputs[f'level_storage_{region}'] = np.concatenate((
-                    np.array([inp.storage_initial.loc[key] * res.storage_cap.loc[key]]),
+                    np.array([inp.storage_initial.loc[key].fillna(0.) * res.storage_cap.loc[key]]),
                     res.storage.loc[key].values[:-1]
                 ))  # Last storage level is not included in ts_outputs
 
