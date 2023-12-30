@@ -15,7 +15,7 @@ def test_invalid_model_name():
         model = psm.models.ModelBase(model_name='invalid_name', ts_data=None, run_mode='plan')
 
 
-@pytest.mark.parametrize('model_name', ['6_region'])
+@pytest.mark.parametrize('model_name', ['1_region', '6_region'])
 class TestModels:
     '''Test core model functionality and some options.'''
 
@@ -34,6 +34,16 @@ class TestModels:
                 columns={'demand': 'wrong_name', 'demand_region2': 'wrong_name'}
             )
             _ = self.Model(ts_data=ts_data_wrong_columns, run_mode='plan')
+
+    def test_must_allow_unmet_in_operate_mode(self, fixed_caps_dict: dict[str, dict[str, float]]):
+        '''Should get ValueError for model in 'operate' mode without allowing unmet demand.'''
+        with pytest.raises(ValueError, match='Must allow unmet demand'):
+            _ = self.Model(
+                ts_data=self.ts_data,
+                run_mode='operate',
+                fixed_caps=fixed_caps_dict,
+                allow_unmet=False
+            )
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
     def test_model_basic(self, run_mode: str, fixed_caps_dict: dict[str, dict[str, float]]):
