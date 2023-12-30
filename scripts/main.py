@@ -54,6 +54,9 @@ def run_model(config: dict, logger: logging.Logger = None):
     model.run()
     logger.info('Done running model.')
 
+    # Make plot
+    model.plot_timeseries()
+
     # Save outputs to file
     output_save_dir = config['output_save_dir']
     model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
@@ -87,13 +90,13 @@ def main():
     '''
 
     run_config = {
-        'model_name': '6_region',
+        'model_name': '1_region',
         'ts_first_period': '2017-06-01',
         'ts_last_period': '2017-06-07',
-        'run_mode': 'operate',
+        'run_mode': 'plan',
         'baseload_integer': False,
         'baseload_ramping': False,
-        'allow_unmet': True,
+        'allow_unmet': False,
         'fixed_caps': {},
         'extra_override': None,
         'output_save_dir': 'outputs',

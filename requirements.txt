@@ -1,5 +1,5 @@
-numpy
-pandas
 jupyterlab
 pytest
+numpy
+pandas
 calliope==0.6.10

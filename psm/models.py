@@ -141,6 +141,10 @@ class ModelBase(calliope.Model):
             logger.critical('Model has inconsistent outputs. Check log files for details.')
         logger.info('Done running model.')
 
+    def plot_timeseries(self):
+        '''Make plot of model timeseries outputs.'''
+        print(0)
+
 
 class OneRegionModel(ModelBase):
     '''Instance of 1-region power system model.'''
