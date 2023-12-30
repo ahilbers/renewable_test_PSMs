@@ -142,8 +142,25 @@ class ModelBase(calliope.Model):
         logger.info('Done running model.')
 
     def plot_timeseries(self):
-        '''Make plot of model timeseries outputs.'''
-        print(0)
+        '''Make plot of model timeseries outputs, as HTML object using plotly.'''
+
+        # Set colors
+        plot_colors = {
+            'baseload': '#003399',
+            'peaking': '#3876f2',
+            'wind': '#4eba44',
+            'solar': '#e3bb12',
+            'storage': '#f42323',
+            'demand_power': '#000000',
+            'unmet': '#000000'
+        }
+        for tech in self._model_data.colors.techs.values:
+            for key in plot_colors.keys():
+                if key in tech:
+                    self._model_data.colors.loc[tech] = plot_colors[key]
+
+        # Make plotly plot as HTML page
+        self.plot.timeseries(array='all', subset={'costs': ['monetary']})
 
 
 class OneRegionModel(ModelBase):

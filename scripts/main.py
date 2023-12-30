@@ -16,6 +16,8 @@ def run_model(config: dict, logger: logging.Logger = None):
         from the 'psm' package
     '''
 
+    output_save_dir = config['output_save_dir']
+
     # If no logger is specified, include log messages from 'psm' package
     if logger is None:
         logger = logging.getLogger(name='psm')
@@ -54,11 +56,12 @@ def run_model(config: dict, logger: logging.Logger = None):
     model.run()
     logger.info('Done running model.')
 
-    # Make plot
+    # Make plot and save to file
+    logger.info(f'Saving plot to file `{output_save_dir}/plot.html`.')
+    os.rename('temp_plot.html', f'{output_save_dir}/plot.html')
     model.plot_timeseries()
 
     # Save outputs to file
-    output_save_dir = config['output_save_dir']
     model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
     logger.info(f'Saved summary model results to `{output_save_dir}`.')
     model.get_timeseries_outputs().to_csv(f'{output_save_dir}/timeseries_outputs.csv')
