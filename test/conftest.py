@@ -1,5 +1,4 @@
 import pytest
-import typing
 import pandas as pd
 
 
@@ -51,7 +50,48 @@ def _get_ts_data_6_region():
 
 
 @pytest.fixture()
-def ts_data_dict() -> typing.Dict[str, pd.DataFrame]:
+def ts_data_dict() -> dict[str, pd.DataFrame]:
     '''Sample time series data for both '1_region' and '6_region' models.'''
     out_dict = {'1_region': _get_ts_data_1_region(), '6_region': _get_ts_data_6_region()}
     return out_dict
+
+
+@pytest.fixture()
+def fixed_caps_dict() -> dict[str, dict[str, float]]:
+    return {
+        '1_region': {
+            'cap_baseload_total': 10.,
+            'cap_peaking_total': 20.,
+            'cap_wind_total': 20.,
+            'cap_solar_total': 15.,
+            'cap_storage_power_total': 10.,
+            'cap_storage_energy_total': 50.
+        },
+        '6_region': {
+            'cap_baseload_region1': 20.,
+            'cap_peaking_region1': 25.,
+            'cap_transmission_region1_region2': 30.,
+            'cap_transmission_region1_region5': 20.,
+            'cap_transmission_region1_region6': 10.,
+            'cap_wind_region2': 40.,
+            'cap_solar_region2': 20.,
+            'cap_storage_power_region2': 20.,
+            'cap_storage_energy_region2': 100.,
+            'cap_transmission_region2_region3': 40.,
+            'cap_baseload_region3': 50.,
+            'cap_peaking_region3': 20.,
+            'cap_transmission_region3_region4': 30.,
+            'cap_transmission_region4_region5': 30.,
+            'cap_wind_region5': 40.,
+            'cap_solar_region5': 30.,
+            'cap_storage_power_region5': 20.,
+            'cap_storage_energy_region5': 100.,
+            'cap_transmission_region5_region6': 10.,
+            'cap_baseload_region6': 20.,
+            'cap_peaking_region6': 20.,
+            'cap_wind_region6': 30.,
+            'cap_solar_region6': 20.,
+            'cap_storage_power_region6': 20.,
+            'cap_storage_energy_region6': 100.,
+        }
+    }

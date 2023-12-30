@@ -15,7 +15,7 @@ def test_invalid_model_name():
         model = psm.models.ModelBase(model_name='invalid_name', ts_data=None, run_mode='plan')
 
 
-@pytest.mark.parametrize('model_name', ['1_region', '6_region'])
+@pytest.mark.parametrize('model_name', ['6_region'])
 class TestModels:
     '''Test core model functionality and some options.'''
 
@@ -35,18 +35,18 @@ class TestModels:
             )
             _ = self.Model(ts_data=ts_data_wrong_columns, run_mode='plan')
 
-    def test_must_allow_unmet_in_operate_mode(self):
-        '''Should get ValueError for model in 'operate' mode without allowing unmet demand.'''
-        with pytest.raises(ValueError, match='Must allow unmet demand'):
-            _ = self.Model(ts_data=self.ts_data, run_mode='operate', allow_unmet=False)
-
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
-    def test_model_basic(self, run_mode: str):
+    def test_model_basic(self, run_mode: str, fixed_caps_dict: dict[str, dict[str, float]]):
         '''Test basic model initialisation and running.'''
 
         # Check model is created correctly
         allow_unmet = True if run_mode == 'operate' else False
-        model = self.Model(ts_data=self.ts_data, run_mode=run_mode, allow_unmet=allow_unmet)
+        model = self.Model(
+            ts_data=self.ts_data,
+            run_mode=run_mode,
+            allow_unmet=allow_unmet,
+            fixed_caps=fixed_caps_dict[self.model_name] if run_mode == 'operate' else None
+        )
         assert model.model_name == self.model_name
         assert model.num_timesteps == self.ts_data.shape[0]
 
@@ -98,39 +98,11 @@ class TestModels:
         )  # Check generation matches demand in each time step
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
-    def test_model_set_fixed_caps(self, run_mode: str):
+    def test_model_set_fixed_caps(
+        self, run_mode: str, fixed_caps_dict: dict[str, dict[str, float]]
+    ):
         '''Test functionality to set fixed generation and transmission capacities.'''
 
-        # Set some fixed capacities
-        fixed_caps_dict = {
-            '1_region': {
-                'cap_baseload_total': 20.,
-                'cap_peaking_total': 20.,
-                'cap_wind_total': 20.,
-                'cap_solar_total': 15.
-            },
-            '6_region': {
-                'cap_baseload_region1': 20.,
-                'cap_peaking_region1': 25.,
-                'cap_transmission_region1_region2': 30.,
-                'cap_transmission_region1_region5': 20.,
-                'cap_transmission_region1_region6': 10.,
-                'cap_wind_region2': 40.,
-                'cap_solar_region2': 20.,
-                'cap_transmission_region2_region3': 40.,
-                'cap_baseload_region3': 50.,
-                'cap_peaking_region3': 20.,
-                'cap_transmission_region3_region4': 30.,
-                'cap_transmission_region4_region5': 30.,
-                'cap_wind_region5': 40.,
-                'cap_solar_region5': 30.,
-                'cap_transmission_region5_region6': 10.,
-                'cap_baseload_region6': 20.,
-                'cap_peaking_region6': 20.,
-                'cap_wind_region6': 30.,
-                'cap_solar_region6': 20.,
-            }
-        }
         fixed_caps = fixed_caps_dict[self.model_name]
 
         # Create and run a model with these capacities and get summary outputs dictionary

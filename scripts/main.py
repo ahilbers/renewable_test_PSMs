@@ -91,7 +91,6 @@ def main():
     output_save_dir (str) : name of directory where outputs are saved
     save_full_model (bool) : save all model properies and results in addition to summary outputs
     '''
-
     run_config = {
         'model_name': '1_region',
         'ts_first_period': '2017-06-01',
@@ -100,7 +99,7 @@ def main():
         'baseload_integer': False,
         'baseload_ramping': False,
         'allow_unmet': False,
-        'fixed_caps': {},
+        'fixed_caps': None,
         'extra_override': None,
         'output_save_dir': 'outputs',
         'save_full_model': True,
