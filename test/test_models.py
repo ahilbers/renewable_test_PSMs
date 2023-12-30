@@ -20,12 +20,18 @@ class TestModels:
     '''Test core model functionality and some options.'''
 
     @pytest.fixture(autouse=True)
-    def _set_model_and_ts_data(self, model_name: str, ts_data_dict: dict[str, pd.DataFrame]):
+    def _set_model_and_ts_data(
+        self,
+        model_name: str,
+        ts_data_dict: dict[str, pd.DataFrame],
+        fixed_caps_dict: dict[str, dict[str, float]]
+    ):
         '''Set model and ts_data used across this class.'''
         self.model_name = model_name
         model_dict = {'1_region': psm.models.OneRegionModel, '6_region': psm.models.SixRegionModel}
         self.Model = model_dict[model_name]
         self.ts_data = ts_data_dict[model_name]
+        self.fixed_caps = fixed_caps_dict[model_name]
 
     def test_check_ts_column_names(self):
         '''Should get AttributeError when using timeseries with wrong column names.'''
@@ -35,13 +41,13 @@ class TestModels:
             )
             _ = self.Model(ts_data=ts_data_wrong_columns, run_mode='plan')
 
-    def test_must_allow_unmet_in_operate_mode(self, fixed_caps_dict: dict[str, dict[str, float]]):
+    def test_must_allow_unmet_in_operate_mode(self):
         '''Should get ValueError for model in 'operate' mode without allowing unmet demand.'''
         with pytest.raises(ValueError, match='Must allow unmet demand'):
             _ = self.Model(
                 ts_data=self.ts_data,
                 run_mode='operate',
-                fixed_caps=fixed_caps_dict,
+                fixed_caps=self.fixed_caps,
                 allow_unmet=False
             )
 
@@ -55,7 +61,7 @@ class TestModels:
             ts_data=self.ts_data,
             run_mode=run_mode,
             allow_unmet=allow_unmet,
-            fixed_caps=fixed_caps_dict[self.model_name] if run_mode == 'operate' else None
+            fixed_caps=self.fixed_caps if run_mode == 'operate' else None
         )
         assert model.model_name == self.model_name
         assert model.num_timesteps == self.ts_data.shape[0]
@@ -108,23 +114,19 @@ class TestModels:
         )  # Check generation matches demand in each time step
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
-    def test_model_set_fixed_caps(
-        self, run_mode: str, fixed_caps_dict: dict[str, dict[str, float]]
-    ):
+    def test_model_set_fixed_caps(self, run_mode: str):
         '''Test functionality to set fixed generation and transmission capacities.'''
-
-        fixed_caps = fixed_caps_dict[self.model_name]
 
         # Create and run a model with these capacities and get summary outputs dictionary
         model = self.Model(
-            ts_data=self.ts_data, run_mode=run_mode, fixed_caps=fixed_caps, allow_unmet=True
+            ts_data=self.ts_data, run_mode=run_mode, fixed_caps=self.fixed_caps, allow_unmet=True
         )
         model.run()
         summary_outputs = model.get_summary_outputs(as_dict=True)
 
         # Check that model capacities are the ones we set
-        summary_outputs_caps = {key: summary_outputs[key] for key in fixed_caps.keys()}
-        assert summary_outputs_caps == fixed_caps
+        summary_outputs_caps = {key: summary_outputs[key] for key in self.fixed_caps.keys()}
+        assert summary_outputs_caps == self.fixed_caps
 
     def test_ts_weights(self):
         '''Test the ability to set weights for each time step.'''
