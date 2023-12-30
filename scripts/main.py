@@ -4,6 +4,7 @@ import warnings
 import logging
 import json
 import psm
+import example_configs
 
 
 def run_model(config: dict, logger: logging.Logger = None):
@@ -73,49 +74,11 @@ def run_model(config: dict, logger: logging.Logger = None):
 
 
 def main():
+    '''Create, solve and analyse model.'''
 
-    '''
-    Info on run_config keys:
-    ------------------------
-    model_name (str) : '1_region' or '6_region'
-    ts_first_period (str) : first period of time series, slice, e.g. '2017-06-08'
-    ts_last_period (str) : last period of time series slice, e.g. '2017-06-15'
-    run_mode (str) : 'plan' or 'operate': whether model determines optimal generation and
-        transmission capacities or optimises operation with a fixed setup
-    baseload_integer (bool) : baseload integer capacity constraint (units of 3GW)
-    baseload_ramping (bool) : baseload ramping constraint
-    allow_unmet (bool) : allow unmet demand in 'plan' mode (always allowed in operate mode)
-    fixed_caps (dict[str, float]) : fixed generation and transmission capacities. See
-        `tutorial.ipynb` for an example.
-    extra_override (str) : name of additional override, should be defined in relevant `model.yaml`
-    output_save_dir (str) : name of directory where outputs are saved
-    save_full_model (bool) : save all model properies and results in addition to summary outputs
-    '''
-
-    fixed_caps = {
-        'cap_baseload_total': 0.,
-        'cap_peaking_total': 0.,
-        'cap_wind_total': 0.,
-        'cap_solar_total': 0.,
-        'cap_storage_power_total': 0.,
-        'cap_storage_energy_total': 0.
-    }
-
-    run_config = {
-        'model_name': '1_region',
-        'ts_first_period': '2017-06-01',
-        'ts_last_period': '2017-06-07',
-        'run_mode': 'operate',
-        'baseload_integer': False,
-        'baseload_ramping': False,
-        'allow_unmet': True,
-        'fixed_caps': fixed_caps,
-        'extra_override': None,
-        'output_save_dir': 'outputs',
-        'save_full_model': True,
-        'log_level_file': 'DEBUG',  # logging level for log file
-        'log_level_stdout': 'INFO',  # logging level for terminal
-    }  # Coded directly in Python for now -- can move to config file if desired
+    # config_*, with * = one_region_operate, one_region_plan, six_region_operate, six_region_plan
+    # are example configurations
+    run_config = example_configs.config_one_region_operate
 
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
