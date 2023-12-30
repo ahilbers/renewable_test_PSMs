@@ -119,7 +119,7 @@ class ModelBase(calliope.Model):
             )
 
         # Detect missing leap days -- reset index if so
-        if psm.utils.has_missing_leap_days(ts_data_used):  # pragma: no cover
+        if psm.utils.has_missing_leap_days(ts_data_used):
             logger.warning('Missing leap days detected. Time series index reset to start in 2020.')
             ts_data_used.index = pd.date_range(
                 start='2020-01-01', periods=self.num_timesteps, freq='h'
@@ -137,7 +137,7 @@ class ModelBase(calliope.Model):
         super(ModelBase, self).run()
         logger.debug(f'Model summary outputs:\n\n{self.get_summary_outputs()}\n')
         logger.debug(f'Model time series outputs:\n\n{self.get_timeseries_outputs()}\n')
-        if not psm.utils.has_consistent_outputs(model=self):  # pragma: no cover
+        if not psm.utils.has_consistent_outputs(model=self):
             logger.critical('Model has inconsistent outputs. Check log files for details.')
         logger.info('Done running model.')
 

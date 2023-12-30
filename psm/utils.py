@@ -11,7 +11,7 @@ import calliope
 logger = logging.getLogger(name=__package__)  # Logger with name 'psm', can be customised elsewhere
 
 
-def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cover
+def get_logger(name: str, run_config: dict) -> logging.Logger:
     '''Get a logger to use throughout the codebase.
 
     Parameters:
@@ -46,7 +46,7 @@ def get_logger(name: str, run_config: dict) -> logging.Logger:  # pragma: no cov
 def load_time_series_data(
     model_name: str,
     path: str = os.path.join(os.path.dirname(__file__), '..', 'data/demand_wind_solar.csv')
-) -> pd.DataFrame:  # pragma: no cover
+) -> pd.DataFrame:
     '''Load demand, wind and solar time series data for model.
 
     Parameters:
@@ -68,7 +68,7 @@ def load_time_series_data(
     return ts_data
 
 
-def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:  # pragma: no cover
+def has_missing_leap_days(ts_data: pd.DataFrame) -> bool:
     '''Detect if a time series has missing leap days.
 
     Parameters:
@@ -128,7 +128,7 @@ def get_cap_override_dict(model_name: str, run_mode: str, fixed_caps: dict) -> d
     '''
 
     if not isinstance(fixed_caps, dict):
-        raise ValueError('Incorrect input format for fixed_caps')  # pragma: no cover
+        raise ValueError('Incorrect input format for fixed_caps')
 
     o_dict = {}  # Populate this override dict
 
@@ -287,7 +287,7 @@ def get_tech_regions(model: calliope.Model) -> list[tuple[str]]:
     return tech_regions
 
 
-def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: no cover
+def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:
     '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
@@ -423,7 +423,7 @@ def _has_consistent_outputs_1_region(model: calliope.Model) -> bool:  # pragma: 
     return passing
 
 
-def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: no cover
+def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:
     '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
@@ -651,7 +651,7 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:  # pragma: 
     return passing
 
 
-def has_consistent_outputs(model: calliope.Model) -> bool:  # pragma: no cover
+def has_consistent_outputs(model: calliope.Model) -> bool:
     '''Check if model outputs (costs, generation levels, emissions) are internally consistent.
     Log errors whenever they are not.
 
