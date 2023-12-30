@@ -58,8 +58,8 @@ def run_model(config: dict, logger: logging.Logger = None):
 
     # Make plot and save to file
     logger.info(f'Saving plot to file `{output_save_dir}/plot.html`.')
-    os.rename('temp_plot.html', f'{output_save_dir}/plot.html')
     model.plot_timeseries()
+    shutil.copy('temp_plot.html', f'{output_save_dir}/plot.html')  # Copy file to output directory
 
     # Save outputs to file
     model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
@@ -108,19 +108,19 @@ def main():
         'log_level_stdout': 'INFO',  # logging level for terminal
     }  # Coded directly in Python for now -- can move to config file if desired
 
-    # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
-    logger = psm.utils.get_logger(name='psm', run_config=run_config)
-    warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
-    warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
-
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
     if os.path.exists(output_save_dir):
-        logger.warning(f'Output directory `{output_save_dir}` already exists. Overwriting results.')
+        print(f'Output directory `{output_save_dir}` already exists. Deleting old version.')
         shutil.rmtree(output_save_dir)
         os.mkdir(output_save_dir)
     else:
         os.mkdir(output_save_dir)
+
+    # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
+    logger = psm.utils.get_logger(name='psm', run_config=run_config)
+    warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
+    warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
 
     run_model(config=run_config, logger=logger)
 

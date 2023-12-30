@@ -19,6 +19,7 @@ __pycache__/
 
 # Model outputs
 outputs*
+temp_plot.html
 
 # Old data files
 *old.csv
