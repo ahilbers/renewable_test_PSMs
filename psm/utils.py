@@ -191,11 +191,14 @@ def get_cap_override_dict(model_name: str, run_mode: str, fixed_caps: dict) -> d
             for tech in ['baseload', 'peaking', 'wind', 'solar', 'storage']:
                 fixed_caps = [i for i in o_dict.keys() if tech in i]
                 if len(fixed_caps) < 3 and run_mode == 'operate':
-                    raise ValueError(f'Expected 3 fixed {tech} capacities, but got {fixed_caps}.')
+                    raise ValueError(
+                        f'Expected 3 fixed {tech} capacities, but only {fixed_caps} specified.'
+                    )
             fixed_transmission_caps = [i for i in o_dict.keys() if 'transmission' in i]
             if len(fixed_transmission_caps) < 7 and run_mode == 'operate':
                 raise ValueError(
-                    f'Expected 7 fixed transmission capacities, but got {fixed_transmission_caps}.'
+                    'Expected 7 fixed transmission capacities, '
+                    f'but only {fixed_transmission_caps} specified.'
                 )
 
     logger.debug(f'Created override dict:\n{json.dumps(o_dict, indent=4)}')
