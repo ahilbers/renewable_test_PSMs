@@ -11,8 +11,8 @@ config_one_region_operate = {
         'cap_peaking_total': 20.,
         'cap_wind_total': 50.,
         'cap_solar_total': 50.,
-        'cap_storage_power_total': 10.,
-        'cap_storage_energy_total': 50.
+        'cap_storage_power_total': 20.,
+        'cap_storage_energy_total': 100.
     },
     'extra_override': None,
     'output_save_dir': 'outputs',
