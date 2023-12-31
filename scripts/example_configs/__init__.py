@@ -18,5 +18,5 @@ save_full_model (bool) : save all model properies and results in addition to sum
 
 from .one_region_operate import config_one_region_operate
 from .one_region_plan import config_one_region_plan
-# from .six_region_operate import config_six_region_operate
-# from .six_region_plan import config_six_region_plan
+from .six_region_operate import config_six_region_operate
+from .six_region_plan import config_six_region_plan

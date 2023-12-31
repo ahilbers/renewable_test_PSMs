@@ -89,10 +89,14 @@ def main():
     else:
         os.mkdir(output_save_dir)
 
-    # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
+    # Log from 'psm' package, ignore warnings about depreciation rates and plotting changing in future
     logger = psm.utils.get_logger(name='psm', run_config=run_config)
-    warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
-    warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
+    warning_messages_to_ignore = [
+        '.*\n.*setting depreciation rate as 1/lifetime.*',
+        '.*Plotting will no longer be available.*'
+    ]
+    for message in warning_messages_to_ignore:
+        warnings.filterwarnings(action='ignore', message=message)
 
     run_model(config=run_config, logger=logger)
 
