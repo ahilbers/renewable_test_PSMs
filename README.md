@@ -7,13 +7,13 @@
 
 #### Summary
 
-<a href="https://www.youtube.com/watch?v=-dk3CVzaGew"> <img align="left" width="300" src="documentation/youtube_link.png"/> </a> 
+<a href="https://www.youtube.com/watch?v=-dk3CVzaGew"> <img align="left" width="300" src="documentation/youtube_link.png"/> </a>
 
-This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models. 
+This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
 
 For a video introduction to energy system models, as well as a (slightly outdated) tutorial on this repo, see the video link on the left. For a very quick start, see [tutorial without installing](#tutorial-without-installing).
 
-**Note**: This is a relatively new version that includes solar power. The version of the models [used in papers](#use-in-papers) do not contain solar power and are available under the branch `2020_papers`.
+**Note**: This is a relatively new version that includes solar power and storage. The version of the models [used in papers](#use-in-papers) do not contain solar power. For the versions of the model used in 2020 papers, see the branch `2020_papers`.
 
 #### Rationale
 
@@ -67,7 +67,7 @@ For a quick introduction to the models, see [this link](https://mybinder.org/v2/
 To use these models in your own code, or customise them, you'll have to install the package (see section below). Then, you can run a sample simulation via
 
 ```
-python3 scripts/main.py
+python scripts/main.py
 ```
 
 This file is a template run illustrating the models' functionality. You can customise it for your own simulations.
@@ -130,11 +130,15 @@ where you should change the `/usr/local/opt/cbc` to the location that `cbc` was 
 
 ## Use in papers
 
-Specific (modified) version of these models have been used in two papers:
+Specific (modified) version of these models have been used in papers, as well as a PhD thesis:
 
-- AP Hilbers, DJ Brayshaw, A Gandy (2020). Efficient quantification of the impact of demand and weather uncertainty in power system models. *IEEE Transactions on Power Systems*. [doi:10.1109/TPWRS.2020.3031187](https://doi.org/10.1109/TPWRS.2020.3031187).
+- AP Hilbers, DJ Brayshaw, A Gandy (2020). Efficient quantification of the impact of demand and weather uncertainty in power system models. *IEEE Transactions on Power Systems*. doi:[10.1109/TPWRS.2020.3031187](https://doi.org/10.1109/TPWRS.2020.3031187).
 
-- AP Hilbers, DJ Brayshaw, A Gandy (2020). Importance subsampling for power system planning under multi-year demand and weather uncertainty. In proceedings of the *16th International Conference on Probabilistic Methods Applied to Power Systems (PMAPS 2020)*. [doi.org/10.1109/PMAPS47429.2020.9183591](https://doi.org/10.1109/PMAPS47429.2020.9183591)
+- AP Hilbers, DJ Brayshaw, A Gandy (2020). Importance subsampling for power system planning under multi-year demand and weather uncertainty. In proceedings of the *16th International Conference on Probabilistic Methods Applied to Power Systems (PMAPS 2020)*. doi:[10.1109/PMAPS47429.2020.9183591](https://doi.org/10.1109/PMAPS47429.2020.9183591)
+
+- AP Hilbers, DJ Brayshaw, A Gandy (2023). Reducing climate risk in energy system planning: a posteriori time series aggregation for models with storage. *Applied Energy*, 334, 120624. doi:[10.1016/j.apenergy.2022.120624](https://doi.org/10.1016/j.apenergy.2022.120624)
+
+- AP Hilbers (2023). Subsampling for renewable electricity system optimisation. Imperial College London. [link](https://spiral.imperial.ac.uk/handle/10044/1/105480)
 
 
 
