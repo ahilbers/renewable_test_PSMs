@@ -70,6 +70,7 @@ techs:
             energy_eff: 0.95  # Square this number for round trip efficiency
             storage_loss: 0.00001  # Fraction of energy charge lost per hour
             storage_initial: 0.  # Initial storage level, fraction of energy capacity
+            # energy_cap_per_storage_cap_equals: 4.  # KWh storage per KW power
         costs:
             monetary:
                 energy_cap: 40.  # GBP per KW
