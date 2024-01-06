@@ -107,58 +107,56 @@ Time series inputs consist of hourly demand levels, wind capacity factors and so
 Minimise
 
 $$
-\Bigg[ \frac{T}{8760}
-  \Bigg( \! \underbrace{\sum_{i \in \mathcal{I}} C_i^\text{gen} \text{cap}^\text{gen}_{i}}_{\substack{\text{install cost,} \\ \text{generation}}}
-  + \underbrace{ \vphantom{\sum_{i \in \mathcal{I}}} C^\text{sto} \text{cap}^\text{sto} }_{\substack{\text{install cost,} \\ \text{storage}}} \!\! \Bigg)
-  + \underbrace{ \sum_{t \in \mathcal{T}} \sum_{i \in \mathcal{I}} F_i^\text{gen} \text{gen}_{i,t}}_\text{generation cost} \Bigg]
+\Bigg\[ 
+\frac{T}{8760}
+\Bigg(
+\underbrace{\sum _{i \in \mathcal{I}} C _i^\text{gen} \text{cap}^\text{gen} _{i}} _{\substack{\text{install cost,} \\ \text{generation}}} + \underbrace{ C^\text{sto} \text{cap}^\text{sto} } _{\substack{\text{install cost,} \\ \text{storage}}}
+\Bigg) + \underbrace{ \sum _{t \in \mathcal{T}} \sum _{i \in \mathcal{I}} F _i^\text{gen} \text{gen} _{i,t}} _\text{generation cost}
+\Bigg\]
 $$
-by optimising over decision variables $\textbf{D}$ and $(\textbf{O}_t)_{t \in \mathcal{T}}$, where
+
+by optimising over decision variables $D$ and $(O_t)_{t \in \mathcal{T}}$, where
+
 $$
-  \textbf{D} = [\text{cap}^\text{gen}_{i}, \ \text{cap}^\text{sto} \ | \ i \in \mathcal{I}]
+  D = \[ \text{cap}^\text{gen} _i, \ \text{cap}^\text{sto} \ | \ i \in \mathcal{I} \]
 $$
-$$
-  \textbf{O}_t = [\text{gen}_{i,t},\ \ch_{t} \ | \ i \in \mathcal{I}]
-$$
+
+$$ O_t = \[ \text{gen} _{i,t},\ \text{ch} _{t} \ | \ i \in \mathcal{I} \] $$
+
 subject to
+
+$$ \sum _{i \in \mathcal{I}} \text{gen} _{i,t} = d _{t} + \text{ch} _{t} \quad \text{for all} \ t $$
+
+$$ \text{sto}_{0} = 0 $$
+
 $$
-  \sum_{i \in \mathcal{I}} \text{gen}_{i,t} = d_{t} + \ch_{t} \quad \text{for all} \ t
-$$
-$$
-  \text{sto}_{0} = 0
-$$
-$$
-  \text{sto}_{t+1} = (1 - l^\text{sto}) \text{sto}_{t} +
+  \text{sto} _{t+1} = (1 - l^\text{sto}) \text{sto} _{t} +
   \begin{cases}
-    e^\text{sto} \ch_{t} \quad \text{if} \ \ch_{t} \ge 0 \\
-    \frac{1}{e^\text{sto}} \ch_{t} \quad \text{if} \ \ch_{t} < 0
+    e^\text{sto} \text{ch} _{t} \quad \text{if} \ \text{ch} _{t} \ge 0 \\
+    \frac{1}{e^\text{sto}} \text{ch} _{t} \quad \text{if} \ \text{ch} _{t} < 0
   \end{cases}
   \quad \text{for all} \ t
 $$
-$$
-  0 \le \text{gen}_{i,t} \le \text{cap}^\text{gen}_{i} \quad \text{for all} \ i, t
-$$
-$$
-  0 \le \text{gen}_{j,t} \le \text{cap}^\text{gen}_{j} \lambda_{j,t} \quad \text{for all} \ j=\{s, w\}, t
-$$
-$$
-  0 \le \text{sto}_{t} \le \text{cap}^\text{sto} \quad \text{for all} \ t
-$$
-$$
-  [\text{if baseload\_ramping = True}] \quad | \, \text{gen}_{b,t} - \text{gen}_{b,t+1} | \le 0.2 \text{cap}^\text{gen}_{b} \quad \text{for all} \ t
-$$
-$$
-  [\text{if baseload\_integer = True}] \quad \text{cap}^\text{gen}_{b} \in 3\mathbb{Z}
-$$
-$$
-  [\text{if allow\_unmet = False}] \quad \text{gen}_{u,t} = 0 \quad \text{for all} \: t.
-$$
 
-The vectors $\textbf{D}$ and $(\textbf{O}_t)_{t \ \in \mathcal{T}}$ are the design and operational decision variables. The factor $\frac{T}{8760}$ normalises install costs to the same temporal scale as generation costs, since $C_i^{gen}$ and $C_{r,r'}^{tr}$ are costs per year of plant lifetime and there are 8760 hours (time steps) in a year.
+$$ 0 \le \text{gen} _{i,t} \le \text{cap}^\text{gen} _{i} \quad \text{for all} \ i \in \[b, p\], \ t $$
+
+$$ 0 \le \text{gen} _{j,t} \le \text{cap}^\text{gen} _{i} \lambda _{j,t} \quad \text{for all} \ j=\[w, s\], \ t $$
+
+$$ 0 \le \text{sto} _{t} \le \text{cap}^\text{sto} \quad \text{for all} \ t $$
+
+$$ \[ \text{if baseload-ramping = True} \] \qquad | \, \text{gen} _{b,t} - \text{gen} _{b,t+1} | \le 0.2 \text{cap}^\text{gen} _{b} \quad \text{for all} \ t $$
+
+$$ \[ \text{if baseload-integer = True} \] \qquad \text{cap}^\text{gen} _{b} \in 3\mathbb{Z} $$
+
+$$ \[ \text{if allow-unmet = False} \] \qquad \text{gen} _{u,t} = 0 \quad \text{for all} \: t $$
+
+The vectors $D$ and $(O _t) _{t \ \in \mathcal{T}}$ are the design and operational decision variables. The factor $\frac{T}{8760}$ normalises install costs to the same temporal scale as generation costs, since $C _i^{gen}$ are costs per year of plant lifetime and there are 8760 hours (time steps) in a non-leap year.
 
 
 #### Operation model
 
 The operation problem is the same as the planning problem, except that the design $\textbf{D}$ is fixed and its contribution removed from the objective function.
+
 
 
 ### 6-region model
@@ -168,67 +166,52 @@ The operation problem is the same as the planning problem, except that the desig
 Minimise
 
 $$
-\sum_{r \in \mathcal{R}} \Bigg[ \frac{T}{8760}
-  \Bigg( \! \underbrace{\sum_{i \in \mathcal{I}} C_i^\text{gen} \text{cap}^\text{gen}_{i,r}}_{\substack{\text{install cost,} \\ \text{generation}}}
-  + \!\! \underbrace{ \sum_{r' \in \mathcal{R}} C_{r,r'}^\text{tr} \text{cap}^\text{tr}_{r,r'} }_{\substack{\text{install cost,} \\ \text{transmission}}}
-  + \underbrace{ \vphantom{\sum_{i \in \mathcal{I}}} C^\text{sto} \text{cap}^\text{sto}_r }_{\substack{\text{install cost,} \\ \text{storage}}} \!\! \Bigg)
-  + \underbrace{ \sum_{t \in \mathcal{T}} \sum_{i \in \mathcal{I}} F_i^\text{gen} \text{gen}_{i,r,t}}_\text{generation cost} \Bigg]
+\sum _{r \in \mathcal{R}} \Bigg\[ \frac{T}{8760}
+  \Bigg( \underbrace{\sum _{i \in \mathcal{I}} C _i^\text{gen} \text{cap}^\text{gen} _{i,r}} _{\substack{\text{install cost,} \\ \text{generation}}} + \underbrace{ \sum _{r' \in \mathcal{R}} C _{r,r'}^\text{tr} \text{cap}^\text{tr} _{r,r'} } _{\substack{\text{install cost,} \\ \text{transmission}}} + \underbrace{ C^\text{sto} \text{cap}^\text{sto} _r } _{\substack{\text{install cost,} \\ \text{storage}}}  \Bigg) + \underbrace{ \sum _{t \in \mathcal{T}} \sum _{i \in \mathcal{I}} F _i^\text{gen} \text{gen} _{i,r,t}} _\text{generation cost} \Bigg]
 $$
-by optimising over decision variables $\textbf{D}$ and $(\textbf{O}_t)_{t \in \mathcal{T}}$, where
-$$
-  \textbf{D} = [\text{cap}^\text{gen}_{i,r}, \ \text{cap}^\text{tr}_{r,r'}, \ \text{cap}^\text{sto}_r \ | \ i \in \mathcal{I}; \ r \in \mathcal{R}; \ r' \in \mathcal{R}]
-$$
-$$
-  \textbf{O}_t = [\text{gen}_{i,r,t}, \ \text{tr}_{r,r',t}, \ \ch_{r, t} \ | \ i \in \mathcal{I}; \ r \in \mathcal{R}; \ r' \in \mathcal{R}]
-$$
+
+by optimising over decision variables $D$ and $(O _t) _{t \in \mathcal{T}}$, where
+
+$$ \textbf{D} = \[ \text{cap}^\text{gen} _{i,r}, \ \text{cap}^\text{tr} _{r,r'}, \ \text{cap}^\text{sto} _r \ | \ i \in \mathcal{I}; \ r \in \mathcal{R}; \ r' \in \mathcal{R} \] $$
+
+$$ \textbf{O}_t = \[ \text{gen} _{i,r,t}, \ \text{tr} _{r,r',t}, \ \text{ch} _{r, t} \ | \ i \in \mathcal{I}; \ r \in \mathcal{R}; \ r' \in \mathcal{R} \] $$
+
 subject to
+
+$$ \text{cap}^\text{gen} _{b, r} \big\rvert _{r \notin \{1,3,6\}} = \text{cap}^\text{gen} _{p,r} \big\rvert _{r \notin \{1,3,6\}} = \text{cap}^\text{gen} _{w, r} \big\rvert _{r \notin \{2,5,6\}} = 0 $$
+
+$$ \text{cap}^\text{tr} _{r,r'} \big\rvert _{(r,r') \notin  \{(1,2), (1,5), (1,6), (2,3), (3,4), (4,5), (5,6)\}} = 0 $$
+
+$$ \text{cap}^\text{sto} _r \big\rvert _{r \notin \{2,5,6\}} = 0 $$
+
+$$ \sum_{i \in \mathcal{I}} \text{gen} _{i,r,t} + \sum _{r' \in \mathcal{R}} \text{tr} _{r',r,t} = d _{r,t} + \text{ch} _{r,t} \quad \text{for all} \ r, t $$
+
+$$ \text{tr} _{r,r',t} + \text{tr} _{r,'r,t} = 0 \quad \text{for all} \ r, r', t $$
+
+$$ \text{sto} _{r,0} = 0 \quad \text{for all} \ r $$
+
 $$
-  \text{cap}^\text{gen}_{b, r} \big\rvert_{r \notin \{1,3,6\}} = \text{cap}^\text{gen}_{p,r} \big\rvert_{r \notin \{1,3,6\}} = \text{cap}^\text{gen}_{w, r} \big\rvert_{r \notin \{2,5,6\}} = 0
-$$
-$$
-  \text{cap}^\text{tr}_{r,r'} \big\rvert_{(r,r') \notin  \{(1,2), (1,5), (1,6), (2,3), (3,4), (4,5), (5,6)\}} = 0
-$$
-$$
-  \text{cap}^\text{sto}_r \big\rvert_{r \notin \{2,5,6\}} = 0
-$$
-$$
-  \sum_{i \in \mathcal{I}} \text{gen}_{i,r,t} + \sum_{r' \in \mathcal{R}} \text{tr}_{r',r,t} = d_{r,t} + \ch_{r,t} \quad \text{for all} \ r, t
-$$
-$$
-  \text{tr}_{r,r',t} + \text{tr}_{r,'r,t} = 0 \quad \text{for all} \ r, r', t
-$$
-$$
-  \text{sto}_{r,0} = 0 \quad \text{for all} \ r
-$$
-$$
-  \text{sto}_{r,t+1} = (1 - l^\text{sto}) \text{sto}_{r,t} +
+  \text{sto} _{r,t+1} = (1 - l^\text{sto}) \text{sto} _{r,t} +
   \begin{cases}
-    e^\text{sto} \ch_{r,t} \quad \text{if} \ \ch_{r,t} \ge 0 \\
-    \frac{1}{e^\text{sto}} \ch_{r,t} \quad \text{if} \ \ch_{r,t} < 0
+    e^\text{sto} \text{ch} _{r,t} \quad \text{if} \ \text{ch} _{r,t} \ge 0 \\
+    \frac{1}{e^\text{sto}} \text{ch} _{r,t} \quad \text{if} \ \text{ch} _{r,t} < 0
   \end{cases}
   \quad \text{for all} \ r, t
 $$
-$$
-  0 \le \text{gen}_{i,r,t} \le \text{cap}^\text{gen}_{i,r} \quad \text{for all} \ i, r, t
-$$
-$$
-  0 \le \text{gen}_{j,r,t} \le \text{cap}^\text{gen}_{j,r} \lambda_{j,r,t} \quad \text{for all} \ j = \{w, s\}, r, t
-$$
-$$
-  |\text{tr}_{r,r',t}| \le \text{cap}^\text{tr}_{r,r'} + \text{cap}^\text{tr}_{r',r} \quad \text{for all} \ r, r', t
-$$
-$$
-  0 \le \text{sto}_{r,t} \le \text{cap}^\text{sto}_r \quad \text{for all} \ r, t
-$$
-$$
-  [\text{if baseload\_ramping = True}] \quad | \, \text{gen}_{b,r,t} - \text{gen}_{b,r,t+1} | \le 0.2 \text{cap}^\text{gen}_{b,r} \quad \text{for all} \ r, t
-$$
-$$
-  [\text{if baseload\_integer = True}] \quad \text{cap}^\text{gen}_{b,r} \in 3\mathbb{Z} \quad \text{for all} \ r
-$$
-$$
-  [\text{if allow\_unmet = False}] \quad \text{gen}_{u,r,t} = 0 \quad \text{for all} \: r, t.
-$$
+
+$$ 0 \le \text{gen} _{i,r,t} \le \text{cap}^\text{gen} _{i,r} \quad \text{for all} \ i, r, t $$
+
+$$ 0 \le \text{gen} _{j,r,t} \le \text{cap}^\text{gen} _{j,r} \lambda _{j,r,t} \quad \text{for all} \ j = \{w, s\}, r, t $$
+
+$$ | \text{tr} _{r,r',t} | \le \text{cap}^\text{tr} _{r,r'} + \text{cap}^\text{tr} _{r',r} \quad \text{for all} \ r, r', t $$
+
+$$ 0 \le \text{sto}_{r,t} \le \text{cap}^\text{sto}_r \quad \text{for all} \ r, t $$
+
+$$ \[ \text{if baseload-ramping = True} \] \qquad | \, \text{gen} _{b,r,t} - \text{gen} _{b,r,t+1} | \le 0.2 \text{cap}^\text{gen} _{b,r} \quad \text{for all} \ r, t $$
+
+$$ \[ \text{if baseload-integer = True} \] \qquad \text{cap}^\text{gen} _{b,r} \in 3\mathbb{Z} \quad \text{for all} \ r $$
+
+$$ \[ \text{if allow-unmet = False} \] \qquad \text{gen} _{u,r,t} = 0 \quad \text{for all} \: r, t $$
 
 The vectors $\textbf{D}$ and $(\textbf{O}_t)_{t \ \in \mathcal{T}}$ are the design and operational decision variables. The factor $\frac{T}{8760}$ normalises install costs to the same temporal scale as generation costs, since $C_i^{gen}$ and $C_{r,r'}^{tr}$ are costs per year of plant lifetime and there are 8760 hours (time steps) in a year.
 
@@ -236,3 +219,11 @@ The vectors $\textbf{D}$ and $(\textbf{O}_t)_{t \ \in \mathcal{T}}$ are the desi
 #### Operation model
 
 The operation problem is the same as the planning problem, except that the design $\textbf{D}$ is fixed and its contribution removed from the objective function.
+
+
+
+
+
+## Additional info
+
+A modified version of the 6-region model, without solar power, was used in a PhD thesis. This text contains additional details, including sources for technologies. See Chapter 3 in [this thesis](https://spiral.imperial.ac.uk/handle/10044/1/105480).
