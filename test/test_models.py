@@ -52,7 +52,7 @@ class TestModels:
             )
 
     @pytest.mark.parametrize('run_mode', ['plan', 'operate'])
-    def test_model_basic(self, run_mode: str, fixed_caps_dict: dict[str, dict[str, float]]):
+    def test_model_basic(self, run_mode: str):
         '''Test basic model initialisation and running.'''
 
         # Check model is created correctly
