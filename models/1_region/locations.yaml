@@ -13,4 +13,5 @@ locations:
             demand_power:
                constraints:
                     resource: df=ts_data:demand
+            storage_:
             unmet:

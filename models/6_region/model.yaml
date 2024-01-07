@@ -1,5 +1,6 @@
+
 import:
-    - 'techs.yaml' 
+    - 'techs.yaml'
     - 'locations.yaml'
 
 model:
@@ -17,6 +18,8 @@ overrides:
     plan:
     # planning mode -- determine capacities
         run.mode: plan
+        # finish time series with same storage as at beginning
+        run.cyclic_storage: False
     continuous:
     # continuous baseload capacity
         techs.baseload_region1.constraints.energy_cap_max: inf
@@ -41,46 +44,16 @@ overrides:
             mode: operate
             cyclic_storage: False
             operation:
-            # maximise scheduling horizon
-                horizon: 332880  # hours
-                window: 332880  # hours
-        locations:
-            region1:
-                techs.baseload_region1.constraints.energy_cap_equals: 21
-                techs.peaking_region1.constraints.energy_cap_equals: 31
-            region2:
-                techs.wind_region2.constraints.resource_area_equals: 32
-                techs.solar_region2.constraints.resource_area_equals: 32
-                techs.unmet_region2.constraints.energy_cap_equals: 1e10
-            region3:
-                techs.baseload_region3.constraints.energy_cap_equals: 23
-                techs.peaking_region3.constraints.energy_cap_equals: 33
-            region4:
-                techs.unmet_region4.constraints.energy_cap_equals: 1e10
-            region5:
-                techs.wind_region5.constraints.resource_area_equals: 35
-                techs.solar_region5.constraints.resource_area_equals: 35
-                techs.unmet_region5.constraints.energy_cap_equals: 1e10
-            region6:
-                techs.baseload_region6.constraints.energy_cap_equals: 26
-                techs.peaking_region6.constraints.energy_cap_equals: 36
-                techs.wind_region6.constraints.resource_area_equals: 36
-                techs.solar_region6.constraints.resource_area_equals: 36
-        links:
-            region1,region2:
-                techs.transmission_region1_region2.constraints.energy_cap_equals: 12
-            region1,region5:
-                techs.transmission_region1_region5.constraints.energy_cap_equals: 15
-            region1,region6:
-                techs.transmission_region1_region6.constraints.energy_cap_equals: 16
-            region2,region3:
-                techs.transmission_region2_region3.constraints.energy_cap_equals: 23
-            region3,region4:
-                techs.transmission_region3_region4.constraints.energy_cap_equals: 34
-            region4,region5:
-                techs.transmission_region4_region5.constraints.energy_cap_equals: 45
-            region5,region6:
-                techs.transmission_region5_region6.constraints.energy_cap_equals: 56
+
+                # operate model can solve problems in sequential planning horizons and windows
+                horizon: 332880  # hours, solve full problem in one window for now
+                window: 332880  # hours, solve full problem in one window for now
+        techs:
+            # cyclic storage doesn't work in operate mode since we solve problems in horizons and
+            # windows -- so start with 0 storage and finish with 0 storage for energy conservation
+            storage_region2.constraints.storage_initial: 0
+            storage_region5.constraints.storage_initial: 0
+            storage_region6.constraints.storage_initial: 0
     ramping:
         techs.baseload_region1.constraints.energy_ramping: 0.2  # frac/hr
         techs.baseload_region3.constraints.energy_ramping: 0.2  # frac/hr

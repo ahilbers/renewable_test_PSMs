@@ -1,19 +1,23 @@
 import os
+import shutil
 import warnings
 import logging
 import json
 import psm
+import example_configs
 
 
 def run_model(config: dict, logger: logging.Logger = None):
     '''Create and solve a power system model across a time period.
-    
+
     Parameters:
     -----------
     config: dictionary with model, run and save properties
     logger: the logger to use in creating the model. If named 'psm', then it logs internal messages
         from the 'psm' package
     '''
+
+    output_save_dir = config['output_save_dir']
 
     # If no logger is specified, include log messages from 'psm' package
     if logger is None:
@@ -53,8 +57,12 @@ def run_model(config: dict, logger: logging.Logger = None):
     model.run()
     logger.info('Done running model.')
 
+    # Make plot and save to file
+    logger.info(f'Saving plot to file `{output_save_dir}/plot.html`.')
+    model.plot_timeseries()
+    shutil.copy('temp_plot.html', f'{output_save_dir}/plot.html')  # Copy file to output directory
+
     # Save outputs to file
-    output_save_dir = config['output_save_dir']
     model.get_summary_outputs().to_csv(f'{output_save_dir}/summary_outputs.csv')
     logger.info(f'Saved summary model results to `{output_save_dir}`.')
     model.get_timeseries_outputs().to_csv(f'{output_save_dir}/timeseries_outputs.csv')
@@ -66,51 +74,29 @@ def run_model(config: dict, logger: logging.Logger = None):
 
 
 def main():
+    '''Create, solve and analyse model.'''
 
-    '''
-    Info on run_config keys:
-    ------------------------
-    model_name (str) : '1_region' or '6_region'
-    ts_first_period (str) : first period of time series, slice, e.g. '2017-06-08'
-    ts_last_period (str) : last period of time series slice, e.g. '2017-06-15'
-    run_mode (str) : 'plan' or 'operate': whether model determines optimal generation and
-        transmission capacities or optimises operation with a fixed setup
-    baseload_integer (bool) : baseload integer capacity constraint (units of 3GW)
-    baseload_ramping (bool) : baseload ramping constraint
-    allow_unmet (bool) : allow unmet demand in 'plan' mode (always allowed in operate mode)
-    fixed_caps (dict[str, float]) : fixed generation and transmission capacities. See
-        `tutorial.ipynb` for an example.
-    extra_override (str) : name of additional override, should be defined in relevant `model.yaml`
-    output_save_dir (str) : name of directory where outputs are saved
-    save_full_model (bool) : save all model properies and results in addition to summary outputs
-    '''
-
-    run_config = {
-        'model_name': '1_region',
-        'ts_first_period': '2017-06-01',
-        'ts_last_period': '2017-06-07',
-        'run_mode': 'plan',
-        'baseload_integer': False,
-        'baseload_ramping': False,
-        'allow_unmet': False,
-        'fixed_caps': None,
-        'extra_override': None,
-        'output_save_dir': 'outputs',
-        'save_full_model': True,
-        'log_level_file': 'DEBUG',  # logging level for log file
-        'log_level_stdout': 'INFO',  # logging level for terminal
-    }  # Coded directly in Python for now -- can move to config file if desired
+    # config_*, with * = one_region_operate, one_region_plan, six_region_operate, six_region_plan
+    # are example configurations
+    run_config = example_configs.config_one_region_operate
 
     # Create directory where the logs and outputs are saved
     output_save_dir = run_config['output_save_dir']
     if os.path.exists(output_save_dir):
-        raise FileExistsError(f'Output directory `{output_save_dir}` already exists.')
-    os.mkdir(output_save_dir)
+        print(f'Output directory `{output_save_dir}` already exists. Deleting old version.')
+        shutil.rmtree(output_save_dir)
+        os.mkdir(output_save_dir)
+    else:
+        os.mkdir(output_save_dir)
 
-    # Log from 'psm' package, ignore warnings like 'setting depreciation rate as 1/lifetime'
+    # Log from 'psm' package, ignore warnings about depreciation rates and plotting changing in future
     logger = psm.utils.get_logger(name='psm', run_config=run_config)
-    warning_message_to_ignore = '.*\n.*setting depreciation rate as 1/lifetime.*'
-    warnings.filterwarnings(action='ignore', message=warning_message_to_ignore)
+    warning_messages_to_ignore = [
+        '.*\n.*setting depreciation rate as 1/lifetime.*',
+        '.*Plotting will no longer be available.*'
+    ]
+    for message in warning_messages_to_ignore:
+        warnings.filterwarnings(action='ignore', message=message)
 
     run_model(config=run_config, logger=logger)
 

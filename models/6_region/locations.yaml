@@ -11,6 +11,7 @@ locations:
                 constraints.resource: df=ts_data:wind_region2
             solar_region2:
                 constraints.resource: df=ts_data:solar_region2
+            storage_region2:
             demand_power:
                 constraints.resource: df=ts_data:demand_region2
             unmet_region2:
@@ -32,6 +33,7 @@ locations:
                 constraints.resource: df=ts_data:wind_region5
             solar_region5:
                 constraints.resource: df=ts_data:solar_region5
+            storage_region5:
             demand_power:
                 constraints.resource: df=ts_data:demand_region5
             unmet_region5:
@@ -44,6 +46,7 @@ locations:
                 constraints.resource: df=ts_data:wind_region6
             solar_region6:
                 constraints.resource: df=ts_data:solar_region6
+            storage_region6:
 
 links:
     region1,region2:

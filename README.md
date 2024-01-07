@@ -7,13 +7,13 @@
 
 #### Summary
 
-<a href="https://www.youtube.com/watch?v=-dk3CVzaGew"> <img align="left" width="300" src="documentation/youtube_link.png"/> </a> 
+<a href="https://www.youtube.com/watch?v=-dk3CVzaGew"> <img align="left" width="300" src="documentation/youtube_link.png"/> </a>
 
-This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models. 
+This repository contains simple test power (energy) system models to use in renewable energy, time series and optimisation analysis, designed specifically for climate scientists who want to get a feel for energy systems. They include *generation & transmission expansion planning* (GTEP), *economic dispatch* (ED) and *unit commitment* (UC) type power system models.
 
 For a video introduction to energy system models, as well as a (slightly outdated) tutorial on this repo, see the video link on the left. For a very quick start, see [tutorial without installing](#tutorial-without-installing).
 
-**Note**: This is a relatively new version that includes solar power. The version of the models [used in papers](#use-in-papers) do not contain solar power and are available under the branch `2020_papers`.
+**Note**: This is a relatively new version that includes solar power and storage. The version of the models [used in papers](#use-in-papers) do not contain solar power. For the versions of the model used in 2020 papers, see the branch `2020_papers`.
 
 #### Rationale
 
@@ -24,7 +24,7 @@ There is considerable research into methods for generation & transmission expans
 
 In most such investigations, a different model is used for each paper. Furthermore, models and the data used are usually not made public. This makes results from different studies hard to compare or reproduce. The closest thing to a standard for such applications are the various IEEE n-bus test systems, but the code, generation technologies and time series data are usually not standardised or provided open-source.
 
-This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling *frameworks* like [OseMOSYS](http://www.osemosys.org/) or [Calliope](https://www.callio.pe/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below.
+This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling *frameworks* like [OseMOSYS](http://www.osemosys.org/) or [PyPSA](https://pypsa.org/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below.
 
 #### Models
 
@@ -59,7 +59,7 @@ If you use this repository in your own research, please cite the following paper
 
 #### Tutorial without installing
 
-For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/HEAD), then open `tutorial.ipynb`. It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run in the browser, without having to install any pacakges on your own machine. Thanks to [Anne Fouilloux](https://github.com/annefou) for setting this up.
+For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/HEAD), then open `tutorial.ipynb`. It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run in the browser, without having to install any pacakges on your own machine. Thanks to [@annefou](https://github.com/annefou) for setting this up.
 
 
 #### Customising and running your own simulations
@@ -67,7 +67,7 @@ For a quick introduction to the models, see [this link](https://mybinder.org/v2/
 To use these models in your own code, or customise them, you'll have to install the package (see section below). Then, you can run a sample simulation via
 
 ```
-python3 scripts/main.py
+python scripts/main.py
 ```
 
 This file is a template run illustrating the models' functionality. You can customise it for your own simulations.
@@ -108,7 +108,7 @@ brew install coin-or-tools/coinor/cbc
 
 If not, see install instructions for your system on the [project website](https://projects.coin-or.org/Cbc).
 
-[Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
+[Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. Another (untested) open-source option is [HiGHS](https://highs.dev/). To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
 #### Running the tests
@@ -116,7 +116,7 @@ This repo contains some unit tests, located in the `test` directory. You can run
 
 
 #### Troubleshooting
-- If you get errors like "no executable named `cbc`", the solver `cbc` isn't found. You need to add it to the path of searched executables. If you installed it via `brew` on a mac, the following might help:
+- If you get errors like `no executable named cbc`, the solver `cbc` isn't found. You need to add it to the path of searched executables. If you installed it via `brew` on a mac, the following might help:
 
 ```
 PATH="/usr/local/opt/cbc/bin:$PATH"
@@ -130,11 +130,15 @@ where you should change the `/usr/local/opt/cbc` to the location that `cbc` was 
 
 ## Use in papers
 
-Specific (modified) version of these models have been used in two papers:
+Specific (modified) version of these models have been used in papers, as well as a PhD thesis:
 
-- AP Hilbers, DJ Brayshaw, A Gandy (2020). Efficient quantification of the impact of demand and weather uncertainty in power system models. *IEEE Transactions on Power Systems*. [doi:10.1109/TPWRS.2020.3031187](https://doi.org/10.1109/TPWRS.2020.3031187).
+- AP Hilbers, DJ Brayshaw, A Gandy (2020). Efficient quantification of the impact of demand and weather uncertainty in power system models. *IEEE Transactions on Power Systems*. doi:[10.1109/TPWRS.2020.3031187](https://doi.org/10.1109/TPWRS.2020.3031187).
 
-- AP Hilbers, DJ Brayshaw, A Gandy (2020). Importance subsampling for power system planning under multi-year demand and weather uncertainty. In proceedings of the *16th International Conference on Probabilistic Methods Applied to Power Systems (PMAPS 2020)*. [doi.org/10.1109/PMAPS47429.2020.9183591](https://doi.org/10.1109/PMAPS47429.2020.9183591)
+- AP Hilbers, DJ Brayshaw, A Gandy (2020). Importance subsampling for power system planning under multi-year demand and weather uncertainty. In proceedings of the *16th International Conference on Probabilistic Methods Applied to Power Systems (PMAPS 2020)*. doi:[10.1109/PMAPS47429.2020.9183591](https://doi.org/10.1109/PMAPS47429.2020.9183591)
+
+- AP Hilbers, DJ Brayshaw, A Gandy (2023). Reducing climate risk in energy system planning: a posteriori time series aggregation for models with storage. *Applied Energy*, 334, 120624. doi:[10.1016/j.apenergy.2022.120624](https://doi.org/10.1016/j.apenergy.2022.120624)
+
+- AP Hilbers (2023). Subsampling for renewable electricity system optimisation. Imperial College London. [link](https://spiral.imperial.ac.uk/handle/10044/1/105480)
 
 
 
