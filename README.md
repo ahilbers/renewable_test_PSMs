@@ -111,8 +111,10 @@ If not, see install instructions for your system on the [project website](https:
 [Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. Another (untested) open-source option is [HiGHS](https://highs.dev/). To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
-#### Running the tests
-This repo contains some unit tests, located in the `test` directory. You can run all unit tests by calling `pytest` from a command line.
+#### Testing model functionality and results
+Every time a model is run, a long list of consistency checks are applied to outputs, checking things like demand being met and total costs matching sum of install and generation costs. If any of these fail, warnings are raised. To see these checks, see `psm/consistency_checks.py`
+
+This repo also contains some unit tests, located in the `test` directory. You can run all unit tests by calling `pytest` from a command line.
 
 
 #### Troubleshooting

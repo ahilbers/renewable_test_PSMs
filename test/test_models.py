@@ -100,7 +100,7 @@ class TestModels:
         )
         if not allow_unmet:
             assert np.isclose(summary_outputs.loc['gen_unmet_total', 'output'], 0.)
-        assert psm.utils.has_consistent_outputs(model)
+        assert psm.consistency_checks.has_consistent_outputs(model)
 
         # Check that model can produce timeseries outputs and that they make sense
         ts_outputs = model.get_timeseries_outputs()

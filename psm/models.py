@@ -137,7 +137,7 @@ class ModelBase(calliope.Model):
         super(ModelBase, self).run()
         logger.debug(f'Model summary outputs:\n\n{self.get_summary_outputs()}\n')
         logger.debug(f'Model time series outputs:\n\n{self.get_timeseries_outputs()}\n')
-        if not psm.utils.has_consistent_outputs(model=self):
+        if not psm.consistency_checks.has_consistent_outputs(model=self):
             logger.critical('Model has inconsistent outputs. Check log files for details.')
         logger.info('Done running model.')
 

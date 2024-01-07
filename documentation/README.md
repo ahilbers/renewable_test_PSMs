@@ -116,7 +116,7 @@ In this model, there is only one region $r=1$, so we drop the $r$ subscript.
 Minimise
 
 $$
-\Bigg\[ 
+\Bigg\[
 \frac{T}{8760}
 \Bigg(
 \underbrace{\sum _{i \in \mathcal{I}} C _i^\text{gen} \text{cap}^\text{gen} _{i}} _{\substack{\text{install cost,} \\ \text{generation}}} + \underbrace{ C^\text{sto-power} \text{cap}^\text{sto-power} + C^\text{sto-energy} \text{cap}^\text{sto-energy} } _{\substack{\text{install cost,} \\ \text{storage}}}
