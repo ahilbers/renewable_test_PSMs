@@ -24,7 +24,7 @@ There is considerable research into methods for generation & transmission expans
 
 In most such investigations, a different model is used for each paper. Furthermore, models and the data used are usually not made public. This makes results from different studies hard to compare or reproduce. The closest thing to a standard for such applications are the various IEEE n-bus test systems, but the code, generation technologies and time series data are usually not standardised or provided open-source.
 
-This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling *frameworks* like [OseMOSYS](http://www.osemosys.org/) or [Calliope](https://www.callio.pe/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below.
+This repository provides a few simple test models to fill this gap. The models can be run “off-the-shelf”, containing pre-determined topologies, technologies and time series data. All that needs to be specified is the subset of time series data to use and a number of switches (e.g. integer or ramping constraints, whether to allow unmet demand) that ensure the model can contain most features seen in more complicated systems. These models are not modelling *frameworks* like [OseMOSYS](http://www.osemosys.org/) or [PyPSA](https://pypsa.org/) (which can be used to create arbitrary power system models, but are not models themselves). The models are built and can run in Python using the [Calliope](https://www.callio.pe/) package. Documentation and examples can be found below.
 
 #### Models
 
@@ -59,7 +59,7 @@ If you use this repository in your own research, please cite the following paper
 
 #### Tutorial without installing
 
-For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/HEAD), then open `tutorial.ipynb`. It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run in the browser, without having to install any pacakges on your own machine. Thanks to [Anne Fouilloux](https://github.com/annefou) for setting this up.
+For a quick introduction to the models, see [this link](https://mybinder.org/v2/gh/ahilbers/renewable_test_PSMs/HEAD), then open `tutorial.ipynb`. It is a [binder](https://mybinder.readthedocs.io/en/latest/) instance of the tutorial (`tutorial.ipynb`) that you can run in the browser, without having to install any pacakges on your own machine. Thanks to [@annefou](https://github.com/annefou) for setting this up.
 
 
 #### Customising and running your own simulations
@@ -108,7 +108,7 @@ brew install coin-or-tools/coinor/cbc
 
 If not, see install instructions for your system on the [project website](https://projects.coin-or.org/Cbc).
 
-[Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
+[Gurobi](https://www.gurobi.com/) is a faster solver, but it requires a license. A free academic license is available. Another (untested) open-source option is [HiGHS](https://highs.dev/). To change the solver used, change the value of `run.solver` in `models/1_region/model.yaml` or `models/6_region/model.yaml`, e.g. to `gurobi`.
 
 
 #### Testing model functionality and results
@@ -118,7 +118,7 @@ This repo also contains some unit tests, located in the `test` directory. You ca
 
 
 #### Troubleshooting
-- If you get errors like "no executable named `cbc`", the solver `cbc` isn't found. You need to add it to the path of searched executables. If you installed it via `brew` on a mac, the following might help:
+- If you get errors like `no executable named cbc`, the solver `cbc` isn't found. You need to add it to the path of searched executables. If you installed it via `brew` on a mac, the following might help:
 
 ```
 PATH="/usr/local/opt/cbc/bin:$PATH"
