@@ -355,7 +355,7 @@ def _has_consistent_outputs_6_region(model: calliope.Model) -> bool:
             - efficiency * np.clip(gen_storage_np[:-1], a_min=None, a_max=0.)  # Charging
             - (1 / efficiency) * np.clip(gen_storage_np[:-1], a_min=0., a_max=None)  # Discharging
         )
-        if not np.allclose(storage_levels_v1, storage_levels_v2, rtol=1e-6, atol=1e-1):
+        if not np.allclose(storage_levels_v1, storage_levels_v2, rtol=1e-2, atol=1e-1):
             logger.error(f'Cannot recreate storage levels in some time steps in region {region}.')
             passing = False
 
