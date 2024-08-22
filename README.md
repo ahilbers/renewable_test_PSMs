@@ -13,7 +13,7 @@ This repository contains simple test power (energy) system models to use in rene
 
 For a video introduction to energy system models, as well as a (slightly outdated) tutorial on this repo, see the video link on the left. For a very quick start, see [tutorial without installing](#tutorial-without-installing).
 
-**Note**: This is a relatively new version that includes solar power and storage. The version of the models [used in papers](#use-in-papers) do not contain solar power. For the versions of the model used in 2020 papers, see the branch `2020_papers`.
+**Note**: This is a relatively new version that includes solar power and storage. The version of the models [used in papers](#use-in-papers) do not contain solar power. For the versions of the model used in 2020 papers, see the release `Paper version` with tag `v1.1` .
 
 #### Rationale
 
